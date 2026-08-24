@@ -1,0 +1,16 @@
+{
+  "id": "arzino-pwa",
+  "name": "ارزینو — مبدل ارز",
+  "short_name": "ارزینو",
+  "description": "مبدل مدرن دلار آمریکا، دلار کانادا، یورو، لیر ترکیه و تومان ایران",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#fffaf6",
+  "theme_color": "#ffb980",
+  "lang": "fa",
+  "dir": "rtl",
+  "categories": ["finance", "utilities"],
+  "icons": [{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
