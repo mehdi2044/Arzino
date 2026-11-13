@@ -115,6 +115,13 @@ function IR() {                      // Iranian market prices from the chosen so
   _ir = Object.assign({}, D.iran || {}, sel || {}); _irKey = key;
   return _ir;
 }
+function srcPicker(asset) {           // chips: same item priced by each Iranian source
+  const btns = SRCS.map(([k]) => {
+    const v = D.iran_by?.[k]?.[asset === 'IRT' ? 'USD' : asset];
+    return v ? `<button data-src="${k}" class="${S.src === k ? 'on' : ''}">${S.src === k ? '✓ ' : ''}${esc(SRC_NAME[k])} <b>${fmt(v, 0)}</b></button>` : '';
+  }).join('');
+  return btns ? `<div class="src-chips"><span class="muted small">منبع تومان:</span>${btns}</div>` : '';
+}
 function srcOf(a) { return D.iran_by?.[S.src]?.[a] ? S.src : (D.iran_src?.[a] || ''); }
 function tpuMarket() { return IR().USD || IR().USDT || D.toman_per_usd || null; }
 function goldProxyUsd(a) {          // estimate for Iranian gold items when no market price
@@ -377,7 +384,7 @@ function renderConv() {
     `۱ ${esc(AM[from].fa)} = <b>${moneyTxt(r, to)}</b><br>۱ ${esc(AM[to].fa)} = <b>${moneyTxt(inv, from)}</b>` +
     (man.length ? `<br><span class="badge b-man">✍️ نرخ دستی فعال برای ${man.map(m => AM[m].fa).join('، ')}</span>` : '') +
     ([from, to].some(isEstimate) ? '<br><span class="badge b-flat">تخمینی از اونس جهانی</span>' : '') +
-    ((from === 'IRT' || to === 'IRT' || AM[from]?.ir || AM[to]?.ir) && !man.length ? `<br><span class="muted small">منبع تومان: ${esc(SRC_NAME[srcOf(from === 'IRT' ? to : from)] || SRC_NAME[S.src])}</span>` : '');
+    ((from === 'IRT' || to === 'IRT' || AM[from]?.ir || AM[to]?.ir) && !man.length ? srcPicker(from === 'IRT' ? to : from) : '');
   const qa = from === 'IRT' ? [100000, 1e6, 10e6, 100e6, 1e9] : ['BTC','ETH','XAU','SEKE'].includes(from) ? [0.01, 0.1, 0.5, 1, 2] : [1, 10, 100, 500, 1000, 5000];
   $('quickAmts').innerHTML = qa.map(v => `<button data-v="${v}">${fmt(v)}</button>`).join('');
   $('quickAmts').onclick = e => { const b = e.target.closest('button'); if (b) { S.conv.amt = b.dataset.v; save(); $('amount').value = fmt(+b.dataset.v); renderConv(); } };
@@ -396,6 +403,7 @@ $('amount').addEventListener('focus', () => { const v = parseNum($('amount').val
 $('fromBtn').onclick = () => openPicker('تبدیل از…', a => { if (a === S.conv.to) S.conv.to = S.conv.from; S.conv.from = a; save(); renderConv(); });
 $('toBtn').onclick = () => openPicker('تبدیل به…', a => { if (a === S.conv.from) S.conv.from = S.conv.to; S.conv.to = a; save(); renderConv(); });
 $('swapBtn').onclick = () => { [S.conv.from, S.conv.to] = [S.conv.to, S.conv.from]; save(); renderConv(); };
+$('rateLine').onclick = e => { const b = e.target.closest('[data-src]'); if (b) { S.src = b.dataset.src; save(); renderAll(); toast('منبع نرخ تومان: ' + SRC_NAME[S.src]); } };
 $('copyBtn').onclick = async () => {
   const t = `${fmt(parseNum(S.conv.amt), 8)} ${AM[S.conv.from].fa} = ${$('result').textContent} ${AM[S.conv.to].fa}`;
   try { await navigator.clipboard.writeText(t); toast('کپی شد ✅'); } catch { toast(t); }

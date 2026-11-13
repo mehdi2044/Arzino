@@ -190,3 +190,7 @@ h1{margin:0;font-size:24px;font-weight:900;background:linear-gradient(90deg,var(
 .hero .h-src button{flex:1;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:14px;padding:7px 10px;font-size:12px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:6px}
 .hero .h-src button b{font-size:15px}
 .hero .h-src button.on{background:#fff;color:#6c5ce7;border-color:#fff}
+
+.src-chips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px}
+.src-chips button{border:1px solid var(--line);background:var(--bg2);border-radius:12px;padding:6px 10px;font-size:13px;font-weight:700}
+.src-chips button.on{background:linear-gradient(90deg,var(--p1),var(--p2));color:#fff;border-color:transparent}
