@@ -102,6 +102,18 @@ def save(path, obj):
         json.dump(obj, f, separators=(",", ":"), ensure_ascii=False)
 
 
+def spark_of(bars, n=40, span=86400):
+    """Downsample the last `span` seconds of bars to n closes."""
+    if not bars:
+        return []
+    end = bars[-1][0]
+    xs = [b for b in bars if b[0] >= end - span] or bars[-n:]
+    if len(xs) <= n:
+        return [b[4] for b in xs]
+    step = len(xs) / n
+    return [xs[min(len(xs) - 1, int(i * step))][4] for i in range(n - 1)] + [xs[-1][4]]
+
+
 def inv_bar(b):
     t, o, h, l, c = b
     return [t, r6(1 / o), r6(1 / l), r6(1 / h), r6(1 / c)]
@@ -276,6 +288,7 @@ def main():
     usd = {"USD": 1.0}
     chg = {}
     src = {}
+    spark = {}
 
     # ---- global markets via Yahoo (+ Binance fallback)
     for aid, (sym, inv) in YAHOO.items():
@@ -339,6 +352,7 @@ def main():
                 chg[aid] = round((last / ref - 1) * 100, 3)
         except Exception:
             pass
+        spark[aid] = spark_of(ch["m1"] or ch["h1"])
         save(f"charts/{aid}.json", ch)
 
     # Fallback for any fiat still missing: open.er-api.com (daily)
@@ -435,12 +449,30 @@ def main():
         irt["m1"], irt["h1"], irt["d1"] = to_bars(hist["r"]), to_bars(hist["h"]), to_bars(hist["d"])
         irt["src"] = "history"
     save("charts/IRT.json", irt)
+    spark["IRT"] = spark_of(irt["m1"] or irt["h1"])
+    if irt["m1"]:
+        try:
+            ref = next(b[1] for b in irt["m1"] if b[0] >= irt["m1"][-1][0] - 86400)
+            chg["IRT"] = round((irt["m1"][-1][4] / ref - 1) * 100, 3)
+        except StopIteration:
+            pass
+    # Iranian-only assets: 24h change + spark from our own history
+    for k in iran:
+        if k in usd:
+            continue
+        rows = [(t, v.get(k)) for t, v in hist["r"] if v.get(k)]
+        if len(rows) > 1:
+            spark[k] = [v for _, v in rows[-40:]]
+            old = [v for t, v in rows if t >= NOW - 86400]
+            if old:
+                chg[k] = round((rows[-1][1] / old[0] - 1) * 100, 3)
 
     latest = {
         "t": NOW,
         "usd": usd,
         "chg": chg,
         "src": src,
+        "spark": spark,
         "iran": iran,
         "iran_src": iran_src,
         "toman_per_usd": iran.get("USD") or iran.get("USDT"),
