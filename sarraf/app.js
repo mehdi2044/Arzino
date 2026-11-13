@@ -49,6 +49,22 @@ const isMgr = () => S.role === 'owner' || S.role === 'partner';
 const ccyOpts = (sel, list = CCYS) => list.map(c => `<option value="${c}" ${c === sel ? 'selected' : ''}>${CCY[c].fa} (${c})</option>`).join('');
 function err(e) { console.error(e); toast('خطا: ' + (e?.message || e)); }
 
+/* ---------------------------------------------------------------- theme */
+function applyTheme() {
+  let t = 'auto'; try { t = localStorage.getItem('sarraf.theme') || 'auto'; } catch {}
+  const dark = t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  document.querySelector('meta[name=theme-color]').content = dark ? '#060c18' : '#0b1f3a';
+  return t;
+}
+function cycleTheme() {
+  const order = ['auto', 'light', 'dark']; let t = 'auto'; try { t = localStorage.getItem('sarraf.theme') || 'auto'; } catch {}
+  const n = order[(order.indexOf(t) + 1) % 3]; try { localStorage.setItem('sarraf.theme', n); } catch {}
+  applyTheme(); toast(n === 'auto' ? 'پوسته: خودکار' : n === 'dark' ? 'پوسته: شب 🌙' : 'پوسته: روز ☀️');
+}
+applyTheme();
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyTheme);
+
 /* ---------------------------------------------------------------- market */
 async function loadMarket() {
   try {
@@ -111,7 +127,7 @@ async function boot() {
   S.user = session?.user || null;
   if (!S.user) return renderAuth();
   await sb.rpc('accept_invites', {p_display_name: S.user.user_metadata?.name || null});
-  const {data, error} = await sb.from('members').select('role, display_name, exchange_id, exchanges(id,name,base_ccy)').eq('user_id', S.user.id);
+  const {data, error} = await sb.from('members').select('role, display_name, exchange_id, exchanges(id,name,base_ccy,settings)').eq('user_id', S.user.id);
   if (error) return err(error);
   S.mems = data;
   if (!data.length) return renderCreateExchange();
@@ -127,7 +143,7 @@ async function openExchange(m) {
 }
 function renderAuth(mode = 'login') {
   $('app').innerHTML = `<div class="auth">
-    <div class="brand" style="justify-content:center;flex-direction:column"><div class="lg">ص</div><h1>صرافینو</h1><small>حسابداری ساده برای صرافی‌ها</small></div>
+    <div class="hero3d"><div class="coin">ص</div><h1>صرافینو</h1><div class="muted">حسابداری ساده و امن برای صرافی‌ها</div></div>
     <div class="card" style="margin-top:18px">
       <div class="seg" style="margin-bottom:12px"><button class="${mode === 'login' ? 'on' : ''}" data-m="login">ورود</button><button class="${mode === 'signup' ? 'on' : ''}" data-m="signup">ثبت‌نام</button></div>
       ${mode === 'signup' ? '<div class="fld"><label>نام شما</label><input class="in" id="aName" autocomplete="name"></div>' : ''}
@@ -174,15 +190,16 @@ function renderCreateExchange() {
 }
 
 /* ---------------------------------------------------------------- shell */
-const VIEWS = [['home','🏠','داشبورد'],['txns','📒','دفتر'],['customers','👥','مشتری‌ها'],['reports','📊','گزارش‌ها'],['more','⚙️','بیشتر']];
+const VIEWS = [['home','🏠','داشبورد'],['txns','📒','دفتر'],['customers','👥','مشتری‌ها'],['board','📣','تابلو'],['reports','📊','گزارش‌ها'],['more','⚙️','بیشتر']];
 function render() {
-  const V = {home:vHome, txns:vTxns, customers:vCustomers, customer:vCustomer, reports:vReports, more:vMore}[S.view] || vHome;
+  const V = {home:vHome, txns:vTxns, customers:vCustomers, customer:vCustomer, board:vBoard, reports:vReports, more:vMore}[S.view] || vHome;
   $('app').innerHTML = `<div class="wrap">
-    <div class="top"><div class="brand"><div class="lg">ص</div><div><h1>${esc(S.ex.name)}</h1><small>${esc(memberName(S.user.id))} · ${ROLE[S.role]}</small></div></div>
-      <div style="display:flex;gap:6px"><button class="ibtn" id="reload" title="بروزرسانی">↻</button>${S.mems.length > 1 ? '<button class="ibtn" id="swEx">🏪</button>' : ''}</div></div>
+    <div class="top"><div class="brand"><div class="coin">${S.ex.settings?.logo ? `<img src="${S.ex.settings.logo}" alt="">` : esc((S.ex.name || 'ص').trim()[0])}</div><div><h1>${esc(S.ex.name)}</h1><small>${esc(memberName(S.user.id))} · ${ROLE[S.role]}</small></div></div>
+      <div class="acts"><a class="ibtn" href="../" title="نرخ لحظه‌ای ارزینو">📈 ارزینو</a><button class="ibtn" id="thm" title="روز / شب">🌓</button><button class="ibtn" id="reload" title="بروزرسانی">↻</button>${S.mems.length > 1 ? '<button class="ibtn" id="swEx">🏪</button>' : ''}</div></div>
     <div id="view"></div></div>
     <nav class="tabs">${VIEWS.map(([k, i, l]) => `<button class="tab ${S.view === k || (S.view === 'customer' && k === 'customers') ? 'on' : ''}" data-v="${k}"><span>${i}</span>${l}</button>`).join('')}</nav>`;
   document.querySelectorAll('.tab').forEach(t => t.onclick = () => { S.view = t.dataset.v; render(); scrollTo(0, 0); });
+  $('thm').onclick = cycleTheme;
   $('reload').onclick = async () => { toast('در حال بروزرسانی…'); await Promise.all([loadExchangeData(), loadMarket()]); render(); };
   if ($('swEx')) $('swEx').onclick = () => openSheet(`<h2>انتخاب صرافی</h2><div class="list">${S.mems.map(m => `<div class="row" data-ex="${m.exchange_id}"><div class="ic">🏪</div><div class="m"><b>${esc(m.exchanges.name)}</b><span>${ROLE[m.role]}</span></div></div>`).join('')}</div>`,
     () => document.querySelectorAll('[data-ex]').forEach(r => r.onclick = () => { closeSheet(); openExchange(S.mems.find(m => m.exchange_id === r.dataset.ex)); }));
@@ -218,7 +235,8 @@ function vHome(el) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const todayProfit = S.recentTrades.filter(t => new Date(t.occurred_at) >= today).reduce((s, t) => s + (t.meta?.profit_base || 0), 0);
   const todayCount = S.recentTrades.filter(t => new Date(t.occurred_at) >= today).length;
-  el.innerHTML = quickActions() + `
+  const due = dueBoardSlot();
+  el.innerHTML = (due ? `<div class="card remind"><h3>📣 وقت ارسال تابلوی نرخ ساعت ${due.time} است <span><button class="btn wa" id="remGo">ارسال تابلو</button> <button class="btn g" id="remDone">ارسال شد ✓</button></span></h3></div>` : '') + quickActions() + `
     <div class="card"><h3>💰 موجودی صندوق‌ها <button class="ibtn small" data-act="transfer">🔁 انتقال</button></h3>
       <div class="grid g3">${bt.map(({b, v}) => `<div class="stat"><div class="l">${esc(b.name)}</div><div class="v ${v < 0 ? 'down' : ''}">${money(v, b.currency)}</div></div>`).join('') || '<p class="muted">صندوقی تعریف نشده</p>'}</div></div>
     <div class="grid g2">
@@ -232,11 +250,15 @@ function vHome(el) {
     </div>
     ${boardCard()}`;
   bindQA(el);
-  el.querySelectorAll('[data-board]').forEach(b => b.onclick = () => { S.view = 'more'; render(); setTimeout(() => $('boardCard')?.scrollIntoView({behavior:'smooth'}), 50); });
+  el.querySelectorAll('[data-board]').forEach(b => b.onclick = () => { S.view = 'board'; render(); });
+  if (due) {
+    $('remGo').onclick = () => { try { localStorage.setItem(due.key, '1'); } catch {} S.view = 'board'; render(); };
+    $('remDone').onclick = () => { try { localStorage.setItem(due.key, '1'); } catch {} render(); };
+  }
 }
 function boardCard() {
-  const rows = BOARD_DEFAULT.map(([c, q]) => ({c, q, r: S.board.find(x => x.ccy === c && x.quote === q), m: mktRate(c, q)}));
-  return `<div class="card"><h3>📋 نرخ‌های امروز صرافی <button class="ibtn small" data-board>ویرایش</button></h3>
+  const rows = boardRows().map(([c, q]) => ({c, q, r: S.board.find(x => x.ccy === c && x.quote === q), m: mktRate(c, q)}));
+  return `<div class="card"><h3>📋 نرخ‌های امروز صرافی <button class="ibtn small" data-board>📣 تابلو و ویرایش</button></h3>
     <div class="tbl-wrap"><table class="tbl"><tr><th>ارز</th><th>خرید</th><th>فروش</th><th>بازار</th></tr>
     ${rows.map(({c, q, r, m}) => `<tr><td>${CCY[c].fa} به ${CCY[q].fa}</td><td class="n">${r?.buy ? fmt(r.buy) : '—'}</td><td class="n">${r?.sell ? fmt(r.sell) : '—'}</td><td class="n muted">${fmt(m)}</td></tr>`).join('')}
     </table></div></div>`;
@@ -284,9 +306,9 @@ function txDetail(x) {
     <h4>ردیف‌های حسابداری</h4>
     <table class="tbl">${(x.lines || []).map(ln => `<tr><td>${party(ln)}</td><td class="n ${ln.amount >= 0 ? 'up' : 'down'}">${ln.amount >= 0 ? '+' : ''}${money(ln.amount, ln.currency)}</td></tr>`).join('')}</table>
     ${isMgr() && !x.voided ? '<div class="fld" style="margin-top:10px"><label>برای باطل کردن، دلیل را بنویسید</label><input class="in" id="shReason" placeholder="مثلاً اشتباه در مبلغ"></div>' : ''}
-    <div class="btns"><button class="btn g" id="shReceipt">🧾 کپی رسید</button>${isMgr() && !x.voided ? '<button class="btn r" id="shVoid">باطل کردن</button>' : ''}<button class="btn g" id="shClose">بستن</button></div>`, () => {
+    <div class="btns"><button class="btn wa" id="shReceipt">🧾 رسید / واتس‌اپ</button>${isMgr() && !x.voided ? '<button class="btn r" id="shVoid">باطل کردن</button>' : ''}<button class="btn g" id="shClose">بستن</button></div>`, () => {
     $('shClose').onclick = closeSheet;
-    $('shReceipt').onclick = () => receipt(x);
+    $('shReceipt').onclick = () => receiptSheet(x);
     if ($('shVoid')) $('shVoid').onclick = async () => {
       const reason = $('shReason').value.trim(); if (!reason) return toast('دلیل ابطال را بنویسید');
       const {error} = await sb.rpc('void_txn', {p_id:x.id, p_reason:reason}); if (error) return err(error);
@@ -294,12 +316,6 @@ function txDetail(x) {
     };
   });
 }
-function receipt(x) {
-  const c = cust(x.customer_id);
-  const t = [`🏪 ${S.ex.name}`, `${TYPE[x.type]?.[1] || ''} #${x.no}`, jd(x.occurred_at), c && !c.is_walkin ? `مشتری: ${c.name}` : '', txSummary(x).replace(/<[^>]+>/g, ''), x.note ? `توضیح: ${x.note}` : ''].filter(Boolean).join('\n');
-  navigator.clipboard?.writeText(t).then(() => toast('متن رسید کپی شد — در واتس‌اپ یا تلگرام بچسبانید'), () => toast(t));
-}
-
 function vCustomers(el) {
   const all = {};
   for (const r of S.bal) if (r.party === 'customer' || r.party === 'trust') { const o = (all[r.customer_id] ||= {c:{}, t:{}}); const k = r.party === 'customer' ? 'c' : 't'; o[k][r.currency] = (o[k][r.currency] || 0) + Number(r.amount); }
@@ -331,7 +347,7 @@ async function vCustomer(el) {
     <p class="muted small">${esc(c.phone || 'بدون تلفن')}${c.notes ? ' · ' + esc(c.notes) : ''}</p>
     <h4 style="margin:6px 0">حساب جاری</h4><div class="chips">${chipsFor(balOf('customer', 'customer_id', c.id))}</div>
     <h4 style="margin:10px 0 6px">امانت</h4><div class="chips">${Object.entries(balOf('trust', 'customer_id', c.id)).filter(([, v]) => Math.abs(v) > 1e-9).map(([cc, v]) => `<span class="chip">${money(Math.abs(v), cc)} ${v > 0 ? 'امانت ما نزد او' : 'امانت او نزد ما'}</span>`).join('') || '<span class="chip">ندارد</span>'}</div>
-    <div class="btns">${c.phone ? `<a class="btn g" href="https://wa.me/${esc(c.phone.replace(/[^\d]/g, ''))}" target="_blank" rel="noopener" style="text-align:center;text-decoration:none">💬 واتس‌اپ</a>` : ''}<button class="btn g" id="cXls">📥 صورت‌حساب اکسل</button></div></div>
+    <div class="btns">${normPhone(c.phone) ? `<a class="btn wa" href="https://wa.me/${normPhone(c.phone)}" target="_blank" rel="noopener">💬 واتس‌اپ</a>` : ''}<button class="btn g" id="cXls">📥 صورت‌حساب اکسل</button></div></div>
     ${quickActions()}<div class="card"><h3>📜 صورت‌حساب</h3><div class="tbl-wrap" id="stmt">در حال بارگذاری…</div></div>`;
   bindQA(el, {customer_id:c.id});
   $('cBack').onclick = () => { S.view = 'customers'; render(); };
@@ -420,12 +436,6 @@ function xlsx(name, rows) {
 function vMore(el) {
   const mgr = isMgr();
   el.innerHTML = `${mgr ? `<div class="qa"><button class="c5" data-act="capital"><span>🏦</span>آورده / برداشت شریک</button><button class="c6" data-act="opening"><span>📌</span>موجودی اول دوره</button><button class="c2" data-act="transfer"><span>🔁</span>انتقال بین صندوق‌ها</button><button class="c1" id="mBoxAdd"><span>➕</span>صندوق جدید</button></div>` : ''}
-    <div class="card" id="boardCard"><h3>📋 تابلوی نرخ صرافی</h3><p class="hint" style="margin-top:-6px">این نرخ‌ها پیش‌فرض فرم معامله‌اند. «خرید» = نرخی که از مشتری می‌خرید، «فروش» = نرخی که به مشتری می‌فروشید.</p>
-      <div class="tbl-wrap"><table class="tbl"><tr><th>ارز</th><th>بازار</th><th>خرید</th><th>فروش</th></tr>
-      ${BOARD_DEFAULT.map(([c, q], i) => { const r = S.board.find(x => x.ccy === c && x.quote === q); return `<tr><td>${CCY[c].fa} → ${CCY[q].fa}</td><td class="n muted">${fmt(mktRate(c, q))}</td>
-        <td><input class="in num" style="min-height:38px;padding:6px" data-bb="${i}" value="${r?.buy ?? ''}" inputmode="decimal"></td><td><input class="in num" style="min-height:38px;padding:6px" data-bs="${i}" value="${r?.sell ?? ''}" inputmode="decimal"></td></tr>`; }).join('')}
-      </table></div>
-      <div class="btns"><button class="btn g" id="bFill">پر کردن از بازار (±۰.۳٪)</button><button class="btn p" id="bSave">ذخیره نرخ‌ها</button></div></div>
     <div class="card"><h3>💰 صندوق‌ها</h3><div class="list">${S.boxes.map(b => `<div class="row" data-box="${b.id}"><div class="ic">${b.kind === 'bank' ? '🏦' : b.kind === 'wallet' ? '👛' : '💵'}</div><div class="m"><b>${esc(b.name)}${b.archived ? ' (بایگانی)' : ''}</b><span>${CCY[b.currency]?.fa || b.currency}</span></div><div class="e">${money(balOf('box', 'box_id', b.id)[b.currency] || 0, b.currency)}</div></div>`).join('')}</div></div>
     <div class="card"><h3>👔 اعضای صرافی</h3><div class="list">${S.members.map(m => `<div class="row" data-mem="${m.user_id}"><div class="ic">${m.role === 'owner' ? '👑' : m.role === 'partner' ? '🤝' : '🧑‍💼'}</div><div class="m"><b>${esc(m.display_name || m.email)}</b><span>${ROLE[m.role]}${m.role !== 'staff' ? ' · سهم سود ' + fmt(m.share_pct, 2) + '٪' : ''} · ${esc(m.email || '')}</span></div></div>`).join('')}</div>
       ${mgr ? '<div class="btns"><button class="btn p" id="mInv">+ دعوت شریک یا کارمند</button></div><div id="invList"></div>' : ''}</div>
@@ -435,14 +445,6 @@ function vMore(el) {
       <div class="btns"><button class="btn g" id="newEx">+ ساخت صرافی دیگر</button><button class="btn r" id="logout">خروج از حساب</button></div>
       <p class="hint">نسخه‌ی آزمایشی. داده‌ها در پایگاه داده‌ی ابری ذخیره می‌شود و هر صرافی فقط به اطلاعات خودش دسترسی دارد.</p></div>`;
   bindQA(el);
-  const fillMarket = () => BOARD_DEFAULT.forEach(([c, q], i) => { const m = mktRate(c, q); if (!m) return; const d = m >= 100 ? 0 : m >= 1 ? 3 : 6;
-    el.querySelector(`[data-bb="${i}"]`).value = +(m * 0.997).toFixed(d); el.querySelector(`[data-bs="${i}"]`).value = +(m * 1.003).toFixed(d); });
-  $('bFill').onclick = fillMarket;
-  $('bSave').onclick = async () => {
-    const rows = BOARD_DEFAULT.map(([c, q], i) => ({exchange_id:S.ex.id, ccy:c, quote:q, buy:num(el.querySelector(`[data-bb="${i}"]`).value) || null, sell:num(el.querySelector(`[data-bs="${i}"]`).value) || null, updated_at:new Date().toISOString(), updated_by:S.user.id}));
-    const {error} = await sb.from('rates').upsert(rows); if (error) return err(error);
-    toast('نرخ‌ها ذخیره شد ✅'); await refresh();
-  };
   if ($('mBoxAdd')) $('mBoxAdd').onclick = () => formBox(null);
   el.querySelectorAll('[data-box]').forEach(r => r.onclick = () => mgr && formBox(box(r.dataset.box)));
   el.querySelectorAll('[data-mem]').forEach(r => r.onclick = () => S.role === 'owner' && formMember(S.members.find(m => m.user_id === r.dataset.mem)));
@@ -495,10 +497,15 @@ let posting = false;
 async function post(p, msg) {
   if (posting) return; posting = true;
   document.querySelectorAll('#sheetBody .btn.p').forEach(b => b.disabled = true);
-  const {error} = await sb.rpc('post_txn', {p:{exchange_id:S.ex.id, occurred_at:dateVal(), note:$('fNote')?.value.trim() || null, ...p}});
+  const {data: tid, error} = await sb.rpc('post_txn', {p:{exchange_id:S.ex.id, occurred_at:dateVal(), note:$('fNote')?.value.trim() || null, ...p}});
   posting = false;
   if (error) { document.querySelectorAll('#sheetBody .btn.p').forEach(b => b.disabled = false); return err(error); }
   closeSheet(); toast(msg || 'ثبت شد ✅'); await refresh();
+  const c = p.customer_id && cust(p.customer_id);
+  if (c && ['trade','deposit','withdraw','trust_out','trust_in','trust_return_in','trust_return_out'].includes(p.type) && (!c.is_walkin || p.type === 'trade')) {
+    const {data: x} = await sb.from('txns').select('*, lines(*)').eq('id', tid).single();
+    if (x) receiptSheet(x);
+  }
 }
 function amtHint(inp, hint, c) { const f = () => { const v = num($(inp).value); $(hint).textContent = isFinite(v) ? `${fmt(v)} ${CCY[$(c)?.value || c]?.fa || ''} ${words(v) ? '· ' + words(v) : ''}` : ''; }; $(inp).addEventListener('input', f); f(); }
 

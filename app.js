@@ -474,7 +474,7 @@ $('refreshBtn').onclick = () => { refresh(true); fetchLive(); Object.keys(chartC
 function applyTheme() {
   const dark = S.theme === 'dark' || (S.theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-  document.querySelector('meta[name=theme-color]').content = dark ? '#17142e' : '#6c5ce7';
+  document.querySelector('meta[name=theme-color]').content = dark ? '#060c18' : '#0b1f3a';
 }
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => { if (S.theme === 'auto') applyTheme(); });
 

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#071427">
+<title>تابلوی نرخ ارز</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%}
+body{font-family:Vazirmatn,Tahoma,sans-serif;color:#fff;background:#071427;background-image:radial-gradient(900px 600px at 100% 0,rgba(247,215,122,.25),transparent 60%),radial-gradient(900px 700px at 0 100%,rgba(25,199,155,.20),transparent 60%),linear-gradient(135deg,#071427,#0f2b52 50%,#071427);background-attachment:fixed}
+.w{max-width:900px;margin:auto;padding:24px 16px 40px}
+.hd{text-align:center;margin-bottom:18px}
+.logo{width:110px;height:110px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;font-size:48px;font-weight:900;color:#f7d77a;background:#0b1f3a;overflow:hidden;
+  box-shadow:0 0 0 7px #e5b84a,0 16px 34px rgba(0,0,0,.5),inset 0 -6px 10px rgba(0,0,0,.4)}
+.logo img{width:100%;height:100%;object-fit:cover;background:#fff}
+h1{margin:0;font-size:34px;font-weight:900}
+.sub{color:#f2c14e;font-weight:600;margin-top:6px}
+.card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:28px;box-shadow:0 30px 60px -20px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.12);overflow:hidden;backdrop-filter:blur(6px)}
+table{width:100%;border-collapse:collapse}
+th{color:rgba(255,255,255,.65);font-weight:800;padding:16px 14px;font-size:15px}
+th.b{color:#4ee6b4}th.s{color:#f7d77a}
+td{padding:14px;border-top:1px solid rgba(255,255,255,.09);font-size:18px}
+td.n{text-align:center;font-weight:900;font-size:28px;letter-spacing:-.5px}
+td.b{color:#4ee6b4}td.s{color:#f7d77a}
+.cc{display:flex;align-items:center;gap:12px}
+.coin{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-weight:900;flex:none;box-shadow:0 8px 14px rgba(0,0,0,.35),inset 0 2px 3px rgba(255,255,255,.35)}
+.cc small{display:block;color:rgba(255,255,255,.6);font-size:13px}
+.ft{text-align:center;margin-top:20px;color:rgba(255,255,255,.75)}
+.pill{display:inline-block;background:linear-gradient(145deg,#b7811a,#f2c14e);color:#2b1d00;font-weight:800;border-radius:999px;padding:10px 22px;margin:8px 4px;text-decoration:none}
+.upd{font-size:13px;color:rgba(255,255,255,.55);margin-top:10px}
+.err{text-align:center;padding:60px 20px;color:rgba(255,255,255,.75)}
+body.tv .w{max-width:none;padding:3vh 4vw}
+body.tv h1{font-size:5vh}body.tv .logo{width:14vh;height:14vh}
+body.tv td{font-size:3.2vh;padding:1.6vh 2vw}body.tv td.n{font-size:5.4vh}body.tv th{font-size:2.6vh}
+body.tv .coin{width:6vh;height:6vh;font-size:2.6vh}
+.pulse{display:inline-block;width:10px;height:10px;border-radius:50%;background:#4ee6b4;margin-left:6px;animation:p 1.6s infinite}
+@keyframes p{70%{box-shadow:0 0 0 10px rgba(78,230,180,0)}0%{box-shadow:0 0 0 0 rgba(78,230,180,.6)}}
+</style>
+</head>
+<body>
+<div class="w" id="app"><div class="err">در حال دریافت نرخ‌ها…</div></div>
+<script src="vendor/supabase.js"></script>
+<script src="config.js?v=1"></script>
+<script>
+const CCY = {USD:['دلار آمریکا','$'],TRY:['لیر ترکیه','₺'],IRT:['تومان','ت'],EUR:['یورو','€'],USDT:['تتر','₮'],GBP:['پوند','£'],AED:['درهم امارات','AED'],CAD:['دلار کانادا','C$'],CHF:['فرانک سوئیس','CHF'],CNY:['یوان چین','¥'],IQD:['دینار عراق','IQD']};
+const COL = {USD:['#1f6f43','#3fb27a'],EUR:['#1e3a8a','#3b82f6'],TRY:['#9f1239','#ef4444'],IRT:['#166534','#22c55e'],USDT:['#0f766e','#26a17b'],GBP:['#4c1d95','#8b5cf6'],AED:['#7c2d12','#ea580c'],CAD:['#991b1b','#f87171'],CHF:['#b91c1c','#f43f5e'],CNY:['#a16207','#facc15'],IQD:['#065f46','#10b981']};
+const q = new URLSearchParams(location.search), ex = q.get('ex');
+if (q.get('tv')) document.body.classList.add('tv');
+const sb = supabase.createClient(SARRAF_CONFIG.url, SARRAF_CONFIG.key, {auth:{persistSession:false}});
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function load() {
+  const {data, error} = await sb.rpc('public_board', {p_ex: ex});
+  const app = document.getElementById('app');
+  if (error || !data) { app.innerHTML = '<div class="err">این تابلو در دسترس نیست یا هنوز فعال نشده است.</div>'; return; }
+  const loc = data.digits === 'en' ? 'en-US' : 'fa-IR';
+  const f = v => v == null ? '—' : new Intl.NumberFormat(loc, {maximumFractionDigits: Math.abs(v) >= 1000 ? 0 : Math.abs(v) >= 100 ? 1 : 3}).format(v);
+  const rows = (data.rows && data.rows.length ? data.rows : [['USD','TRY'],['EUR','TRY'],['USDT','TRY'],['GBP','TRY'],['USD','IRT'],['EUR','IRT'],['TRY','IRT'],['USDT','IRT']])
+    .map(([c, qq]) => ({c, q: qq, r: (data.rates || []).find(x => x.ccy === c && x.quote === qq)})).filter(x => x.r && (x.r.buy || x.r.sell));
+  const last = Math.max(0, ...(data.rates || []).map(r => +new Date(r.updated_at)));
+  document.title = 'نرخ ارز — ' + data.name;
+  app.innerHTML = `<div class="hd"><div class="logo">${data.logo ? `<img src="${data.logo}" alt="">` : esc((data.name || 'ص').trim()[0])}</div><h1>${esc(data.name)}</h1>
+    <div class="sub"><span class="pulse"></span>تابلوی نرخ ارز · ${new Intl.DateTimeFormat(loc + '-u-ca-persian', {weekday:'long', day:'numeric', month:'long'}).format(new Date())}</div></div>
+    <div class="card"><table><tr><th style="text-align:right">ارز</th><th class="b">خرید از شما</th><th class="s">فروش به شما</th></tr>
+    ${rows.map(({c, q: qq, r}) => `<tr><td><div class="cc"><div class="coin" style="background:radial-gradient(circle at 35% 30%,${(COL[c]||['#334155','#64748b'])[1]},${(COL[c]||['#334155','#64748b'])[0]})">${CCY[c]?.[1] || c}</div><div>${CCY[c]?.[0] || c}<small>به ${CCY[qq]?.[0] || qq}</small></div></div></td>
+      <td class="n b">${f(Number(r.buy))}</td><td class="n s">${f(Number(r.sell))}</td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center">نرخی ثبت نشده است</td></tr>'}</table></div>
+    <div class="ft">${data.note ? `<div>${esc(data.note)}</div>` : ''}
+      ${data.phone ? `<a class="pill" href="https://wa.me/${String(data.phone).replace(/[^\d]/g, '').replace(/^0(5\d{9})$/, '90$1')}">💬 واتس‌اپ ${esc(data.phone)}</a>` : ''}${data.address ? `<span class="pill">📍 ${esc(data.address)}</span>` : ''}
+      <div class="upd">آخرین بروزرسانی نرخ‌ها: ${last ? new Intl.DateTimeFormat(loc + '-u-ca-persian', {hour:'2-digit', minute:'2-digit', day:'numeric', month:'short', hour12:false}).format(new Date(last)) : '—'}</div></div>`;
+}
+load(); setInterval(load, 60000);
+</script>
+</body>
+</html>
