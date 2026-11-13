@@ -35,6 +35,11 @@ body.tv .w{max-width:none;padding:3vh 4vw}
 body.tv h1{font-size:5vh}body.tv .logo{width:14vh;height:14vh}
 body.tv td{font-size:3.2vh;padding:1.6vh 2vw}body.tv td.n{font-size:5.4vh}body.tv th{font-size:2.6vh}
 body.tv .coin{width:6vh;height:6vh;font-size:2.6vh}
+@media(max-width:560px){
+  .w{padding:16px 10px 30px}h1{font-size:26px}.logo{width:86px;height:86px;font-size:38px}
+  th{padding:12px 6px;font-size:12.5px}td{padding:10px 6px;font-size:14px}td.n{font-size:21px}
+  .coin{width:34px;height:34px;font-size:14px}.cc{gap:8px}.cc small{font-size:11px}
+}
 .pulse{display:inline-block;width:10px;height:10px;border-radius:50%;background:#4ee6b4;margin-left:6px;animation:p 1.6s infinite}
 @keyframes p{70%{box-shadow:0 0 0 10px rgba(78,230,180,0)}0%{box-shadow:0 0 0 0 rgba(78,230,180,.6)}}
 </style>
@@ -63,7 +68,7 @@ async function load() {
   app.innerHTML = `<div class="hd"><div class="logo">${data.logo ? `<img src="${data.logo}" alt="">` : esc((data.name || 'ص').trim()[0])}</div><h1>${esc(data.name)}</h1>
     <div class="sub"><span class="pulse"></span>تابلوی نرخ ارز · ${new Intl.DateTimeFormat(loc + '-u-ca-persian', {weekday:'long', day:'numeric', month:'long'}).format(new Date())}</div></div>
     <div class="card"><table><tr><th style="text-align:right">ارز</th><th class="b">خرید از شما</th><th class="s">فروش به شما</th></tr>
-    ${rows.map(({c, q: qq, r}) => `<tr><td><div class="cc"><div class="coin" style="background:radial-gradient(circle at 35% 30%,${(COL[c]||['#334155','#64748b'])[1]},${(COL[c]||['#334155','#64748b'])[0]})">${CCY[c]?.[1] || c}</div><div>${CCY[c]?.[0] || c}<small>به ${CCY[qq]?.[0] || qq}</small></div></div></td>
+    ${rows.map(({c, q: qq, r}) => `<tr><td><div class="cc"><div class="coin" style="background:radial-gradient(circle at 35% 30%,${(COL[c]||['#334155','#64748b'])[1]},${(COL[c]||['#334155','#64748b'])[0]})">${CCY[c]?.[1] || c}</div><div>${(CCY[c]?.[0] || c).split(' ')[0]}<small>به ${(CCY[qq]?.[0] || qq).split(' ')[0]}</small></div></div></td>
       <td class="n b">${f(Number(r.buy))}</td><td class="n s">${f(Number(r.sell))}</td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center">نرخی ثبت نشده است</td></tr>'}</table></div>
     <div class="ft">${data.note ? `<div>${esc(data.note)}</div>` : ''}
       ${data.phone ? `<a class="pill" href="https://wa.me/${String(data.phone).replace(/[^\d]/g, '').replace(/^0(5\d{9})$/, '90$1')}">💬 واتس‌اپ ${esc(data.phone)}</a>` : ''}${data.address ? `<span class="pill">📍 ${esc(data.address)}</span>` : ''}

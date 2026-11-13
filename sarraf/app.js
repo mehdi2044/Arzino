@@ -195,7 +195,7 @@ function render() {
   const V = {home:vHome, txns:vTxns, customers:vCustomers, customer:vCustomer, board:vBoard, reports:vReports, more:vMore}[S.view] || vHome;
   $('app').innerHTML = `<div class="wrap">
     <div class="top"><div class="brand"><div class="coin">${S.ex.settings?.logo ? `<img src="${S.ex.settings.logo}" alt="">` : esc((S.ex.name || 'ص').trim()[0])}</div><div><h1>${esc(S.ex.name)}</h1><small>${esc(memberName(S.user.id))} · ${ROLE[S.role]}</small></div></div>
-      <div class="acts"><a class="ibtn" href="../" title="نرخ لحظه‌ای ارزینو">📈 ارزینو</a><button class="ibtn" id="thm" title="روز / شب">🌓</button><button class="ibtn" id="reload" title="بروزرسانی">↻</button>${S.mems.length > 1 ? '<button class="ibtn" id="swEx">🏪</button>' : ''}</div></div>
+      <div class="acts"><a class="ibtn" href="../" title="نرخ لحظه‌ای ارزینو">📈<span class="lbl"> ارزینو</span></a><button class="ibtn" id="thm" title="روز / شب">🌓</button><button class="ibtn" id="reload" title="بروزرسانی">↻</button>${S.mems.length > 1 ? '<button class="ibtn" id="swEx">🏪</button>' : ''}</div></div>
     <div id="view"></div></div>
     <nav class="tabs">${VIEWS.map(([k, i, l]) => `<button class="tab ${S.view === k || (S.view === 'customer' && k === 'customers') ? 'on' : ''}" data-v="${k}"><span>${i}</span>${l}</button>`).join('')}</nav>`;
   document.querySelectorAll('.tab').forEach(t => t.onclick = () => { S.view = t.dataset.v; render(); scrollTo(0, 0); });

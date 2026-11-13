@@ -146,3 +146,14 @@ a{color:var(--em)}
 .logo-up .coin{width:64px;height:64px}
 .chk{display:flex;align-items:center;gap:8px;font-weight:600}
 .chk input{width:20px;height:20px;accent-color:var(--em)}
+
+.remind .btn.g{background:rgba(255,255,255,.55);color:#3b2700;border-color:transparent}
+.tbl .in.num{font-size:14.5px;min-width:86px}
+@media(max-width:520px){
+  .top{padding:9px 10px}
+  .brand h1{font-size:15.5px;max-width:42vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .coin{width:40px;height:40px;font-size:17px}
+  .top .ibtn{height:36px;min-width:36px;padding:0 8px}
+  .top .ibtn .lbl{display:none}
+  .tbl th,.tbl td{padding:6px 3px}
+}

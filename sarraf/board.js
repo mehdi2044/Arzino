@@ -25,6 +25,7 @@ function normPhone(p) {
   if (/^09\d{9}$/.test(d)) d = '98' + d.slice(1);        // Iran mobile
   return d.length >= 10 ? d : '';
 }
+const ltr = t => '\u202A' + t + '\u202C';            // keep phone numbers left-to-right inside Persian text
 const waLink = (phone, text) => `https://wa.me/${phone ? normPhone(phone) : ''}?text=${encodeURIComponent(text)}`;
 const faNum = (v, d) => { if (v == null || !isFinite(v)) return '—'; return new Intl.NumberFormat(settings().board_digits === 'en' ? 'en-US' : 'fa-IR', {maximumFractionDigits: d ?? (Math.abs(v) >= 1000 ? 0 : Math.abs(v) >= 100 ? 1 : 3)}).format(v); };
 function roundRate(v, quote) {
@@ -137,7 +138,7 @@ function boardText(short) {
   const rows = boardRows().map(([c, q]) => ({c, q, r: S.board.find(x => x.ccy === c && x.quote === q)})).filter(x => x.r?.buy || x.r?.sell);
   const lines = [`🏦 ${S.ex.name}`, `📅 ${jd(Date.now(), {weekday:'long', day:'numeric', month:'long', hour:'2-digit', minute:'2-digit', hour12:false})}`, ''];
   for (const {c, q, r} of rows) lines.push(`${CCY[c].fa} به ${CCY[q].fa}:  خرید ${faNum(Number(r.buy))}  |  فروش ${faNum(Number(r.sell))}`);
-  if (!short) { if (settings().board_note) lines.push('', settings().board_note); if (settings().phone) lines.push('📞 ' + settings().phone); }
+  if (!short) { if (settings().board_note) lines.push('', settings().board_note); if (settings().phone) lines.push('📞 ' + ltr(settings().phone)); }
   return lines.join('\n');
 }
 
@@ -188,15 +189,16 @@ async function drawBoard(canvas, size = 'post') {
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = T.text; ctx.font = '900 62px Vazirmatn';
   ctx.fillText(S.ex.name, W / 2, y);
   y += 52; ctx.font = '600 32px Vazirmatn'; ctx.fillStyle = T.accent;
-  const dfmt = new Intl.DateTimeFormat((st.board_digits === 'en' ? 'en-US' : 'fa-IR') + '-u-ca-persian', {weekday:'long', day:'numeric', month:'long', year:'numeric'}).format(new Date());
+  const parts = Object.fromEntries(new Intl.DateTimeFormat((st.board_digits === 'en' ? 'en-US' : 'fa-IR') + '-u-ca-persian', {weekday:'long', day:'numeric', month:'long', year:'numeric'}).formatToParts(new Date()).map(p => [p.type, p.value]));
+  const dfmt = `${parts.weekday} ${parts.day} ${parts.month} ${parts.year}`;
   const tfmt = new Intl.DateTimeFormat(st.board_digits === 'en' ? 'en-US' : 'fa-IR', {hour:'2-digit', minute:'2-digit', hour12:false}).format(new Date());
   ctx.fillText(`تابلوی نرخ ارز · ${dfmt} · ساعت ${tfmt}`, W / 2, y);
   y += 40;
   // table card
   const rows = boardRows().map(([c, q]) => ({c, q, r: S.board.find(x => x.ccy === c && x.quote === q)})).filter(x => x.r?.buy || x.r?.sell);
-  const footH = 190, x0 = 60, cw = W - 120;
-  const avail = H - y - footH - 40;
-  const headH = 76, rowH = Math.min(150, Math.max(92, (avail - headH) / Math.max(rows.length, 1)));
+  const footH = (st.board_note ? 60 : 0) + ((st.phone || st.address) ? 110 : 30), x0 = 60, cw = W - 120;
+  const avail = H - y - footH - 30;
+  const headH = 76, rowH = Math.min(150, Math.max(58, (avail - headH - 16) / Math.max(rows.length, 1)));
   const ch = headH + rowH * Math.max(rows.length, 1) + 16;
   ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 40; ctx.shadowOffsetY = 18;
   rr(ctx, x0, y, cw, ch, 36); ctx.fillStyle = T.card; ctx.fill(); ctx.restore();
@@ -222,9 +224,9 @@ async function drawBoard(canvas, size = 'post') {
     ry += rowH;
   });
   // footer
-  let fy = H - footH + 30; ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'center';
-  if (st.board_note) { ctx.fillStyle = T.muted; ctx.font = '600 28px Vazirmatn'; ctx.fillText(st.board_note, W / 2, fy); fy += 50; }
-  const contact = [st.phone ? '📞 ' + st.phone : '', st.address ? '📍 ' + st.address : ''].filter(Boolean).join('     ');
+  let fy = Math.max(y + ch + 56, H - footH + 34); ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'center';
+  if (st.board_note) { ctx.fillStyle = T.muted; ctx.font = '600 28px Vazirmatn'; ctx.fillText(st.board_note, W / 2, fy); fy += 70; }
+  const contact = [st.phone ? '📞 ' + ltr(st.phone) : '', st.address ? '📍 ' + st.address : ''].filter(Boolean).join('     ');
   if (contact) {
     ctx.font = '800 32px Vazirmatn'; const tw = Math.min(W - 120, ctx.measureText(contact).width + 80);
     rr(ctx, (W - tw) / 2, fy - 42, tw, 64, 32); ctx.fillStyle = T.accent; ctx.fill();
@@ -269,13 +271,13 @@ function receiptText(x) {
     if (t.length) out.push('🤝 امانت: ' + t.map(([cc, v]) => `${money(Math.abs(v), cc)} ${v > 0 ? 'نزد شما' : 'نزد ما'}`).join('، '));
   }
   out.push('', 'با تشکر از اعتماد شما 🌿');
-  if (settings().phone) out.push('📞 ' + settings().phone);
+  if (settings().phone) out.push('📞 ' + ltr(settings().phone));
   return out.join('\n');
 }
 async function drawReceipt(canvas, x) {
   await ensureFont();
   const st = settings(), W = 1080, txt = receiptText(x).split('\n');
-  const H = Math.max(1100, 420 + txt.length * 64);
+  const H = 470 + txt.reduce((h, l, i) => h + (!l ? 24 : i < 2 ? 70 : 60), 0);
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d'); ctx.direction = 'rtl';
   bgPaint(ctx, W, H, BOARD_THEMES.navy);
