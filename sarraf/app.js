@@ -1,7 +1,7 @@
 'use strict';
 /* صرافینو — multi-exchange accounting for small currency exchanges */
 
-const sb = supabase.createClient(window.SARRAF_CONFIG.url, window.SARRAF_CONFIG.key);
+const sb = supabase.createClient(window.SARRAF_CONFIG.url, window.SARRAF_CONFIG.key, {global:{fetch:(u, o = {}) => fetch(u, {...o, cache:'no-store'})}});
 const MARKET_URL = 'https://raw.githubusercontent.com/mehdi2044/arzino/data/latest.json';
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));

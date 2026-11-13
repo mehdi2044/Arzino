@@ -1,5 +1,5 @@
 // Arzino service worker: app shell offline + last data cached
-const CACHE = 'arzino-v13';
+const CACHE = 'arzino-v14';
 const SHELL = ['./', './index.html', './app.css?v=13', './app.js?v=13', './vendor/lightweight-charts.js', './manifest.webmanifest',
   './icons/app.svg', './icons/app-192.png', './icons/gold.svg', './icons/silver.svg', './icons/coin.svg', './icons/g18.svg'];
 self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).catch(() => {})); });
@@ -8,7 +8,9 @@ self.addEventListener('activate', e => e.waitUntil(Promise.all([
 self.addEventListener('fetch', e => {
   const req = e.request; if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  if (url.hostname.includes('binance')) return;                       // live prices: network only
+  if (url.pathname.includes('/sarraf/')) return;                      // accounting app: never cache
+  const ok = url.origin === location.origin || url.hostname === 'raw.githubusercontent.com' || url.hostname.endsWith('fonts.googleapis.com') || url.hostname.endsWith('fonts.gstatic.com');
+  if (!ok) return;                                                     // any other API: straight to network
   if (url.hostname === 'raw.githubusercontent.com') {                  // data: network first, cache fallback
     const key = url.origin + url.pathname;
     e.respondWith(fetch(req).then(r => { const c = r.clone(); caches.open(CACHE).then(x => x.put(key, c)); return r; })
