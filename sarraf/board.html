@@ -71,7 +71,7 @@ async function load() {
     ${rows.map(({c, q: qq, r}) => `<tr><td><div class="cc"><div class="coin" style="background:radial-gradient(circle at 35% 30%,${(COL[c]||['#334155','#64748b'])[1]},${(COL[c]||['#334155','#64748b'])[0]})">${CCY[c]?.[1] || c}</div><div>${(CCY[c]?.[0] || c).split(' ')[0]}<small>به ${(CCY[qq]?.[0] || qq).split(' ')[0]}</small></div></div></td>
       <td class="n b">${f(Number(r.buy))}</td><td class="n s">${f(Number(r.sell))}</td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center">نرخی ثبت نشده است</td></tr>'}</table></div>
     <div class="ft">${data.note ? `<div>${esc(data.note)}</div>` : ''}
-      ${data.phone ? `<a class="pill" href="https://wa.me/${String(data.phone).replace(/[^\d]/g, '').replace(/^0(5\d{9})$/, '90$1')}">💬 واتس‌اپ ${esc(data.phone)}</a>` : ''}${data.address ? `<span class="pill">📍 ${esc(data.address)}</span>` : ''}
+      ${data.phone ? `<a class="pill" href="https://wa.me/${String(data.phone).replace(/[^\d]/g, '').replace(/^0(5\d{9})$/, '90$1')}">💬 واتس‌اپ <bdi dir="ltr">${esc(data.phone)}</bdi></a>` : ''}${data.address ? `<span class="pill">📍 ${esc(data.address)}</span>` : ''}
       <div class="upd">آخرین بروزرسانی نرخ‌ها: ${last ? new Intl.DateTimeFormat(loc + '-u-ca-persian', {hour:'2-digit', minute:'2-digit', day:'numeric', month:'short', hour12:false}).format(new Date(last)) : '—'}</div></div>`;
 }
 load(); setInterval(load, 60000);
