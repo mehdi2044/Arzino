@@ -164,8 +164,9 @@ function renderCreateExchange() {
   </div></div>`;
   $('exGo').onclick = async () => {
     const n = $('exName').value.trim(); if (!n) return toast('نام صرافی را وارد کنید');
+    if ($('exGo').disabled) return; $('exGo').disabled = true; $('exGo').textContent = 'در حال ساخت…';
     const {error} = await sb.rpc('create_exchange', {p_name:n, p_display_name:$('exMe').value.trim() || S.user.email, p_base:$('exBase').value});
-    if (error) return err(error);
+    if (error) { $('exGo').disabled = false; $('exGo').textContent = 'ساخت صرافی'; return err(error); }
     toast('صرافی ساخته شد 🎉'); boot();
   };
   $('exOut').onclick = async () => { await sb.auth.signOut(); boot(); };
@@ -490,9 +491,13 @@ function boxSelect(id, ccy, sel, allowNone) {
 const dateFld = () => `<div class="fld"><label>تاریخ و ساعت</label><input class="in" id="fDate" type="datetime-local" value="${new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}"></div>`;
 const noteFld = () => `<div class="fld"><label>توضیحات</label><input class="in" id="fNote" placeholder="اختیاری"></div>`;
 const dateVal = () => { const v = $('fDate')?.value; return v ? new Date(v).toISOString() : new Date().toISOString(); };
+let posting = false;
 async function post(p, msg) {
+  if (posting) return; posting = true;
+  document.querySelectorAll('#sheetBody .btn.p').forEach(b => b.disabled = true);
   const {error} = await sb.rpc('post_txn', {p:{exchange_id:S.ex.id, occurred_at:dateVal(), note:$('fNote')?.value.trim() || null, ...p}});
-  if (error) return err(error);
+  posting = false;
+  if (error) { document.querySelectorAll('#sheetBody .btn.p').forEach(b => b.disabled = false); return err(error); }
   closeSheet(); toast(msg || 'ثبت شد ✅'); await refresh();
 }
 function amtHint(inp, hint, c) { const f = () => { const v = num($(inp).value); $(hint).textContent = isFinite(v) ? `${fmt(v)} ${CCY[$(c)?.value || c]?.fa || ''} ${words(v) ? '· ' + words(v) : ''}` : ''; }; $(inp).addEventListener('input', f); f(); }
