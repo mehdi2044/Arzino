@@ -368,42 +368,45 @@ def main():
         except Exception as e:
             note_err("er-api", e)
 
-    # ---- Iranian market (Toman)
-    iran = {}
-    iran_src = {}
+    # ---- Iranian market (Toman): every source kept separately, merged view = bonbast first
+    def sanitize(dct, tpu):
+        out = {}
+        for k, v in dct.items():
+            if tpu and k in usd and k != "USD":
+                theo = usd[k] * tpu
+                ratio = v / theo if theo > 0 else 1
+                for f in (1, 10, 100, 1000):
+                    if 0.6 < ratio / f < 1.6:
+                        out[k] = r6(v / f)
+                        break
+            else:
+                out[k] = r6(v)
+        return out
+
+    by_src = {}
     for name, fn in (("bonbast", iran_bonbast), ("tgju", iran_tgju),
                      ("nobitex", iran_nobitex), ("wallex", iran_wallex)):
         try:
-            got = fn()
-            for k, v in got.items():
-                if k not in iran:
-                    iran[k] = v
-                    iran_src[k] = name
+            by_src[name] = fn()
             note_ok(f"iran:{name}")
         except Exception as e:
             note_err(f"iran:{name}", e)
-
-    # sanity: compare each Iranian fiat price with USD cross; fix per-10/per-100 quoting
+    ref_tpu = next((d.get("USD") for d in by_src.values() if d.get("USD")), None) or \
+        next((d.get("USDT") for d in by_src.values() if d.get("USDT")), None)
+    by_src = {n: sanitize(d, d.get("USD") or ref_tpu) for n, d in by_src.items()}
+    # keep the last good values of a source that failed this run
+    for n, d in (prev.get("iran_by") or {}).items():
+        if n not in by_src and d:
+            by_src[n] = d
+    iran, iran_src = {}, {}
+    for n in ("bonbast", "tgju", "nobitex", "wallex"):
+        for k, v in by_src.get(n, {}).items():
+            if k not in iran:
+                iran[k], iran_src[k] = v, n
     tpu = iran.get("USD") or iran.get("USDT")
-    if tpu:
-        for k, v in list(iran.items()):
-            if k in usd and k not in ("USD",):
-                theo = usd[k] * tpu
-                if theo <= 0:
-                    continue
-                ratio = v / theo
-                fixed = False
-                for f in (10, 100, 1000):
-                    if 0.7 < ratio / f < 1.4:
-                        iran[k] = v / f
-                        fixed = True
-                        break
-                if not fixed and not (0.6 < ratio < 1.6):
-                    del iran[k]  # nonsense value, drop it
     if not tpu and prev.get("iran", {}).get("USD"):
         iran = prev["iran"]
         iran_src = {k: "stale" for k in iran}
-    iran = {k: r6(v) for k, v in iran.items()}
 
     # ---- Toman chart (Toman per USD): Nobitex USDT/IRT candles, else our own history
     irt_old = load("charts/IRT.json", {})
@@ -475,6 +478,7 @@ def main():
         "spark": spark,
         "iran": iran,
         "iran_src": iran_src,
+        "iran_by": by_src,
         "toman_per_usd": iran.get("USD") or iran.get("USDT"),
     }
     save("latest.json", latest)
