@@ -485,7 +485,7 @@ function bindNewCust() {
 }
 function boxSelect(id, ccy, sel, allowNone) {
   const list = S.boxes.filter(b => !b.archived && (!ccy || b.currency === ccy));
-  return `<select class="in" id="${id}">${allowNone ? `<option value="">${allowNone}</option>` : ''}${list.map(b => `<option value="${b.id}" ${b.id === sel ? 'selected' : ''}>${esc(b.name)}</option>`).join('')}</select>`;
+  return `<select class="in" id="${id}">${list.map(b => `<option value="${b.id}" ${b.id === sel ? 'selected' : ''}>${esc(b.name)}</option>`).join('')}${allowNone ? `<option value="" ${!list.length ? 'selected' : ''}>${allowNone}</option>` : ''}</select>`;
 }
 const dateFld = () => `<div class="fld"><label>تاریخ و ساعت</label><input class="in" id="fDate" type="datetime-local" value="${new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}"></div>`;
 const noteFld = () => `<div class="fld"><label>توضیحات</label><input class="in" id="fNote" placeholder="اختیاری"></div>`;
@@ -528,8 +528,8 @@ function formTrade(pre = {}) {
     <div class="btns"><button class="btn p" id="tGo">ثبت معامله</button><button class="btn g" id="tX">انصراف</button></div>`, () => {
     let lock = 'B';                          // which side is derived
     const setBoxes = () => {
-      $('tABox').innerHTML = boxSelect('tABx', $('tAC').value, null, '— نسیه / به حساب مشتری —');
-      $('tBBox').innerHTML = boxSelect('tBBx', $('tBC').value, null, '— نسیه / بستانکار شود —');
+      $('tABox').innerHTML = boxSelect('tABx', $('tAC').value, null, '— دریافت نشد: از موجودی مشتری کم شود / بدهکار شود —');
+      $('tBBox').innerHTML = boxSelect('tBBx', $('tBC').value, null, '— پرداخت نشد: به حساب مشتری بستانکار شود —');
       if (!S.boxes.some(b => b.currency === $('tAC').value)) $('tABx').value = '';
       if (!S.boxes.some(b => b.currency === $('tBC').value)) $('tBBx').value = '';
     };
@@ -571,12 +571,13 @@ function formTrade(pre = {}) {
       if (!C || !(A > 0) || !(B > 0) || gc === rc) return toast('مشتری، مبلغ‌ها و دو ارز متفاوت را کامل کنید');
       if (cust(C)?.is_walkin && (!ab || !bb)) return toast('برای مشتری گذری، دریافت و پرداخت باید نقدی باشد. برای نسیه، مشتری را با نام ثبت کنید.');
       const ug = usdOf(gc), ur = usdOf(rc);
+      // customer account: + = customer owes us, - = we owe the customer
       const lines = [
-        {party:'customer', customer_id:C, currency:gc, amount:-A, usd_rate:ug},
-        {party:'customer', customer_id:C, currency:rc, amount:B, usd_rate:ur},
+        {party:'customer', customer_id:C, currency:gc, amount:A, usd_rate:ug},    // he must deliver A
+        {party:'customer', customer_id:C, currency:rc, amount:-B, usd_rate:ur},   // we must deliver B
       ];
-      if (ab) lines.push({party:'box', box_id:ab, currency:gc, amount:A, usd_rate:ug}, {party:'customer', customer_id:C, currency:gc, amount:A, usd_rate:ug});
-      if (bb) lines.push({party:'box', box_id:bb, currency:rc, amount:-B, usd_rate:ur}, {party:'customer', customer_id:C, currency:rc, amount:-B, usd_rate:ur});
+      if (ab) lines.push({party:'box', box_id:ab, currency:gc, amount:A, usd_rate:ug}, {party:'customer', customer_id:C, currency:gc, amount:-A, usd_rate:ug});
+      if (bb) lines.push({party:'box', box_id:bb, currency:rc, amount:-B, usd_rate:ur}, {party:'customer', customer_id:C, currency:rc, amount:B, usd_rate:ur});
       const {st, wk} = orient();
       const profit = (inBase(A, gc) ?? 0) - (inBase(B, rc) ?? 0);
       post({type:'trade', customer_id:C, lines, meta:{give:{ccy:gc, amt:A}, get:{ccy:rc, amt:B}, rate:num($('tR').value), pair:`${st}/${wk}`,
