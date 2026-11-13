@@ -1,6 +1,6 @@
 // Arzino service worker: app shell offline + last data cached
-const CACHE = 'arzino-v9';
-const SHELL = ['./', './index.html', './app.css?v=9', './app.js?v=9', './vendor/lightweight-charts.js', './manifest.webmanifest',
+const CACHE = 'arzino-v10';
+const SHELL = ['./', './index.html', './app.css?v=10', './app.js?v=10', './vendor/lightweight-charts.js', './manifest.webmanifest',
   './icons/app.svg', './icons/app-192.png', './icons/gold.svg', './icons/silver.svg', './icons/coin.svg', './icons/g18.svg'];
 self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).catch(() => {})); });
 self.addEventListener('activate', e => e.waitUntil(Promise.all([

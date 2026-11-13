@@ -19,8 +19,8 @@ const ASSETS = [
   {id:'AUD', fa:'دلار استرالیا', en:'Australian Dollar', sym:'A$', ic:'icons/flags/au.svg', g:'fiat'},
   {id:'RUB', fa:'روبل روسیه', en:'Russian Ruble', sym:'₽', ic:'icons/flags/ru.svg', g:'fiat'},
   {id:'IRT', fa:'تومان ایران', en:'Iranian Toman', sym:'تومان', ic:'icons/flags/ir.svg', g:'fiat'},
-  {id:'XAU', fa:'طلا (اونس جهانی)', en:'Gold ounce', sym:'oz', ic:'icons/gold.svg', g:'metal'},
-  {id:'XAG', fa:'نقره (اونس جهانی)', en:'Silver ounce', sym:'oz', ic:'icons/silver.svg', g:'metal'},
+  {id:'XAU', fa:'انس جهانی طلا', en:'Gold ounce', sym:'oz', ic:'icons/gold.svg', g:'metal'},
+  {id:'XAG', fa:'انس جهانی نقره', en:'Silver ounce', sym:'oz', ic:'icons/silver.svg', g:'metal'},
   {id:'G18', fa:'طلای ۱۸ عیار (گرم)', en:'18K gold gram', sym:'g', ic:'icons/g18.svg', g:'metal', ir:true, k:0.75/31.1034768},
   {id:'G24', fa:'طلای ۲۴ عیار (گرم)', en:'24K gold gram', sym:'g', ic:'icons/gold.svg', g:'metal', ir:true, k:1/31.1034768},
   {id:'MESGHAL', fa:'مثقال طلا', en:'Gold mesghal', sym:'', ic:'icons/g18.svg', g:'metal', ir:true, k:4.6083*0.705/31.1034768},
@@ -83,7 +83,7 @@ function money(v, q, short) {
   if (v == null || !isFinite(v)) return '—';
   if (q === 'IRT') return `${fmt(v, Math.abs(v) >= 100 ? 0 : 2)} <small>تومان</small>`;
   if (q === 'USD') return `${fmt(v)} <small>$</small>`;
-  return `${fmt(v)} <small>${esc(AM[q]?.sym || q)}</small>`;
+  return `${fmt(v)} <small><bdi>${esc(AM[q]?.sym ?? q)}</bdi></small>`;
 }
 function moneyTxt(v, q) { return money(v, q).replace(/<[^>]+>/g, ''); }
 
@@ -133,6 +133,7 @@ function rate(a, b) {               // how many b for 1 a
   const ta = toman(a), tb = toman(b); return ta && tb ? ta / tb : null;
 }
 const isManual = a => !!S.manual[a];
+function marketRate(a, b) { const m = S.manual; S.manual = {}; try { return rate(a, b); } finally { S.manual = m; } }
 const isEstimate = a => AM[a]?.ir && !D.iran?.[a];
 
 /* ---------------------------------------------------------------- data */
@@ -195,6 +196,20 @@ function sparkSVG(arr, w = 70, h = 30, color) {
   const pts = arr.map((v, i) => `${(i / (arr.length - 1) * w).toFixed(1)},${(h - 3 - (v - mn) / r * (h - 6)).toFixed(1)}`).join(' ');
   const c = color || (arr[arr.length - 1] >= arr[0] ? 'var(--up)' : 'var(--down)');
   return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${c}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+function sparkIn(a, q) {             // index-aligned sparkline of a priced in q
+  const usdSp = x => {
+    if (x === 'USD') return null;
+    if (x === 'IRT') return (D.spark?.IRT || []).map(v => 1 / v);
+    if (AM[x]?.ir) { const s = D.spark?.[x]; const i = D.spark?.IRT; if (!s || !i) return s && s.length ? s : null;
+      return s.map((v, k) => v / i[Math.round(k * (i.length - 1) / Math.max(1, s.length - 1))]); }
+    return D.spark?.[x] || null;
+  };
+  const A = usdSp(a), Q = usdSp(q);
+  if (a === 'USD' && Q) return Q.map(v => 1 / v);
+  if (!A || !A.length) return null;
+  if (q === 'USD' || !Q || !Q.length) return q === 'USD' ? A : null;
+  return A.map((v, k) => v / Q[Math.round(k * (Q.length - 1) / Math.max(1, A.length - 1))]);
 }
 function chgBadge(v) {
   if (v == null || !isFinite(v)) return '';
@@ -265,7 +280,7 @@ function renderMarket() {
     const sec = q === 'USD' ? toman(a.id) : usdP(a.id);
     const secTxt = q === 'USD' ? (sec ? fmt(sec, 0) + ' تومان' : '') : (sec ? '$' + fmt(sec) : '');
     const ch = changeIn(a.id, q);
-    const sp = D.spark?.[a.id];
+    const sp = sparkIn(a.id, q);
     const tags = [
       isManual(a.id) ? '<span class="badge b-man">✍️ دستی</span>' : '',
       live[a.id] ? '<span class="badge b-live">● زنده</span>' : '',
@@ -274,8 +289,8 @@ function renderMarket() {
     return `<div class="item grp-${a.ir ? 'iran' : a.g}" data-id="${a.id}">
       ${icon(a.id)}
       <div class="nm"><b>${esc(a.fa)}</b><span>${a.id === 'G18' || a.ir ? 'بازار ایران' : a.id} ${tags}</span></div>
-      ${sparkSVG(sp)}
-      <div class="pr"><b>${money(p, q)}</b><span>${chgBadge(ch)} ${secTxt}</span></div>
+      ${sparkSVG(sp, 70, 30, ch == null ? null : ch >= 0 ? 'var(--up)' : 'var(--down)')}
+      <div class="pr"><b class="${p != null && Math.abs(p) >= 1e8 ? 'long' : ''}">${money(p, q)}</b><span>${chgBadge(ch)} ${secTxt}</span></div>
       <button class="star ${S.favs.includes(a.id) ? 'on' : ''}" data-star="${a.id}" title="منتخب">⭐</button>
     </div>`;
   }).join('') || '<p class="muted">موردی نیست. ⭐ را کنار هر ارز بزنید تا اینجا بیاید.</p>';
@@ -484,7 +499,12 @@ async function buildSeries(a, q, rk) {
   bars = aggregate(bars, R.agg);
   const out = []; let lt = -1;
   for (const b of bars) if (b[0] > lt && b.slice(1).every(isFinite)) { out.push(b); lt = b[0]; }
-  // when the Toman side has a manual / market rate that differs from chart data, keep chart as-is (history)
+  // Toman charts come from Tether trades / daily cash-dollar history; calibrate so the line ends at today's market price
+  if ((q === 'IRT' || a === 'IRT' || AM[a]?.ir) && out.length) {
+    const target = marketRate(a, q), lastC = out[out.length - 1][4];
+    const f = target && lastC ? target / lastC : 1;
+    if (f > 0.85 && f < 1.15 && Math.abs(f - 1) > 1e-6) return out.map(([t, o, h, l, c]) => [t, o * f, h * f, l * f, c * f]);
+  }
   return out;
 }
 function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
@@ -544,9 +564,10 @@ async function drawChart(reset) {
   $('chartLast').innerHTML = money(cur, q);
   $('chartChg').innerHTML = `<span class="${chg >= 0 ? 'up' : 'down'}">${chg >= 0 ? '▲' : '▼'} ${fmt(Math.abs(chg), 2)}٪</span> <span class="muted small">در ${RANGES[r].fa} اخیر</span>`;
   const hi = Math.max(...bars.map(b => b[2])), lo = Math.min(...bars.map(b => b[3]));
-  $('chartStats').innerHTML = `<div>آخرین در نمودار<b>${fmt(last)}</b></div><div>شروع بازه<b>${fmt(first)}</b></div><div>بیشترین<b class="up">${fmt(hi)}</b></div><div>کمترین<b class="down">${fmt(lo)}</b></div>`;
+  const sf = v => Math.abs(v) >= 1e7 ? words(v) : fmt(v);
+  $('chartStats').innerHTML = `<div>آخرین در نمودار<b>${sf(last)}</b></div><div>شروع بازه<b>${sf(first)}</b></div><div>بیشترین<b class="up">${sf(hi)}</b></div><div>کمترین<b class="down">${sf(lo)}</b></div>`;
   const notes = [];
-  if (q === 'IRT' || a === 'IRT') notes.push(r === '1Y' ? 'تومان: دلار آزاد روزانه' : 'تومان: بر پایه معاملات تتر');
+  if (q === 'IRT' || a === 'IRT') notes.push(r === '1Y' ? 'تومان: دلار آزاد روزانه' : 'روند تومان: بر پایه معاملات تتر');
   if (AM[a]?.ir) notes.push('تخمینی از اونس جهانی طلا');
   if (isManual(a) || isManual(q)) notes.push('✍️ قیمت بالا با نرخ دستی است');
   if (live[a] && ['15m','1H'].includes(r)) notes.push('● زنده');
@@ -557,7 +578,12 @@ $('chartAssetBtn').onclick = () => openPicker('نمودار کدام دارای�
 /* ---------------------------------------------------------------- calculator */
 let cExpr = '', cLast = null;
 const KEYS = [['C','fn'],['⌫','fn'],['%','fn'],['÷','op'],['7'],['8'],['9'],['×','op'],['4'],['5'],['6'],['−','op'],['1'],['2'],['3'],['+','op'],['±','fn'],['0'],['.'],['=','eq']];
-function evalExpr(s) {               // safe shunting-yard evaluator
+function evalExpr(s) {
+  const m = s.match(/^(.*[\d%])([+−])(\d*\.?\d+)%$/);      // 200+5%  ->  210
+  if (m) { const L = evalCore(m[1]); const p = parseFloat(m[3]) / 100; return m[2] === '+' ? L * (1 + p) : L * (1 - p); }
+  return evalCore(s);
+}
+function evalCore(s) {               // safe shunting-yard evaluator
   const toks = s.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-').match(/\d*\.?\d+(?:e[+-]?\d+)?%?|[-+*/()]/g);
   if (!toks) return NaN;
   const out = [], ops = [], prec = {'+':1, '-':1, '*':2, '/':2, 'u':3};
@@ -633,7 +659,8 @@ addEventListener('appinstalled', () => { $('installBtn').style.display = 'none';
 if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 
 applyTheme();
-show(S.view || 'market');
+const hv = location.hash.replace('#', '');
+show(['market','chart','convert','calc'].includes(hv) ? hv : (S.view || 'market'));
 refresh();
 fetchLive();
 setInterval(() => { if (!document.hidden) refresh(); }, 60000);
