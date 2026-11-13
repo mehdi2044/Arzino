@@ -142,10 +142,13 @@ function renderAuth(mode = 'login') {
     if (!email || password.length < 6) return toast('ایمیل و رمز (حداقل ۶ کاراکتر) را وارد کنید');
     $('aGo').disabled = true;
     const r = mode === 'login' ? await sb.auth.signInWithPassword({email, password})
-      : await sb.auth.signUp({email, password, options:{data:{name: $('aName').value.trim()}}});
+      : await sb.auth.signUp({email, password, options:{data:{name: $('aName').value.trim()}, emailRedirectTo: location.origin + location.pathname}});
     $('aGo').disabled = false;
     if (r.error) return toast(r.error.message.includes('Invalid login') ? 'ایمیل یا رمز اشتباه است' : r.error.message);
-    if (mode === 'signup' && !r.data.session) return toast('ایمیل تأیید فرستاده شد؛ پس از تأیید وارد شوید');
+    if (mode === 'signup' && !r.data.session) {
+      $('app').innerHTML = `<div class="auth"><div class="card center"><h2>📧 ایمیل خود را چک کنید</h2><p>یک لینک تأیید به <b dir="ltr">${esc(email)}</b> فرستاده شد. روی لینک بزنید تا وارد صرافینو شوید.</p><p class="hint">اگر نیامد، پوشه‌ی Spam را هم ببینید.</p><button class="btn g w" onclick="location.reload()">بازگشت به ورود</button></div></div>`;
+      return;
+    }
     boot();
   };
 }
