@@ -181,3 +181,7 @@ h1{margin:0;font-size:24px;font-weight:900;background:linear-gradient(90deg,var(
   .amount{font-size:28px}.result{font-size:26px}
   .stats{grid-template-columns:repeat(2,1fr)}
 }
+
+.base-sel{appearance:none;-webkit-appearance:none;border:1px solid var(--line);background:var(--bg2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a7896' stroke-width='2' fill='none'/%3E%3C/svg%3E") no-repeat 12px center;
+  padding:10px 14px 10px 34px;border-radius:14px;font-weight:800;font-size:15px;min-width:170px;box-shadow:var(--shadow);color:var(--text)}
+.base-sel option,.base-sel optgroup{background:var(--bg2);color:var(--text)}

@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: data
@@ -44,6 +45,11 @@ jobs:
             [ "$i" = 1 ] && sleep 150
           done
 
-      - name: Cleanup old test branch
+      - name: Queue the next update (keeps refreshes coming even when the cron is late)
+        if: github.ref == 'refs/heads/main'
         continue-on-error: true
-        run: git push origin --delete wf-test 2>/dev/null || true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sleep 60
+          gh workflow run data.yml --ref main -R "${{ github.repository }}"

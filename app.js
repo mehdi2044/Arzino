@@ -79,11 +79,23 @@ function words(v) { // short Persian magnitude
   for (const [n, w] of u) if (Math.abs(v) >= n) return fmt(v / n, v / n >= 100 ? 1 : 2) + ' ' + w;
   return '';
 }
+function qLabel(q) {                // short unit label for any asset used as a quote
+  if (q === 'IRT') return 'تومان';
+  if (q === 'USD') return '$';
+  const x = AM[q]; if (!x) return q;
+  return x.sym && !['oz', 'g', ''].includes(x.sym) ? x.sym : x.fa;
+}
+function qName(q) { return q === 'IRT' ? 'تومان' : AM[q]?.fa || q; }
+function baseOptions(cur, exclude = []) {
+  const grp = {fiat:'💵 ارزها', metal:'🪙 طلا و سکه', crypto:'₿ رمزارز'};
+  return Object.entries(grp).map(([g, l]) => `<optgroup label="${l}">` +
+    ASSETS.filter(a => a.g === g && !exclude.includes(a.id)).map(a => `<option value="${a.id}" ${a.id === cur ? 'selected' : ''}>${esc(a.fa)} (${a.id === 'IRT' ? 'IRT' : a.id})</option>`).join('') + '</optgroup>').join('');
+}
 function money(v, q, short) {
   if (v == null || !isFinite(v)) return '—';
   if (q === 'IRT') return `${fmt(v, Math.abs(v) >= 100 ? 0 : 2)} <small>تومان</small>`;
   if (q === 'USD') return `${fmt(v)} <small>$</small>`;
-  return `${fmt(v)} <small><bdi>${esc(AM[q]?.sym ?? q)}</bdi></small>`;
+  return `${fmt(v)} <small><bdi>${esc(qLabel(q))}</bdi></small>`;
 }
 function moneyTxt(v, q) { return money(v, q).replace(/<[^>]+>/g, ''); }
 
@@ -267,18 +279,24 @@ function renderHero() {
 }
 function renderMarket() {
   renderHero();
-  seg($('quoteSeg'), QUOTES, S.quote, v => { S.quote = v; save(); renderMarket(); });
+  const qs = QUOTES.some(([v]) => v === S.quote) ? QUOTES : [...QUOTES, [S.quote, qName(S.quote)]];
+  seg($('quoteSeg'), qs, S.quote, v => { S.quote = v; save(); renderMarket(); });
+  $('quoteSel').innerHTML = baseOptions(S.quote);
+  $('quoteSel').onchange = () => { S.quote = $('quoteSel').value; save(); renderMarket(); };
   $('groupChips').innerHTML = GROUPS.map(([v, l]) => `<button class="chip ${v === S.group ? 'active' : ''}" data-v="${v}">${l}</button>`).join('');
   $('groupChips').onclick = e => { const b = e.target.closest('button'); if (b) { S.group = b.dataset.v; save(); renderMarket(); } };
   const q = S.quote;
-  let list = ASSETS.filter(a => a.id !== q && a.id !== 'IRT');
+  let list = ASSETS.filter(a => a.id !== q);
   if (S.group === 'fav') list = list.filter(a => S.favs.includes(a.id));
   else if (S.group !== 'all') list = list.filter(a => a.g === S.group);
   list = list.filter(a => !a.ir || D.iran?.[a.id] || isManual(a.id) || usdRaw('XAU'));
   $('marketList').innerHTML = list.map(a => {
-    const p = rate(a.id, q);
-    const sec = q === 'USD' ? toman(a.id) : usdP(a.id);
-    const secTxt = q === 'USD' ? (sec ? fmt(sec, 0) + ' تومان' : '') : (sec ? '$' + fmt(sec) : '');
+    const per = a.id === 'IRT' ? 1e6 : 1;           // Toman row: per 1 million Toman
+    const p = rate(a.id, q) == null ? null : rate(a.id, q) * per;
+    let secTxt = '';
+    if (q === 'IRT') { const u = usdP(a.id); if (u && a.id !== 'USD') secTxt = '$' + fmt(u * per); }
+    else if (a.id === 'IRT') { const u = usdP('IRT'); if (u && q !== 'USD') secTxt = '$' + fmt(u * per); }
+    else { const t = toman(a.id); if (t) secTxt = fmt(t, 0) + ' تومان'; }
     const ch = changeIn(a.id, q);
     const sp = sparkIn(a.id, q);
     const tags = [
@@ -288,7 +306,7 @@ function renderMarket() {
     ].join(' ');
     return `<div class="item grp-${a.ir ? 'iran' : a.g}" data-id="${a.id}">
       ${icon(a.id)}
-      <div class="nm"><b>${esc(a.fa)}</b><span>${a.id === 'G18' || a.ir ? 'بازار ایران' : a.id} ${tags}</span></div>
+      <div class="nm"><b>${a.id === 'IRT' ? '۱ میلیون تومان' : esc(a.fa)}</b><span>${a.ir ? 'بازار ایران' : a.id} ${tags}</span></div>
       ${sparkSVG(sp, 70, 30, ch == null ? null : ch >= 0 ? 'var(--up)' : 'var(--down)')}
       <div class="pr"><b class="${p != null && Math.abs(p) >= 1e8 ? 'long' : ''}">${money(p, q)}</b><span>${chgBadge(ch)} ${secTxt}</span></div>
       <button class="star ${S.favs.includes(a.id) ? 'on' : ''}" data-star="${a.id}" title="منتخب">⭐</button>
@@ -298,7 +316,8 @@ function renderMarket() {
     const st = e.target.closest('[data-star]');
     if (st) { const id = st.dataset.star; S.favs = S.favs.includes(id) ? S.favs.filter(x => x !== id) : [...S.favs, id]; save(); renderMarket(); return; }
     const it = e.target.closest('.item'); if (!it) return;
-    S.chart.a = it.dataset.id; S.chart.q = q === it.dataset.id ? 'USD' : q; save(); show('chart');
+    let ca = it.dataset.id, cq = q; if (ca === 'IRT') [ca, cq] = [q, 'IRT'];
+    S.chart.a = ca; S.chart.q = cq === ca ? 'USD' : cq; save(); show('chart');
   };
   $('marketFoot').innerHTML = `قیمت‌های تومانی از بازار آزاد ایران و قیمت‌های جهانی از بازارهای بین‌المللی گرفته می‌شود و هر چند دقیقه بروز می‌شود. «تخمینی» یعنی از روی اونس جهانی طلا محاسبه شده. برای نرخ صرافی خودتان از ⚙ ← نرخ دستی استفاده کنید.`;
   setStatus(lastOk || !D.t ? 'ok' : 'err');
@@ -372,18 +391,18 @@ $('convChartBtn').onclick = () => {
 
 /* ---------------- manual rates */
 let manualFor = null;
-const UNIT_OPTS = [['IRT','تومان'],['USD','دلار'],['TRY','لیر'],['EUR','یورو']];
+const unitName = u => u === 'IRT' ? 'تومان' : AM[u]?.fa || u;
 function openManual(a, unit) {
   if (a === 'IRT') a = 'USD';
   manualFor = a;
   const m = S.manual[a];
-  const u = m?.unit || (unit && unit !== a ? unit : (a === 'USD' ? 'IRT' : 'IRT'));
+  const u = m?.unit || (unit && unit !== a ? unit : (S.setBase && S.setBase !== a ? S.setBase : (a === 'IRT' ? 'USD' : 'IRT')));
   $('manualTitle').textContent = `✍️ نرخ دستی ${AM[a].fa}`;
-  $('manualUnit').innerHTML = UNIT_OPTS.filter(([v]) => v !== a).map(([v, l]) => `<option value="${v}" ${v === u ? 'selected' : ''}>${l}</option>`).join('');
+  $('manualUnit').innerHTML = baseOptions(u, [a]);
   const mkInfo = () => {
     const uu = $('manualUnit').value; const saved = S.manual[a]; delete S.manual[a];
     const online = rate(a, uu); if (saved) S.manual[a] = saved;
-    $('manualInfo').innerHTML = `هر ۱ ${esc(AM[a].fa)} چند ${UNIT_OPTS.find(x => x[0] === uu)[1]}؟<br>نرخ آنلاین فعلی: <b>${online ? moneyTxt(online, uu) : 'نامشخص'}</b>`;
+    $('manualInfo').innerHTML = `هر ۱ ${esc(AM[a].fa)} چند ${esc(unitName(uu))}؟<br>نرخ آنلاین فعلی: <b>${online ? moneyTxt(online, uu) : 'نامشخص'}</b>`;
   };
   $('manualUnit').onchange = mkInfo; mkInfo();
   $('manualVal').value = m ? String(m.v) : '';
@@ -405,11 +424,16 @@ function renderSettings() {
   seg($('setIran'), [['1','بازار آزاد'],['0','محاسبه‌ای']], S.iranMarket ? '1' : '0', v => { S.iranMarket = v === '1'; save(); renderSettings(); renderAll(); });
   seg($('setDigits'), [['fa','۱۲۳'],['en','123']], S.digits, v => { S.digits = v; save(); renderSettings(); renderAll(); });
   seg($('setTheme'), [['auto','خودکار'],['light','☀️'],['dark','🌙']], S.theme, v => { S.theme = v; save(); applyTheme(); renderSettings(); if (chart) { chart.remove(); chart = null; drawChart(true); } });
-  $('manualList').innerHTML = ASSETS.filter(a => a.id !== 'IRT').map(a => {
+  const B = S.setBase || 'IRT';
+  $('setBaseSel').innerHTML = baseOptions(B);
+  $('setBaseSel').onchange = () => { S.setBase = $('setBaseSel').value; save(); renderSettings(); };
+  $('manualList').innerHTML = ASSETS.filter(a => a.id !== B && a.id !== 'IRT').map(a => {
     const m = S.manual[a.id];
-    return `<div class="item grp-${a.ir ? 'iran' : a.g}" data-id="${a.id}">${icon(a.id)}<div class="nm"><b>${esc(a.fa)}</b><span>${m ? '✍️ ' + fmt(m.v) + ' ' + UNIT_OPTS.find(x => x[0] === m.unit)[1] : 'آنلاین: ' + moneyTxt(rate(a.id, 'IRT'), 'IRT')}</span></div>${m ? '<span class="badge b-man">دستی</span>' : ''}</div>`;
+    const now = rate(a.id, B), mk = marketRate(a.id, B);
+    const line = m ? `✍️ ${fmt(m.v)} ${esc(unitName(m.unit))} · آنلاین: ${moneyTxt(mk, B)}` : `آنلاین: ${moneyTxt(now, B)}`;
+    return `<div class="item grp-${a.ir ? 'iran' : a.g}" data-id="${a.id}">${icon(a.id)}<div class="nm"><b>${esc(a.fa)}</b><span>${line}</span></div>${m ? '<span class="badge b-man">دستی</span>' : ''}</div>`;
   }).join('');
-  $('manualList').onclick = e => { const it = e.target.closest('.item'); if (it) openManual(it.dataset.id); };
+  $('manualList').onclick = e => { const it = e.target.closest('.item'); if (it) openManual(it.dataset.id, B); };
   const src = new Set(Object.values(D.iran_src || {}));
   $('about').innerHTML = `آخرین بروزرسانی داده: <b>${D.t ? new Date(D.t * 1000).toLocaleString(S.digits === 'fa' ? 'fa-IR' : 'en-GB') : '—'}</b><br>
     منابع نرخ ایران: ${[...src].join('، ') || '—'} · بازارهای جهانی: Yahoo Finance${live._t ? ' · رمزارز زنده: Binance' : ''}<br>
@@ -528,7 +552,13 @@ let drawToken = 0;
 async function drawChart(reset) {
   const {a, q, r, type} = S.chart;
   pickerBtn($('chartAssetBtn'), a);
-  seg($('chartQuoteSeg'), QUOTES.filter(([v]) => v !== a), q, v => { S.chart.q = v; save(); drawChart(true); });
+  const cq = QUOTES.filter(([v]) => v !== a);
+  if (!cq.some(([v]) => v === q)) cq.push([q, qName(q)]);
+  cq.push(['__more', '➕ سایر']);
+  seg($('chartQuoteSeg'), cq, q, v => {
+    if (v === '__more') return openPicker('مقایسه با کدام ارز؟', x => { S.chart.q = x; save(); drawChart(true); }, [a]);
+    S.chart.q = v; save(); drawChart(true);
+  });
   seg($('rangeSeg'), Object.entries(RANGES).map(([k, v]) => [k, v.fa]), r, v => { S.chart.r = v; save(); drawChart(true); });
   seg($('typeSeg'), [['area','〰 خطی'],['candle','🕯 کندل']], type, v => { S.chart.type = v; save(); drawChart(true); });
   if (q === a) { S.chart.q = a === 'USD' ? 'IRT' : 'USD'; return drawChart(reset); }

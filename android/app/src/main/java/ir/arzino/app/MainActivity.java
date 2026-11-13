@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
@@ -16,6 +17,9 @@ import androidx.webkit.WebViewAssetLoader;
 /** Arzino: the web app bundled inside the APK, served from a secure https origin. */
 public class MainActivity extends Activity {
     private static final String HOST = "appassets.androidplatform.net";
+    private static final String LIVE = "https://mehdi2044.github.io/Arzino/";
+    private static final String OFFLINE = "https://" + HOST + "/assets/www/index.html";
+    private boolean fellBack = false;
     private WebView web;
 
     @Override
@@ -32,9 +36,14 @@ public class MainActivity extends Activity {
                 return loader.shouldInterceptRequest(r.getUrl());
             }
             @Override
+            public void onReceivedError(WebView v, WebResourceRequest r, WebResourceError e) {
+                // no internet / site unreachable: open the copy bundled inside the app
+                if (r.isForMainFrame() && !fellBack) { fellBack = true; v.loadUrl(OFFLINE); }
+            }
+            @Override
             public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
                 Uri u = r.getUrl();
-                if (HOST.equals(u.getHost())) return false;
+                if (HOST.equals(u.getHost()) || "mehdi2044.github.io".equals(u.getHost())) return false;
                 try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (Exception ignored) { }
                 return true;
             }
@@ -47,7 +56,7 @@ public class MainActivity extends Activity {
         s.setTextZoom(100);
         setContentView(web);
         if (state != null) web.restoreState(state);
-        else web.loadUrl("https://" + HOST + "/assets/www/index.html");
+        else web.loadUrl(LIVE);
     }
 
     @Override

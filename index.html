@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=10">
+<link rel="stylesheet" href="app.css?v=11">
 <title>ارزینو — نرخ لحظه‌ای ارز، طلا و رمزارز</title>
 </head>
 <body>
@@ -43,9 +43,10 @@
         <div class="chips" id="groupChips"></div>
       </div>
       <div class="bar">
-        <span class="muted">نمایش قیمت به:</span>
-        <div class="seg" id="quoteSeg"></div>
+        <span class="muted">مقایسه همه با:</span>
+        <select class="base-sel" id="quoteSel"></select>
       </div>
+      <div class="bar"><div class="seg" id="quoteSeg"></div></div>
       <div class="list" id="marketList"></div>
       <p class="foot" id="marketFoot"></p>
     </section>
@@ -163,6 +164,10 @@
   </div>
   <h3 class="sec-title">✍️ نرخ‌های دستی</h3>
   <p class="muted small">روی هر ارز بزنید تا نرخ دلخواه (مثلاً نرخ صرافی خودتان) را وارد کنید. نرخ دستی در همه‌جای برنامه (بازار، مبدل) جایگزین نرخ آنلاین می‌شود.</p>
+  <div class="set">
+    <div><b>مقایسه با</b><div class="muted small">نرخ همه ارزها بر حسب این ارز</div></div>
+    <select class="base-sel" id="setBaseSel"></select>
+  </div>
   <div class="list compact" id="manualList"></div>
   <button class="btn danger wide" id="clearAllManual">حذف همه نرخ‌های دستی</button>
   <h3 class="sec-title">ℹ️ درباره و منابع</h3>
@@ -173,6 +178,6 @@
 <div class="toast" id="toast"></div>
 
 <script src="vendor/lightweight-charts.js"></script>
-<script src="app.js?v=10"></script>
+<script src="app.js?v=11"></script>
 </body>
 </html>
