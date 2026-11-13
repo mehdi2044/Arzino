@@ -42,7 +42,7 @@ jobs:
             git add -A && git commit -qm "data $(date -u +%FT%TZ)"
             git push -fq "$REPO" data
             cd "$GITHUB_WORKSPACE"
-            [ "$i" = 1 ] && sleep 150
+            if [ "$i" = 1 ]; then sleep 150; fi
           done
 
       - name: Queue the next update (keeps refreshes coming even when the cron is late)
