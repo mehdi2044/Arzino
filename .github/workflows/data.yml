@@ -1,0 +1,48 @@
+name: update-data
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["scripts/**", ".github/workflows/data.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Load previous data
+        run: |
+          mkdir -p out
+          if git fetch --depth=1 origin data 2>/dev/null; then
+            git archive FETCH_HEAD | tar -x -C out
+          fi
+
+      - name: Fetch prices
+        run: python3 scripts/fetch_data.py out
+
+      - name: Publish to data branch
+        run: |
+          cd out
+          rm -rf .git
+          git init -q -b data
+          git config user.name "arzino-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -qm "data $(date -u +%FT%TZ)"
+          git push -fq "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data
+
+      - name: Cleanup old test branch
+        continue-on-error: true
+        run: git push origin --delete wf-test 2>/dev/null || true
