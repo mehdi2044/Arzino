@@ -1,1 +1,178 @@
-<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#ffb980"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="icon" href="icon.svg"><link rel="manifest" href="manifest.webmanifest"><title>ارزینو — مبدل ارز</title><style>:root{--bg:#fffaf6;--card:#fffdfb;--soft:#fff2e8;--text:#4d3425;--muted:#846c5d;--line:#f2d7c4;--accent:#ffb980;--peach:#ffe6d2;--mint:#dff3e8;--pink:#f8e3ea;--lav:#ece6f7;--good:#4f9a73;--bad:#d66f6f}*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;background:radial-gradient(circle at 12% 4%,rgba(255,185,128,.28),transparent 29%),var(--bg);color:var(--text);min-height:100vh;font-size:18px}.app{max-width:760px;margin:auto;padding:22px 16px 42px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px}.brand{display:flex;align-items:center;gap:12px}.logo{width:54px;height:54px;border-radius:17px;background:linear-gradient(145deg,#ffb980,#ffd3ad);display:grid;place-items:center;font-weight:900;color:#684326;font-size:24px;box-shadow:0 12px 30px rgba(255,185,128,.25)}h1{font-size:28px;margin:0}.sub{font-size:15px}.sub,.label,.status,.foot{color:var(--muted)}.label,.status{font-size:15px}.top-actions{display:flex;gap:8px}.iconbtn,.btn{border:1px solid var(--line);background:#fff4e8;color:var(--text);border-radius:15px;cursor:pointer;font-size:17px}.iconbtn{height:48px;min-width:48px;padding:0 12px}.install{background:var(--peach);font-weight:800;display:none}.panel{background:rgba(255,253,251,.95);border:1px solid var(--line);box-shadow:0 18px 55px rgba(154,104,67,.12);border-radius:26px;padding:20px}.amount{font-size:48px;width:100%;background:transparent;border:0;outline:0;color:var(--text);text-align:right;font-weight:800}.row{display:grid;grid-template-columns:1fr 58px 1fr;gap:10px;align-items:center;margin-top:18px}.currency{background:var(--soft);border:1px solid var(--line);padding:14px;border-radius:17px;display:flex;align-items:center;gap:10px;min-height:64px}.currency select{width:100%;background:transparent;border:0;color:var(--text);font-size:18px;outline:0}.flag{font-size:25px}.swap{width:54px;height:54px;border-radius:50%;border:1px solid #f1c9aa;background:var(--peach);color:#9b5f34;font-size:24px}.resultbox{margin-top:18px;padding:20px;border-radius:19px;background:#fff1e4;border:1px solid #f7cfad}.result{font-size:38px;font-weight:900;margin-top:8px;word-break:break-word}.rate{font-size:16px;color:#7d6150;margin-top:10px;line-height:1.8}.manualBadge{display:none;margin-top:10px;padding:8px 12px;background:#fff0c9;border:1px solid #efcf80;border-radius:12px;font-size:14px;font-weight:800;color:#7b5a19}.manualBadge.show{display:inline-block}.status{display:flex;align-items:center;gap:8px;margin-top:15px}.dot{width:9px;height:9px;border-radius:50%;background:var(--good)}.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;margin-top:15px}.mini{padding:17px;border-radius:19px;border:1px solid var(--line)}.mini:nth-child(4n+1){background:#fff4e8}.mini:nth-child(4n+2){background:var(--mint)}.mini:nth-child(4n+3){background:var(--pink)}.mini:nth-child(4n){background:var(--lav)}.mini strong{display:block;font-size:22px;margin-top:6px}.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:15px}.btn{padding:14px 12px;font-weight:800;min-height:52px}.primary{background:var(--peach);color:#754726}.secondary{background:var(--mint)}.manualBtn{background:var(--lav)}.foot{font-size:14px;line-height:2;margin-top:18px}.modal{position:fixed;inset:0;background:rgba(65,42,28,.3);backdrop-filter:blur(7px);display:none;place-items:end center;padding:16px;z-index:5}.modal.show{display:grid}.sheet{width:min(720px,100%);background:#fffaf6;border:1px solid var(--line);border-radius:24px;padding:20px}.sheet h2{font-size:24px;margin:0 0 10px}.sheet p{font-size:16px;line-height:1.9}.input{width:100%;padding:15px;border-radius:14px;border:1px solid var(--line);font-size:18px;background:white;color:var(--text)}.modalActions{display:flex;gap:10px;margin-top:14px}.modalActions .btn{flex:1}.danger{background:#f9e0e0}.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);opacity:0;pointer-events:none;background:#5a3a27;color:white;padding:12px 17px;border-radius:13px;font-size:15px;transition:.2s}.toast.show{opacity:1}@media(max-width:560px){body{font-size:17px}.amount{font-size:45px}.row{grid-template-columns:1fr 48px 1fr}.swap{width:48px;height:48px}.currency{padding:12px 10px}.currency select{font-size:17px}.cards{grid-template-columns:1fr}.actions{grid-template-columns:1fr 1fr}.manualBtn{grid-column:1/-1}.result{font-size:35px}}</style></head><body><div class="app"><div class="top"><div class="brand"><div class="logo">⇄</div><div><h1>ارزینو</h1><div class="sub">مبدل سریع ارزهای روزمره</div></div></div><div class="top-actions"><button class="iconbtn install" id="installBtn">⬇ نصب</button><button class="iconbtn" id="settingsBtn">⚙️</button></div></div><section class="panel"><div class="label">مبلغ</div><input id="amount" class="amount" inputmode="decimal" value="1"><div class="row"><div class="currency"><span class="flag" id="fromFlag">🇺🇸</span><select id="from"></select></div><button id="swap" class="swap">⇄</button><div class="currency"><span class="flag" id="toFlag">🇨🇦</span><select id="to"></select></div></div><div class="resultbox"><div class="label">معادل تقریبی</div><div id="result" class="result">—</div><div id="rate" class="rate">در حال دریافت نرخ…</div><div id="manualBadge" class="manualBadge">✍️ نرخ دستی فعال است</div></div><div class="status"><span class="dot" id="statusDot"></span><span id="statusText">در حال اتصال…</span></div><div class="actions"><button class="btn primary" id="refresh">↻ بروزرسانی نرخ‌ها</button><button class="btn secondary" id="copy">کپی نتیجه</button><button class="btn manualBtn" id="manualRateBtn">✍️ نرخ دستی</button></div></section><div class="cards" id="quickCards"></div><div class="foot">نرخ USD/CAD/EUR/TRY از ExchangeRate-API و نرخ تومان، در صورت ثبت کلید Navasan، از نوسان دریافت می‌شود. اگر نرخ صرافی با نرخ آنلاین متفاوت بود، برای همان جفت‌ارز از «نرخ دستی» استفاده کن.</div></div><div class="modal" id="settingsModal"><div class="sheet"><h2>تنظیم نرخ تومان</h2><p>کلید Navasan را وارد کن. کلید فقط در مرورگر همین دستگاه ذخیره می‌شود.</p><input id="navasanKey" class="input" placeholder="Navasan API Key"><div class="modalActions"><button class="btn primary" id="saveKey">ذخیره</button><button class="btn" id="closeSettings">بستن</button></div></div></div><div class="modal" id="manualModal"><div class="sheet"><h2>✍️ نرخ دستی</h2><p id="manualHelp"></p><input id="manualRateInput" class="input" inputmode="decimal" placeholder="مثلاً 1.385"><div class="modalActions"><button class="btn primary" id="saveManual">اعمال نرخ</button><button class="btn danger" id="clearManual">حذف نرخ دستی</button><button class="btn" id="closeManual">بستن</button></div></div></div><div class="toast" id="toast"></div><script>const C={USD:{n:'دلار آمریکا',f:'🇺🇸',s:'$'},CAD:{n:'دلار کانادا',f:'🇨🇦',s:'C$'},EUR:{n:'یورو',f:'🇪🇺',s:'€'},TRY:{n:'لیر ترکیه',f:'🇹🇷',s:'₺'},TOMAN:{n:'تومان ایران',f:'🇮🇷',s:'تومان'}};const $=x=>document.getElementById(x);let fx=null,toman=null;function fill(e){e.innerHTML=Object.entries(C).map(([c,v])=>`<option value="${c}">${v.n}</option>`).join('')}fill($('from'));fill($('to'));$('from').value='USD';$('to').value='CAD';const num=v=>Number(String(v).replace(/[٬,\s]/g,'').replace('٫','.'))||0;function fmt(v,c){return Number.isFinite(v)?new Intl.NumberFormat('fa-IR',{maximumFractionDigits:c==='TOMAN'?0:4}).format(v):'—'}function manualKey(f,t){return`manual_${f}_${t}`}function getManual(f,t){let v=Number(localStorage.getItem(manualKey(f,t)));if(Number.isFinite(v)&&v>0)return v;let rev=Number(localStorage.getItem(manualKey(t,f)));return Number.isFinite(rev)&&rev>0?1/rev:null}function usd(a,c){if(c==='USD')return a;if(c==='TOMAN')return toman?a/toman:NaN;return fx?.rates?.[c]?a/fx.rates[c]:NaN}function baseConv(a,f,t){let u=usd(a,f);if(t==='USD')return u;if(t==='TOMAN')return toman?u*toman:NaN;return fx?.rates?.[t]?u*fx.rates[t]:NaN}function conv(a,f,t){if(f===t)return a;let m=getManual(f,t);return m?a*m:baseConv(a,f,t)}function render(){let f=$('from').value,t=$('to').value;$('fromFlag').textContent=C[f].f;$('toFlag').textContent=C[t].f;let r=conv(num($('amount').value),f,t),one=conv(1,f,t),m=getManual(f,t);$('result').textContent=Number.isFinite(r)?`${fmt(r,t)} ${C[t].s}`:'—';$('rate').textContent=Number.isFinite(one)?`۱ ${C[f].n} = ${fmt(one,t)} ${C[t].s}`:'برای تومان، کلید Navasan را در تنظیمات وارد کن';$('manualBadge').classList.toggle('show',!!m);if(fx){let p=[['USD','CAD'],['EUR','USD'],['EUR','CAD'],['USD','TRY']];if(toman)p.push(['USD','TOMAN']);$('quickCards').innerHTML=p.map(([a,b])=>`<div class="mini"><div class="label">۱ ${C[a].n}</div><strong>${fmt(conv(1,a,b),b)} ${C[b].s}</strong><div class="label">${C[b].n}${getManual(a,b)?' • دستی':''}</div></div>`).join('')}}async function load(force=false){try{$('statusText').textContent='در حال دریافت نرخ‌ها…';let cache=JSON.parse(localStorage.getItem('fx_cache')||'null');if(!force&&cache&&Date.now()-cache.saved<21600000)fx=cache.data;else{let r=await fetch('https://open.er-api.com/v6/latest/USD',{cache:'no-store'});fx=await r.json();localStorage.setItem('fx_cache',JSON.stringify({saved:Date.now(),data:fx}))}await loadT(force);$('statusDot').style.background='var(--good)';$('statusText').textContent='نرخ‌ها آماده‌اند';render()}catch(e){$('statusDot').style.background='var(--bad)';$('statusText').textContent='دریافت نرخ ناموفق بود';render()}}async function loadT(force=false){let k=localStorage.getItem('navasan_key');if(!k)return;try{let c=JSON.parse(localStorage.getItem('toman_cache')||'null');if(!force&&c&&Date.now()-c.saved<1800000){toman=c.value;return}let r=await fetch(`https://api.navasan.tech/latest/?api_key=${encodeURIComponent(k)}&item=usd_sell`,{cache:'no-store'}),d=await r.json(),v=Number(String(d?.usd_sell?.value??d?.usd?.value??d?.value).replace(/,/g,''));if(Number.isFinite(v)){toman=v;localStorage.setItem('toman_cache',JSON.stringify({saved:Date.now(),value:v}))}}catch(e){}}function toast(t){$('toast').textContent=t;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),1800)}$('amount').oninput=render;$('from').onchange=render;$('to').onchange=render;$('swap').onclick=()=>{let a=$('from').value;$('from').value=$('to').value;$('to').value=a;render()};$('refresh').onclick=()=>load(true);$('copy').onclick=()=>{navigator.clipboard?.writeText(`${$('amount').value} ${$('from').value} = ${$('result').textContent}`);toast('نتیجه کپی شد')};$('settingsBtn').onclick=()=>{$('navasanKey').value=localStorage.getItem('navasan_key')||'';$('settingsModal').classList.add('show')};$('closeSettings').onclick=()=> $('settingsModal').classList.remove('show');$('saveKey').onclick=async()=>{let k=$('navasanKey').value.trim();if(k)localStorage.setItem('navasan_key',k);else localStorage.removeItem('navasan_key');$('settingsModal').classList.remove('show');await load(true)};$('manualRateBtn').onclick=()=>{let f=$('from').value,t=$('to').value,live=baseConv(1,f,t),m=getManual(f,t);$('manualHelp').textContent=`نرخ را وارد کن: ۱ ${C[f].n} چند ${C[t].n} است؟ نرخ آنلاین فعلی: ${Number.isFinite(live)?fmt(live,t):'نامشخص'}`;$('manualRateInput').value=m?String(m):'';$('manualModal').classList.add('show');setTimeout(()=>$('manualRateInput').focus(),100)};$('closeManual').onclick=()=> $('manualModal').classList.remove('show');$('saveManual').onclick=()=>{let f=$('from').value,t=$('to').value,v=num($('manualRateInput').value);if(!v||v<=0){toast('یک نرخ معتبر وارد کن');return}localStorage.setItem(manualKey(f,t),String(v));localStorage.removeItem(manualKey(t,f));$('manualModal').classList.remove('show');render();toast('نرخ دستی اعمال شد')};$('clearManual').onclick=()=>{let f=$('from').value,t=$('to').value;localStorage.removeItem(manualKey(f,t));localStorage.removeItem(manualKey(t,f));$('manualModal').classList.remove('show');render();toast('نرخ آنلاین دوباره فعال شد')};let dip=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();dip=e;$('installBtn').style.display='inline-flex'});$('installBtn').onclick=async()=>{if(dip){dip.prompt();await dip.userChoice;dip=null;$('installBtn').style.display='none'}};if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));load();</script></body></html>
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#6c5ce7">
+<meta name="description" content="ارزینو — نرخ لحظه‌ای ارز، تومان، طلا، نقره و رمزارز با نمودار، مبدل و ماشین‌حساب">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ارزینو">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/app.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css?v=9">
+<title>ارزینو — نرخ لحظه‌ای ارز، طلا و رمزارز</title>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div class="brand">
+      <img src="icons/app.svg" class="logo" alt="">
+      <div>
+        <h1>ارزینو</h1>
+        <div class="upd"><span class="dot" id="liveDot"></span><span id="updText">در حال دریافت نرخ‌ها…</span></div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="ibtn install" id="installBtn" title="نصب">⬇ نصب</button>
+      <button class="ibtn" id="refreshBtn" title="بروزرسانی">↻</button>
+      <button class="ibtn" id="settingsBtn" title="تنظیمات">⚙</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- MARKET -->
+    <section class="view active" id="view-market">
+      <div class="hero" id="hero"></div>
+      <div class="bar">
+        <div class="chips" id="groupChips"></div>
+      </div>
+      <div class="bar">
+        <span class="muted">نمایش قیمت به:</span>
+        <div class="seg" id="quoteSeg"></div>
+      </div>
+      <div class="list" id="marketList"></div>
+      <p class="foot" id="marketFoot"></p>
+    </section>
+
+    <!-- CHART -->
+    <section class="view" id="view-chart">
+      <div class="card">
+        <div class="chart-head">
+          <button class="picker" id="chartAssetBtn"></button>
+          <div class="seg small" id="chartQuoteSeg"></div>
+        </div>
+        <div class="chart-price">
+          <div class="big" id="chartLast">—</div>
+          <div class="chg" id="chartChg"></div>
+        </div>
+        <div class="seg ranges" id="rangeSeg"></div>
+        <div class="chart-box"><div id="chart"></div><div class="chart-msg" id="chartMsg"></div></div>
+        <div class="row-between">
+          <div class="seg small" id="typeSeg"></div>
+          <span class="muted small" id="chartNote"></span>
+        </div>
+        <div class="stats" id="chartStats"></div>
+      </div>
+    </section>
+
+    <!-- CONVERTER -->
+    <section class="view" id="view-convert">
+      <div class="card conv">
+        <div class="conv-row">
+          <button class="picker" id="fromBtn"></button>
+          <input id="amount" class="amount" inputmode="decimal" autocomplete="off" value="1">
+        </div>
+        <div class="words" id="fromWords"></div>
+        <div class="swap-wrap"><button class="swap" id="swapBtn" title="جابجایی">⇅</button></div>
+        <div class="conv-row">
+          <button class="picker" id="toBtn"></button>
+          <div class="result" id="result">—</div>
+        </div>
+        <div class="words" id="toWords"></div>
+        <div class="rate-line" id="rateLine"></div>
+        <div class="quick" id="quickAmts"></div>
+        <div class="btn-row">
+          <button class="btn primary" id="copyBtn">📋 کپی نتیجه</button>
+          <button class="btn alt" id="convManualBtn">✍️ نرخ دستی</button>
+          <button class="btn ghost" id="convChartBtn">📈 نمودار</button>
+        </div>
+      </div>
+      <h3 class="sec-title">💱 معادل این مبلغ در همه ارزها</h3>
+      <div class="list compact" id="allList"></div>
+    </section>
+
+    <!-- CALCULATOR -->
+    <section class="view" id="view-calc">
+      <div class="card calc">
+        <div class="calc-expr" id="calcExpr"></div>
+        <div class="calc-out" id="calcOut">0</div>
+        <div class="keys" id="keys"></div>
+        <div class="btn-row">
+          <button class="btn primary" id="calcToConv">💱 ارسال به مبدل</button>
+          <button class="btn ghost" id="calcCopy">📋 کپی</button>
+        </div>
+      </div>
+      <h3 class="sec-title">🧾 تاریخچه محاسبات</h3>
+      <div class="list compact" id="calcHist"></div>
+    </section>
+  </main>
+
+  <nav class="tabs">
+    <button class="tab active" data-v="market"><span>📊</span>بازار</button>
+    <button class="tab" data-v="chart"><span>📈</span>نمودار</button>
+    <button class="tab" data-v="convert"><span>💱</span>مبدل</button>
+    <button class="tab" data-v="calc"><span>🧮</span>ماشین‌حساب</button>
+  </nav>
+</div>
+
+<!-- sheets -->
+<div class="sheet-bg" id="sheetBg"></div>
+<div class="sheet" id="pickerSheet">
+  <div class="sheet-grip"></div>
+  <h2 id="pickerTitle">انتخاب ارز</h2>
+  <input class="input" id="pickerSearch" placeholder="جستجو: دلار، لیر، BTC، طلا…">
+  <div class="list compact" id="pickerList"></div>
+</div>
+
+<div class="sheet" id="manualSheet">
+  <div class="sheet-grip"></div>
+  <h2 id="manualTitle">نرخ دستی</h2>
+  <p class="muted" id="manualInfo"></p>
+  <label class="lbl">قیمت هر واحد</label>
+  <div class="manual-row">
+    <input class="input" id="manualVal" inputmode="decimal" placeholder="مثلاً 270000">
+    <select class="input" id="manualUnit"></select>
+  </div>
+  <div class="words" id="manualWords"></div>
+  <div class="btn-row">
+    <button class="btn primary" id="manualSave">✅ اعمال نرخ دستی</button>
+    <button class="btn danger" id="manualClear">🗑 برگشت به نرخ آنلاین</button>
+  </div>
+</div>
+
+<div class="sheet tall" id="settingsSheet">
+  <div class="sheet-grip"></div>
+  <h2>⚙ تنظیمات</h2>
+  <div class="set">
+    <div><b>قیمت تومانی ارزها</b><div class="muted small">بازار آزاد ایران یا محاسبه از نرخ دلار</div></div>
+    <div class="seg small" id="setIran"></div>
+  </div>
+  <div class="set">
+    <div><b>اعداد</b><div class="muted small">نمایش ارقام فارسی یا انگلیسی</div></div>
+    <div class="seg small" id="setDigits"></div>
+  </div>
+  <div class="set">
+    <div><b>پوسته</b></div>
+    <div class="seg small" id="setTheme"></div>
+  </div>
+  <h3 class="sec-title">✍️ نرخ‌های دستی</h3>
+  <p class="muted small">روی هر ارز بزنید تا نرخ دلخواه (مثلاً نرخ صرافی خودتان) را وارد کنید. نرخ دستی در همه‌جای برنامه (بازار، مبدل) جایگزین نرخ آنلاین می‌شود.</p>
+  <div class="list compact" id="manualList"></div>
+  <button class="btn danger wide" id="clearAllManual">حذف همه نرخ‌های دستی</button>
+  <h3 class="sec-title">ℹ️ درباره و منابع</h3>
+  <div class="about" id="about"></div>
+  <button class="btn ghost wide" id="closeSettings">بستن</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="vendor/lightweight-charts.js"></script>
+<script src="app.js?v=9"></script>
+</body>
+</html>

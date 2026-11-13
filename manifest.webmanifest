@@ -1,16 +1,25 @@
 {
-  "id": "arzino-pwa",
-  "name": "ارزینو — مبدل ارز",
+  "id": "arzino-pwa-v2",
+  "name": "ارزینو — نرخ لحظه‌ای ارز، طلا و رمزارز",
   "short_name": "ارزینو",
-  "description": "مبدل مدرن دلار آمریکا، دلار کانادا، یورو، لیر ترکیه و تومان ایران",
-  "start_url": "./",
+  "description": "نرخ لحظه‌ای دلار، یورو، لیر، دلار کانادا، یوان، فرانک، تومان، طلا، نقره، سکه، بیت‌کوین، اتریوم و تتر با نمودار، مبدل و ماشین‌حساب",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait-primary",
-  "background_color": "#fffaf6",
-  "theme_color": "#ffb980",
+  "orientation": "portrait",
+  "background_color": "#f4f2ff",
+  "theme_color": "#6c5ce7",
   "lang": "fa",
   "dir": "rtl",
   "categories": ["finance", "utilities"],
-  "icons": [{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+  "icons": [
+    {"src": "icons/app-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icons/app-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icons/app-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+    {"src": "icons/app.svg", "sizes": "any", "type": "image/svg+xml"}
+  ],
+  "shortcuts": [
+    {"name": "مبدل ارز", "url": "./index.html#convert"},
+    {"name": "نمودار دلار", "url": "./index.html#chart"}
+  ]
 }
