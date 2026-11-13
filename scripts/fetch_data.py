@@ -239,6 +239,36 @@ def nobitex_udf(resolution, seconds):
             for t, o, h, l, c in zip(d["t"], d["o"], d["h"], d["l"], d["c"])]
 
 
+def wallex_udf(resolution, seconds):
+    q = {"symbol": "USDTTMN", "resolution": resolution, "from": NOW - seconds, "to": NOW}
+    d = jget("https://api.wallex.ir/v1/udf/history?" + urllib.parse.urlencode(q))
+    if d.get("s") != "ok":
+        raise ValueError(d.get("s"))
+    return [[int(t), r6(float(o)), r6(float(h)), r6(float(l)), r6(float(c))]
+            for t, o, h, l, c in zip(d["t"], d["o"], d["h"], d["l"], d["c"])]
+
+
+def tgju_daily(key="price_dollar_rl", n=400):
+    """Daily OHLC history from tgju (rial) -> toman bars, oldest first."""
+    q = {"lang": "en", "order_dir": "desc", "start": 0, "length": n}
+    d = jget(f"https://api.tgju.org/v1/market/indicator/summary-table-data/{key}?" + urllib.parse.urlencode(q))
+    bars = []
+    for row in d.get("data", []):
+        # row: [open, low, high, close, change, pct, gregorian_date, jalali_date]
+        try:
+            o, l, h, c = (to_num(re.sub(r"<[^>]+>", "", str(x))) for x in row[:4])
+            ds = re.sub(r"<[^>]+>", "", str(row[6]))
+            t = int(time.mktime(time.strptime(ds.strip()[:10], "%Y/%m/%d")))
+            if o and h and l and c:
+                bars.append([t, r6(o / 10), r6(h / 10), r6(l / 10), r6(c / 10)])
+        except Exception:
+            continue
+    bars.sort()
+    if len(bars) < 5:
+        raise ValueError("too few rows")
+    return bars
+
+
 # ---------------------------------------------------------------- main
 def main():
     os.makedirs(os.path.join(OUT, "charts"), exist_ok=True)
@@ -365,18 +395,29 @@ def main():
     irt_old = load("charts/IRT.json", {})
     irt = {"id": "IRT", "unit": "toman_per_usd", "m1": irt_old.get("m1", []),
            "h1": irt_old.get("h1", []), "d1": irt_old.get("d1", []), "u": irt_old.get("u", {})}
+    for name, udf in (("wallex", wallex_udf), ("nobitex", nobitex_udf)):
+        try:
+            irt["m1"] = udf("1", 26 * 3600)
+            if NOW - irt["u"].get("h1", 0) > 25 * 60 or not irt["h1"]:
+                irt["h1"] = udf("60", 32 * 86400)
+                irt["u"]["h1"] = NOW
+            if NOW - irt["u"].get("d1", 0) > 3 * 3600 or not irt["d1"]:
+                irt["d1"] = udf("D", 366 * 86400)
+                irt["u"]["d1"] = NOW
+            irt["src"] = name + "-usdt"
+            note_ok(f"chart:IRT:{name}")
+            break
+        except Exception as e:
+            note_err(f"chart:IRT:{name}", e)
+    # tgju free-market daily history (cash dollar) is preferred for the 1-year view
     try:
-        irt["m1"] = nobitex_udf("1", 26 * 3600)
-        if NOW - irt["u"].get("h1", 0) > 25 * 60 or not irt["h1"]:
-            irt["h1"] = nobitex_udf("60", 32 * 86400)
-            irt["u"]["h1"] = NOW
-        if NOW - irt["u"].get("d1", 0) > 3 * 3600 or not irt["d1"]:
-            irt["d1"] = nobitex_udf("D", 366 * 86400)
-            irt["u"]["d1"] = NOW
-        irt["src"] = "nobitex-usdt"
-        note_ok("chart:IRT")
+        if NOW - irt["u"].get("tg", 0) > 3 * 3600 or irt.get("d1src") != "tgju":
+            irt["d1"] = tgju_daily()
+            irt["d1src"] = "tgju"
+            irt["u"]["tg"] = NOW
+        note_ok("chart:IRT:tgju")
     except Exception as e:
-        note_err("chart:IRT", e)
+        note_err("chart:IRT:tgju", e)
 
     # rolling history of the Iranian market (our own record, every run)
     hist = load("history/iran.json", {"r": [], "h": [], "d": []})
