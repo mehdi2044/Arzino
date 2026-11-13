@@ -234,13 +234,27 @@ async function drawBoard(canvas, size = 'post') {
   }
 }
 function canvasBlob(canvas) { return new Promise(r => canvas.toBlob(r, 'image/png')); }
-async function shareCanvas(canvas, name, text) {
-  const blob = await canvasBlob(canvas), file = new File([blob], name, {type: 'image/png'});
-  if (navigator.canShare && navigator.canShare({files: [file]})) {
-    try { await navigator.share({files: [file], text}); return; } catch (e) { if (e.name === 'AbortError') return; }
+const isMobile = () => navigator.userAgentData?.mobile ?? /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+// Phones: native share sheet (pick WhatsApp). Computers: copy image to clipboard + open WhatsApp, user presses Ctrl+V.
+async function shareCanvas(canvas, name, text, phone) {
+  const blob = await canvasBlob(canvas);
+  if (isMobile()) {
+    const file = new File([blob], name, {type: 'image/png'});
+    if (navigator.canShare && navigator.canShare({files: [file]})) {
+      try { await navigator.share({files: [file], text}); return; } catch (e) { if (e.name === 'AbortError') return; }
+    }
   }
-  downloadCanvas(canvas, name);
-  toast('تصویر دانلود شد؛ در واتس‌اپ آن را برای مشتری یا لیست پخش بفرستید');
+  let copied = false;
+  try { await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]); copied = true; } catch {}
+  if (!copied) downloadCanvas(canvas, name);
+  const url = phone ? `https://wa.me/${normPhone(phone)}` : 'https://web.whatsapp.com/';
+  openSheet(`<h2>📤 ارسال تصویر در واتس‌اپ</h2>
+    <div class="preview">${copied ? '✅ تصویر کپی شد.' : '⬇️ تصویر دانلود شد.'}<br>
+      ۱) دکمه‌ی زیر را بزنید تا واتس‌اپ ${phone ? 'روی چت همین مشتری' : ''} باز شود.<br>
+      ۲) ${phone ? '' : 'چت یا «لیست پخش» را انتخاب کنید، '}در کادر پیام ${copied ? '<b>Ctrl+V</b> بزنید' : 'روی 📎 بزنید و فایل دانلودشده را انتخاب کنید'} و ارسال کنید.</div>
+    <div class="btns"><a class="btn wa" href="${url}" target="_blank" rel="noopener">💬 باز کردن واتس‌اپ</a><button class="btn g" id="shDl">⬇️ دانلود تصویر</button><button class="btn g" id="shX">بستن</button></div>`, () => {
+    $('shX').onclick = closeSheet; $('shDl').onclick = () => downloadCanvas(canvas, name);
+  });
 }
 function downloadCanvas(canvas, name) { const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = name; document.body.appendChild(a); a.click(); a.remove(); }
 function shrinkImage(file, size) {
@@ -305,7 +319,7 @@ function receiptSheet(x) {
     <div class="btns"><button class="btn g" id="rcCopy">📋 کپی</button><button class="btn g" id="rcClose">بستن</button></div><canvas id="rcCanvas" style="display:none"></canvas>`, () => {
     $('rcClose').onclick = closeSheet;
     $('rcCopy').onclick = () => navigator.clipboard?.writeText(receiptText(x)).then(() => toast('کپی شد'));
-    $('rcImg').onclick = async () => { await drawReceipt($('rcCanvas'), x); shareCanvas($('rcCanvas'), `receipt-${x.no}.png`, phone ? '' : receiptText(x)); };
+    $('rcImg').onclick = async () => { await drawReceipt($('rcCanvas'), x); const cv = $('rcCanvas'); shareCanvas(cv, `receipt-${x.no}.png`, phone ? '' : receiptText(x), phone); };
   });
 }
 
