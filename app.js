@@ -318,7 +318,7 @@ function renderMarket() {
     ].join(' ');
     return `<div class="item grp-${a.ir ? 'iran' : a.g}" data-id="${a.id}">
       ${icon(a.id)}
-      <div class="nm"><b>${a.id === 'IRT' ? '۱ میلیون تومان' : esc(a.fa)}</b><span>${a.ir ? (srcOf(a.id) || 'بازار ایران') : a.id} ${tags}</span></div>
+      <div class="nm"><b>${a.id === 'IRT' ? '۱ میلیون تومان' : esc(a.fa)}</b><span>${a.ir ? (srcOf(a.id) || 'بازار ایران') : a.id + (q === 'IRT' && S.iranMarket && IR()[a.id] && !isManual(a.id) ? ' · ' + srcOf(a.id) : '')} ${tags}</span></div>
       ${sparkSVG(sp, 70, 30, ch == null ? null : ch >= 0 ? 'var(--up)' : 'var(--down)')}
       <div class="pr"><b class="${p != null && Math.abs(p) >= 1e8 ? 'long' : ''}">${money(p, q)}</b><span>${chgBadge(ch)} ${secTxt}</span></div>
       <button class="star ${S.favs.includes(a.id) ? 'on' : ''}" data-star="${a.id}" title="منتخب">⭐</button>
