@@ -1,0 +1,20 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'ir.arzino.app'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'ir.arzino.app'
+        minSdk 24
+        targetSdk 34
+        versionCode Integer.parseInt(System.getenv('VERSION_CODE') ?: '1')
+        versionName "2.0." + (System.getenv('VERSION_CODE') ?: '1')
+    }
+    signingConfigs {
+        arzino { storeFile file('../arzino.keystore'); storePassword 'arzino123'; keyAlias 'arzino'; keyPassword 'arzino123' }
+    }
+    buildTypes {
+        release { minifyEnabled false; signingConfig signingConfigs.arzino }
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+}
+dependencies { implementation 'androidx.webkit:webkit:1.11.0' }
