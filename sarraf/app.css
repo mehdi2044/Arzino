@@ -157,3 +157,13 @@ a{color:var(--em)}
   .top .ibtn .lbl{display:none}
   .tbl th,.tbl td{padding:6px 3px}
 }
+
+/* ---- language: LTR layout (Turkish / English) ---- */
+html[dir=ltr] .stat .v{text-align:left}
+html[dir=ltr] .row .e{text-align:right}
+html[dir=ltr] .tbl th,html[dir=ltr] .tbl td{text-align:left}
+html[dir=ltr] .tbl td.n{text-align:right}
+.lang-sel{appearance:none;-webkit-appearance:none;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-weight:800;font-size:13px;border-radius:12px;height:38px;padding:0 9px;cursor:pointer;text-align:center}
+.top .lang-sel{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.22);color:#fff}
+.lang-sel option{color:#0b1f3a;background:#fff}
+.auth-lang{display:flex;justify-content:flex-end;margin-bottom:6px}

@@ -40,16 +40,29 @@ body.tv .coin{width:6vh;height:6vh;font-size:2.6vh}
   th{padding:12px 6px;font-size:12.5px}td{padding:10px 6px;font-size:14px}td.n{font-size:21px}
   .coin{width:34px;height:34px;font-size:14px}.cc{gap:8px}.cc small{font-size:11px}
 }
-.pulse{display:inline-block;width:10px;height:10px;border-radius:50%;background:#4ee6b4;margin-left:6px;animation:p 1.6s infinite}
+.lang{position:absolute;top:10px;inset-inline-end:10px;z-index:2}body.tv .lang{display:none}
+.lang-sel{appearance:none;-webkit-appearance:none;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:6px 10px;font:inherit;font-weight:700}.lang-sel option{color:#071427}
+.pulse{display:inline-block;width:10px;height:10px;border-radius:50%;background:#4ee6b4;margin-inline-end:6px;animation:p 1.6s infinite}
 @keyframes p{70%{box-shadow:0 0 0 10px rgba(78,230,180,0)}0%{box-shadow:0 0 0 0 rgba(78,230,180,.6)}}
 </style>
 </head>
 <body>
-<div class="w" id="app"><div class="err">در حال دریافت نرخ‌ها…</div></div>
+<div class="lang" id="lang"></div>
+<div class="w" id="app"><div class="err">…</div></div>
 <script src="vendor/supabase.js"></script>
 <script src="config.js?v=1"></script>
+<script src="../i18n.js?v=1"></script>
 <script>
-const CCY = {USD:['دلار آمریکا','$'],TRY:['لیر ترکیه','₺'],IRT:['تومان','ت'],EUR:['یورو','€'],USDT:['تتر','₮'],GBP:['پوند','£'],AED:['درهم امارات','AED'],CAD:['دلار کانادا','C$'],CHF:['فرانک سوئیس','CHF'],CNY:['یوان چین','¥'],IQD:['دینار عراق','IQD']};
+(() => { const l = new URLSearchParams(location.search).get('lang'); if (l && I18N.LANGS[l] && l !== I18N.lang) { I18N.lang = l; I18N.apply(); } })();
+I18N.addPhrases({
+  tr: {'این تابلو در دسترس نیست یا هنوز فعال نشده است.': 'Bu pano kullanılamıyor ya da henüz etkinleştirilmedi.', 'نرخ ارز': 'Döviz kurları', 'تابلوی نرخ ارز': 'Döviz kur panosu', 'ارز': 'Döviz', 'خرید از شما': 'Sizden alış', 'فروش به شما': 'Size satış', 'به {b}': '{b} karşılığı', 'نرخی ثبت نشده است': 'Kayıtlı kur yok', 'واتس‌اپ': 'WhatsApp', 'آخرین بروزرسانی نرخ‌ها:': 'Kurların son güncellemesi:'},
+  en: {'این تابلو در دسترس نیست یا هنوز فعال نشده است.': 'This board is not available or not enabled yet.', 'نرخ ارز': 'Exchange rates', 'تابلوی نرخ ارز': 'Exchange rate board', 'ارز': 'Currency', 'خرید از شما': 'We buy', 'فروش به شما': 'We sell', 'به {b}': 'in {b}', 'نرخی ثبت نشده است': 'No rates saved', 'واتس‌اپ': 'WhatsApp', 'آخرین بروزرسانی نرخ‌ها:': 'Rates last updated:'},
+});
+const SYMS = {USD:'$',TRY:'₺',IRT:'ت',EUR:'€',USDT:'₮',GBP:'£',AED:'AED',CAD:'C$',CHF:'CHF',CNY:'¥',IQD:'IQD'};
+const nameOf = c => I18N.has('s.' + c) ? t('s.' + c) : c, symOf = c => c === 'IRT' && I18N.lang !== 'fa' ? 'IRT' : (SYMS[c] || c);
+document.getElementById('lang').innerHTML = I18N.picker('lang-sel', true); I18N.bindPickers();
+addEventListener('langchange', () => load());
+
 const COL = {USD:['#1f6f43','#3fb27a'],EUR:['#1e3a8a','#3b82f6'],TRY:['#9f1239','#ef4444'],IRT:['#166534','#22c55e'],USDT:['#0f766e','#26a17b'],GBP:['#4c1d95','#8b5cf6'],AED:['#7c2d12','#ea580c'],CAD:['#991b1b','#f87171'],CHF:['#b91c1c','#f43f5e'],CNY:['#a16207','#facc15'],IQD:['#065f46','#10b981']};
 const q = new URLSearchParams(location.search), ex = q.get('ex');
 if (q.get('tv')) document.body.classList.add('tv');
@@ -58,21 +71,22 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;
 async function load() {
   const {data, error} = await sb.rpc('public_board', {p_ex: ex});
   const app = document.getElementById('app');
-  if (error || !data) { app.innerHTML = '<div class="err">این تابلو در دسترس نیست یا هنوز فعال نشده است.</div>'; return; }
-  const loc = data.digits === 'en' ? 'en-US' : 'fa-IR';
+  if (error || !data) { app.innerHTML = '<div class="err">' + _('این تابلو در دسترس نیست یا هنوز فعال نشده است.') + '</div>'; return; }
+  const loc = data.digits === 'en' || I18N.lang !== 'fa' ? 'en-US' : 'fa-IR';
+  const dloc = I18N.lang === 'fa' ? loc + '-u-ca-persian' : I18N.dateLocale();
   const f = v => v == null ? '—' : new Intl.NumberFormat(loc, {maximumFractionDigits: Math.abs(v) >= 1000 ? 0 : Math.abs(v) >= 100 ? 1 : 3}).format(v);
   const rows = (data.rows && data.rows.length ? data.rows : [['USD','TRY'],['EUR','TRY'],['USDT','TRY'],['GBP','TRY'],['USD','IRT'],['EUR','IRT'],['TRY','IRT'],['USDT','IRT']])
     .map(([c, qq]) => ({c, q: qq, r: (data.rates || []).find(x => x.ccy === c && x.quote === qq)})).filter(x => x.r && (x.r.buy || x.r.sell));
   const last = Math.max(0, ...(data.rates || []).map(r => +new Date(r.updated_at)));
-  document.title = 'نرخ ارز — ' + data.name;
+  document.title = _('نرخ ارز') + ' — ' + data.name;
   app.innerHTML = `<div class="hd"><div class="logo">${data.logo ? `<img src="${data.logo}" alt="">` : esc((data.name || 'ص').trim()[0])}</div><h1>${esc(data.name)}</h1>
-    <div class="sub"><span class="pulse"></span>تابلوی نرخ ارز · ${new Intl.DateTimeFormat(loc + '-u-ca-persian', {weekday:'long', day:'numeric', month:'long'}).format(new Date())}</div></div>
-    <div class="card"><table><tr><th style="text-align:right">ارز</th><th class="b">خرید از شما</th><th class="s">فروش به شما</th></tr>
-    ${rows.map(({c, q: qq, r}) => `<tr><td><div class="cc"><div class="coin" style="background:radial-gradient(circle at 35% 30%,${(COL[c]||['#334155','#64748b'])[1]},${(COL[c]||['#334155','#64748b'])[0]})">${CCY[c]?.[1] || c}</div><div>${(CCY[c]?.[0] || c).split(' ')[0]}<small>به ${(CCY[qq]?.[0] || qq).split(' ')[0]}</small></div></div></td>
-      <td class="n b">${f(Number(r.buy))}</td><td class="n s">${f(Number(r.sell))}</td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center">نرخی ثبت نشده است</td></tr>'}</table></div>
+    <div class="sub"><span class="pulse"></span>${_('تابلوی نرخ ارز')} · ${new Intl.DateTimeFormat(dloc, {weekday:'long', day:'numeric', month:'long'}).format(new Date())}</div></div>
+    <div class="card"><table><tr><th style="text-align:start">${_('ارز')}</th><th class="b">${_('خرید از شما')}</th><th class="s">${_('فروش به شما')}</th></tr>
+    ${rows.map(({c, q: qq, r}) => `<tr><td><div class="cc"><div class="coin" style="background:radial-gradient(circle at 35% 30%,${(COL[c]||['#334155','#64748b'])[1]},${(COL[c]||['#334155','#64748b'])[0]})">${symOf(c)}</div><div>${nameOf(c)}<small>${_('به {b}', {b: nameOf(qq)})}</small></div></div></td>
+      <td class="n b">${f(Number(r.buy))}</td><td class="n s">${f(Number(r.sell))}</td></tr>`).join('') || `<tr><td colspan="3" style="text-align:center">${_('نرخی ثبت نشده است')}</td></tr>`}</table></div>
     <div class="ft">${data.note ? `<div>${esc(data.note)}</div>` : ''}
-      ${data.phone ? `<a class="pill" href="https://wa.me/${String(data.phone).replace(/[^\d]/g, '').replace(/^0(5\d{9})$/, '90$1')}">💬 واتس‌اپ <bdi dir="ltr">${esc(data.phone)}</bdi></a>` : ''}${data.address ? `<span class="pill">📍 ${esc(data.address)}</span>` : ''}
-      <div class="upd">آخرین بروزرسانی نرخ‌ها: ${last ? new Intl.DateTimeFormat(loc + '-u-ca-persian', {hour:'2-digit', minute:'2-digit', day:'numeric', month:'short', hour12:false}).format(new Date(last)) : '—'}</div></div>`;
+      ${data.phone ? `<a class="pill" href="https://wa.me/${String(data.phone).replace(/[^\d]/g, '').replace(/^0(5\d{9})$/, '90$1')}">💬 ${_('واتس‌اپ')} <bdi dir="ltr">${esc(data.phone)}</bdi></a>` : ''}${data.address ? `<span class="pill">📍 ${esc(data.address)}</span>` : ''}
+      <div class="upd">${_('آخرین بروزرسانی نرخ‌ها:')} ${last ? new Intl.DateTimeFormat(dloc, {hour:'2-digit', minute:'2-digit', day:'numeric', month:'short', hour12:false}).format(new Date(last)) : '—'}</div></div>`;
 }
 load(); setInterval(load, 60000);
 </script>

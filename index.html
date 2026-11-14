@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=14">
+<link rel="stylesheet" href="app.css?v=15">
 <title>ارزینو — نرخ لحظه‌ای ارز، طلا و رمزارز</title>
 </head>
 <body>
@@ -24,15 +24,16 @@
     <div class="brand">
       <img src="icons/app.svg" class="logo" alt="">
       <div>
-        <h1>ارزینو</h1>
-        <div class="upd"><span class="dot" id="liveDot"></span><span id="updText">در حال دریافت نرخ‌ها…</span></div>
+        <h1 data-i18n="app.name">ارزینو</h1>
+        <div class="upd"><span class="dot" id="liveDot"></span><span id="updText" data-i18n="hdr.loading">در حال دریافت نرخ‌ها…</span></div>
       </div>
     </div>
     <div class="top-actions">
-      <a class="ibtn sarraf" href="sarraf/" title="حسابداری صرافی">🏪 صرافی</a>
-      <button class="ibtn install" id="installBtn" title="نصب">⬇ نصب</button>
-      <button class="ibtn" id="refreshBtn" title="بروزرسانی">↻</button>
-      <button class="ibtn" id="settingsBtn" title="تنظیمات">⚙</button>
+      <span id="langSlot"></span>
+      <a class="ibtn sarraf" href="sarraf/" data-i18n-title="hdr.sarrafT" data-i18n="hdr.sarraf">🏪 صرافی</a>
+      <button class="ibtn install" id="installBtn" data-i18n-title="hdr.install" data-i18n="hdr.install">⬇ نصب</button>
+      <button class="ibtn" id="refreshBtn" data-i18n-title="hdr.refresh">↻</button>
+      <button class="ibtn" id="settingsBtn" data-i18n-title="hdr.settings">⚙</button>
     </div>
   </header>
 
@@ -44,7 +45,7 @@
         <div class="chips" id="groupChips"></div>
       </div>
       <div class="bar">
-        <span class="muted">مقایسه همه با:</span>
+        <span class="muted" data-i18n="mk.compare">مقایسه همه با:</span>
         <select class="base-sel" id="quoteSel"></select>
       </div>
       <div class="bar"><div class="seg" id="quoteSeg"></div></div>
@@ -81,7 +82,7 @@
           <input id="amount" class="amount" inputmode="decimal" autocomplete="off" value="1">
         </div>
         <div class="words" id="fromWords"></div>
-        <div class="swap-wrap"><button class="swap" id="swapBtn" title="جابجایی">⇅</button></div>
+        <div class="swap-wrap"><button class="swap" id="swapBtn" data-i18n-title="cv.swap">⇅</button></div>
         <div class="conv-row">
           <button class="picker" id="toBtn"></button>
           <div class="result" id="result">—</div>
@@ -90,12 +91,12 @@
         <div class="rate-line" id="rateLine"></div>
         <div class="quick" id="quickAmts"></div>
         <div class="btn-row">
-          <button class="btn primary" id="copyBtn">📋 کپی نتیجه</button>
-          <button class="btn alt" id="convManualBtn">✍️ نرخ دستی</button>
-          <button class="btn ghost" id="convChartBtn">📈 نمودار</button>
+          <button class="btn primary" id="copyBtn" data-i18n="cv.copy">📋 کپی نتیجه</button>
+          <button class="btn alt" id="convManualBtn" data-i18n="cv.manual">✍️ نرخ دستی</button>
+          <button class="btn ghost" id="convChartBtn" data-i18n="cv.chart">📈 نمودار</button>
         </div>
       </div>
-      <h3 class="sec-title">💱 معادل این مبلغ در همه ارزها</h3>
+      <h3 class="sec-title" data-i18n="cv.all">💱 معادل این مبلغ در همه ارزها</h3>
       <div class="list compact" id="allList"></div>
     </section>
 
@@ -106,20 +107,20 @@
         <div class="calc-out" id="calcOut">0</div>
         <div class="keys" id="keys"></div>
         <div class="btn-row">
-          <button class="btn primary" id="calcToConv">💱 ارسال به مبدل</button>
-          <button class="btn ghost" id="calcCopy">📋 کپی</button>
+          <button class="btn primary" id="calcToConv" data-i18n="calc.toConv">💱 ارسال به مبدل</button>
+          <button class="btn ghost" id="calcCopy" data-i18n="calc.copy">📋 کپی</button>
         </div>
       </div>
-      <h3 class="sec-title">🧾 تاریخچه محاسبات</h3>
+      <h3 class="sec-title" data-i18n="calc.hist">🧾 تاریخچه محاسبات</h3>
       <div class="list compact" id="calcHist"></div>
     </section>
   </main>
 
   <nav class="tabs">
-    <button class="tab active" data-v="market"><span>📊</span>بازار</button>
-    <button class="tab" data-v="chart"><span>📈</span>نمودار</button>
-    <button class="tab" data-v="convert"><span>💱</span>مبدل</button>
-    <button class="tab" data-v="calc"><span>🧮</span>ماشین‌حساب</button>
+    <button class="tab active" data-v="market"><span>📊</span><i data-i18n="tab.market">بازار</i></button>
+    <button class="tab" data-v="chart"><span>📈</span><i data-i18n="tab.chart">نمودار</i></button>
+    <button class="tab" data-v="convert"><span>💱</span><i data-i18n="tab.convert">مبدل</i></button>
+    <button class="tab" data-v="calc"><span>🧮</span><i data-i18n="tab.calc">ماشین‌حساب</i></button>
   </nav>
 </div>
 
@@ -127,62 +128,68 @@
 <div class="sheet-bg" id="sheetBg"></div>
 <div class="sheet" id="pickerSheet">
   <div class="sheet-grip"></div>
-  <h2 id="pickerTitle">انتخاب ارز</h2>
-  <input class="input" id="pickerSearch" placeholder="جستجو: دلار، لیر، BTC، طلا…">
+  <h2 id="pickerTitle" data-i18n="pk.title">انتخاب ارز</h2>
+  <input class="input" id="pickerSearch" data-i18n-ph="pk.search" placeholder="جستجو: دلار، لیر، BTC، طلا…">
   <div class="list compact" id="pickerList"></div>
 </div>
 
 <div class="sheet" id="manualSheet">
   <div class="sheet-grip"></div>
-  <h2 id="manualTitle">نرخ دستی</h2>
+  <h2 id="manualTitle" data-i18n="mn.title">نرخ دستی</h2>
   <p class="muted" id="manualInfo"></p>
-  <label class="lbl">قیمت هر واحد</label>
+  <label class="lbl" data-i18n="mn.price">قیمت هر واحد</label>
   <div class="manual-row">
-    <input class="input" id="manualVal" inputmode="decimal" placeholder="مثلاً 270000">
+    <input class="input" id="manualVal" inputmode="decimal" data-i18n-ph="mn.ph" placeholder="مثلاً 270000">
     <select class="input" id="manualUnit"></select>
   </div>
   <div class="words" id="manualWords"></div>
   <div class="btn-row">
-    <button class="btn primary" id="manualSave">✅ اعمال نرخ دستی</button>
-    <button class="btn danger" id="manualClear">🗑 برگشت به نرخ آنلاین</button>
+    <button class="btn primary" id="manualSave" data-i18n="mn.apply">✅ اعمال نرخ دستی</button>
+    <button class="btn danger" id="manualClear" data-i18n="mn.clear">🗑 برگشت به نرخ آنلاین</button>
   </div>
 </div>
 
 <div class="sheet tall" id="settingsSheet">
   <div class="sheet-grip"></div>
-  <h2>⚙ تنظیمات</h2>
+  <h2 data-i18n="st.title">⚙ تنظیمات</h2>
   <div class="set">
-    <div><b>قیمت تومانی ارزها</b><div class="muted small">بازار آزاد ایران یا محاسبه از نرخ دلار</div></div>
+    <div><b data-i18n="st.lang">زبان برنامه</b><div class="muted small" data-i18n="st.langD"></div></div>
+    <div class="seg small" id="setLang"></div>
+  </div>
+  <div class="set">
+    <div><b data-i18n="st.iranPrice">قیمت تومانی ارزها</b><div class="muted small" data-i18n="st.iranPriceD">بازار آزاد ایران یا محاسبه از نرخ دلار</div></div>
     <div class="seg small" id="setIran"></div>
   </div>
   <div class="set">
-    <div><b>منبع نرخ تومان</b><div class="muted small">پیش‌فرض bonbast؛ هر کدام را خواستی انتخاب کن</div></div>
+    <div><b data-i18n="st.src">منبع نرخ تومان</b><div class="muted small" data-i18n="st.srcD">پیش‌فرض bonbast؛ هر کدام را خواستی انتخاب کن</div></div>
     <div class="seg small" id="setSrc"></div>
   </div>
-  <div class="set">
-    <div><b>اعداد</b><div class="muted small">نمایش ارقام فارسی یا انگلیسی</div></div>
+  <div class="set" id="digitsRow">
+    <div><b data-i18n="st.digits">اعداد</b><div class="muted small" data-i18n="st.digitsD">نمایش ارقام فارسی یا انگلیسی</div></div>
     <div class="seg small" id="setDigits"></div>
   </div>
   <div class="set">
-    <div><b>پوسته</b></div>
+    <div><b data-i18n="st.theme">پوسته</b></div>
     <div class="seg small" id="setTheme"></div>
   </div>
-  <h3 class="sec-title">✍️ نرخ‌های دستی</h3>
-  <p class="muted small">روی هر ارز بزنید تا نرخ دلخواه (مثلاً نرخ صرافی خودتان) را وارد کنید. نرخ دستی در همه‌جای برنامه (بازار، مبدل) جایگزین نرخ آنلاین می‌شود.</p>
+  <h3 class="sec-title" data-i18n="st.manual">✍️ نرخ‌های دستی</h3>
+  <p class="muted small" data-i18n="st.manualD">روی هر ارز بزنید تا نرخ دلخواه (مثلاً نرخ صرافی خودتان) را وارد کنید. نرخ دستی در همه‌جای برنامه (بازار، مبدل) جایگزین نرخ آنلاین می‌شود.</p>
   <div class="set">
-    <div><b>مقایسه با</b><div class="muted small">نرخ همه ارزها بر حسب این ارز</div></div>
+    <div><b data-i18n="st.base">مقایسه با</b><div class="muted small" data-i18n="st.baseD">نرخ همه ارزها بر حسب این ارز</div></div>
     <select class="base-sel" id="setBaseSel"></select>
   </div>
   <div class="list compact" id="manualList"></div>
-  <button class="btn danger wide" id="clearAllManual">حذف همه نرخ‌های دستی</button>
-  <h3 class="sec-title">ℹ️ درباره و منابع</h3>
+  <button class="btn danger wide" id="clearAllManual" data-i18n="st.clearAll">حذف همه نرخ‌های دستی</button>
+  <h3 class="sec-title" data-i18n="st.about">ℹ️ درباره و منابع</h3>
   <div class="about" id="about"></div>
-  <button class="btn ghost wide" id="closeSettings">بستن</button>
+  <button class="btn ghost wide" id="closeSettings" data-i18n="st.close">بستن</button>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script src="vendor/lightweight-charts.js"></script>
-<script src="app.js?v=14"></script>
+<script src="i18n.js?v=1"></script>
+<script src="lang-arzino.js?v=1"></script>
+<script src="app.js?v=15"></script>
 </body>
 </html>
