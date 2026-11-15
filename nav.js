@@ -192,9 +192,11 @@
 
   /* ------------------------------------------------------------------ show / hide password (every password field) */
   const eyeCss = document.createElement('style');
-  eyeCss.textContent = `.pw-wrap{position:relative;display:block}.pw-wrap>input{padding-inline-end:48px!important;width:100%}
-.pw-eye{position:absolute;top:50%;transform:translateY(-50%);inset-inline-end:6px;width:38px;height:34px;border:0;border-radius:10px;background:transparent;cursor:pointer;font-size:18px;line-height:1;color:inherit;opacity:.75}
-.pw-eye:hover{opacity:1;background:rgba(127,127,127,.12)}[dir=ltr] .pw-wrap>input,.pw-wrap>input[dir=ltr]{text-align:left}`;
+  eyeCss.textContent = `.pw-wrap{display:flex;align-items:stretch;gap:8px;width:100%}
+.pw-wrap>input{flex:1 1 auto;min-width:0;width:auto!important}
+.pw-eye{flex:none;width:50px;min-height:44px;border:1px solid var(--line,#dce4ee);border-radius:12px;background:var(--soft,var(--bg2,#f2f6fb));
+  cursor:pointer;font-size:20px;line-height:1;color:inherit;display:grid;place-items:center;padding:0;transition:background .15s,border-color .15s}
+.pw-eye:hover{border-color:#19c79b;background:rgba(25,199,155,.1)}.pw-eye:active{transform:scale(.96)}`;
   document.head.appendChild(eyeCss);
   const EYE = {fa: ['نمایش رمز', 'پنهان کردن رمز'], tr: ['Şifreyi göster', 'Şifreyi gizle'], en: ['Show password', 'Hide password'], ar: ['إظهار كلمة المرور', 'إخفاء كلمة المرور']};
   const eyeT = i => (EYE[w.I18N ? I18N.lang : 'fa'] || EYE.en)[i];
