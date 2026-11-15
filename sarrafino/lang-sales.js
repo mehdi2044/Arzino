@@ -149,3 +149,5 @@ ar: {
   's.final': 'نظّم مكتب صرافتك اليوم', 's.wa': 'استشرنا عبر واتساب', 's.wa.msg': 'مرحباً، لدي سؤال عن صرافينو.', 's.loading': 'جارٍ التحميل…',
 },
 });
+I18N.add({fa: {'p.f.wl': 'ارزینوی اختصاصی با نام و لوگوی شما و منبع قیمت دلخواه'}, tr: {'p.f.wl': 'Kendi adınız ve logonuzla özel Arzino, kendi fiyat kaynağınız'},
+  en: {'p.f.wl': 'Your own Arzino with your name and logo and your own price feeds'}, ar: {'p.f.wl': 'أرزينو خاص باسمك وشعارك ومصادر أسعارك'}});

@@ -9,7 +9,7 @@ const jd = (t, o) => t ? new Intl.DateTimeFormat(I18N.dateLocale(), o || {year: 
 const L4 = ['fa', 'tr', 'en', 'ar'];
 const FEATS = [['board', 'تابلوی نرخ و ارسال در واتس‌اپ'], ['receipts_wa', 'رسید واتس‌اپ برای مشتری'], ['expenses', 'ثبت هزینه‌ها'], ['trusts', 'امانت'],
   ['reports', 'گزارش سود و زیان'], ['excel', 'خروجی اکسل'], ['partners', 'شریک‌ها و سهم سود'], ['public_board', 'تابلوی زنده و تلویزیون مغازه'],
-  ['directory', 'معرفی صرافی در ارزینو'], ['branding', 'رسید و تابلو بدون نام صرافینو']];
+  ['directory', 'معرفی صرافی در ارزینو'], ['branding', 'رسید و تابلو بدون نام صرافینو'], ['arzino_wl', 'ارزینوی اختصاصی با نام و لوگوی شما']];
 const LIMS = [['staff', 'کاربر'], ['customers', 'مشتری'], ['langs', 'زبان'], ['exchanges', 'صرافی / شعبه']];
 const PLACES = [['banner', 'بنر بالای بازار'], ['feed', 'لابه‌لای فهرست نرخ‌ها'], ['converter', 'زیر مبدل'], ['interstitial', 'تمام‌صفحه با شمارش معکوس']];
 const A = {tab: 'home', data: {}};

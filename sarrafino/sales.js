@@ -8,7 +8,7 @@ const api = path => fetch(`${C.url}/rest/v1/${path}`, {headers: {apikey: C.key, 
 
 const FEATS = [['💱', 'trade'], ['👥', 'cust'], ['💰', 'box'], ['🤝', 'trust'], ['🧾', 'rc'], ['📣', 'board'], ['📺', 'tv'], ['📊', 'pl'], ['👔', 'team'], ['🌐', 'lang'], ['🔒', 'sec'], ['📱', 'app']];
 const PF = [['board', 'p.f.board'], ['receipts_wa', 'p.f.rc'], ['expenses', 'p.f.exp'], ['trusts', 'p.f.trust'], ['reports', 'p.f.pl'], ['excel', 'p.f.excel'],
-  ['partners', 'p.f.partners'], ['public_board', 'p.f.tv'], ['directory', 'p.f.dir'], ['branding', 'p.f.brand']];
+  ['partners', 'p.f.partners'], ['public_board', 'p.f.tv'], ['directory', 'p.f.dir'], ['branding', 'p.f.brand'], ['arzino_wl', 'p.f.wl']];
 let plans = null, months = 1;
 
 function drawFeats() {

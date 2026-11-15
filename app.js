@@ -120,6 +120,7 @@ function moneyTxt(v, q) { return money(v, q).replace(/<[^>]+>/g, ''); }
 /* ---------------------------------------------------------------- pricing */
 function usdRaw(a) {               // USD per unit, online only
   if (a === 'USD') return 1;
+  if (window.WL_OV && WL_OV.usd[a] != null) return WL_OV.usd[a];       // exchange's own price API (dedicated Arzino)
   if (live[a]) return live[a];
   return D.usd?.[a] ?? PLUS.customUsd(a) ?? null;
 }
@@ -127,10 +128,10 @@ const SRCS = [['bonbast','bonbast'],['tgju','tgju']];
 const SRC_NAME = new Proxy({}, {get: (o, k) => ({bonbast:'bonbast.com', tgju:'tgju.org'})[k] || (I18N.has('src.' + k) ? t('src.' + k) : k)});
 let _ir = null, _irKey = '';
 function IR() {                      // Iranian market prices from the chosen source (gaps filled from others)
-  const key = D.t + S.src;
+  const wl = window.WL_OV || {irt: {}}, key = D.t + S.src + '|' + (wl.t || 0) + Object.keys(wl.irt).length;
   if (_ir && _irKey === key) return _ir;
   const sel = D.iran_by?.[S.src];
-  _ir = Object.assign({}, D.iran || {}, sel || {}); _irKey = key;
+  _ir = Object.assign({}, D.iran || {}, sel || {}, wl.irt); _irKey = key;
   return _ir;
 }
 function srcPicker(asset) {           // chips: same item priced by each Iranian source
@@ -198,6 +199,7 @@ async function refresh(force) {
     const d = await fetchJSON('latest.json');
     if (d && d.usd && (!D.t || d.t >= D.t || force)) {
       D = d; try { localStorage.setItem('arzino.d', JSON.stringify(D)); } catch {}
+      PLUS.wlApply();                     // re-convert the exchange's own prices with the fresh market
     }
     lastOk = Date.now();
     setStatus('ok');
@@ -330,6 +332,7 @@ function renderMarket() {
   $('quoteSel').onchange = () => { S.quote = $('quoteSel').value; save(); renderMarket(); };
   $('groupChips').innerHTML = GROUPS().map(([v, l]) => `<button class="chip ${v === S.group ? 'active' : ''}" data-v="${v}">${l}</button>`).join('') + `<button class="chip add" data-add>${t('ad.addBtn')}</button>`;
   $('groupChips').onclick = e => { const b = e.target.closest('button'); if (!b) return; if (b.hasAttribute('data-add')) return PLUS.addSheet(); S.group = b.dataset.v; save(); renderMarket(); };
+  $('wlTop').innerHTML = PLUS.wlBoard();
   $('mkExtra').innerHTML = PLUS.slot('banner') + (PLUS.hasDir() ? PLUS.dirHTML() : '');
   const q = S.quote;
   let list = ASSETS.filter(a => a.id !== q);

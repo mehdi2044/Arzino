@@ -634,3 +634,79 @@ ar: ['إيصال واتساب', `- يتضمن نص الإيصال الرقم و�
 - يُكتب الإيصال باللغة المختارة حالياً.`],
 },
 });
+HELP.add({
+'sarraf.wl': {
+fa: ['ارزینوی اختصاصی', `یک ارزینوی کامل به نام صرافی شما برای مشتری‌هایتان: نام و لوگوی شما، نرخ خرید و فروش شما بالای صفحه، دکمه‌ی واتس‌اپ شما، بدون تبلیغ و بدون معرفی صرافی‌های دیگر. همه‌ی امکانات ارزینو (بازار، نمودار، مبدل، ماشین‌حساب) سر جایش است.
+## لینک و نصب
+- لینک را برای مشتری‌ها بفرستید یا در وضعیت واتس‌اپ و اینستاگرام بگذارید. مشتری می‌تواند آن را مثل یک برنامه روی گوشی نصب کند؛ با نام و لوگوی شما.
+- **نام کوتاه:** به‌جای کد طولانی، مثلاً ario-ex تا لینک کوتاه و خوانا شود.
+- **نام برنامه:** اگر خالی بماند، نام صرافی نمایش داده می‌شود. لوگو همان لوگوی تابلوی شماست.
+## منبع قیمت دلخواه (API)
+اگر نمی‌خواهید، هیچ کاری لازم نیست؛ همه‌ی قیمت‌ها مثل ارزینوی اصلی از منابع پیش‌فرض می‌آید. اگر قیمت‌های خودتان را دارید:
+- **برای کدام بخش:** همه‌ی ارزها، همه‌ی رمزارزها، فلزات، قیمت‌های تومانی، یا فقط یک ارز. منبع «یک ارز» بر منبع کل بخش مقدم است.
+- **آدرس API:** آدرسی که پاسخ JSON می‌دهد. اگر کلید لازم دارد، در «هدر کلید» بنویسید؛ کلید فقط روی سرور می‌ماند و به مشتری‌ها نشان داده نمی‌شود.
+- **آزمایش API:** پاسخ را نشان می‌دهد و می‌گوید چند قیمت پیدا شد.
+- **مسیر:** جای عدد در پاسخ، مثلاً data.price یا rates.
+- **قیمت‌ها به چه ارزی است:** مثلاً USD، USDT، TRY یا IRT (تومان).
+- **معنی عدد:** «قیمت ۱ واحد» (مثلاً ۱ BTC = ۶۵۰۰۰ USD) یا «چند واحد = ۱ ارز پایه» (مثلاً ۱ USD = ۰٫۹۲ EUR).
+## سه مثال آماده
+- **همه‌ی ارزها:** https://open.er-api.com/v6/latest/USD · مسیر rates · ارز USD · معنی «چند واحد = ۱ ارز پایه».
+- **همه‌ی رمزارزها:** https://data-api.binance.vision/api/v3/ticker/price · مسیر خالی · ارز USDT · قیمت ۱ واحد · در بخش پیشرفته: فیلد کد symbol، فیلد قیمت price، حذف از انتها USDT.
+- **فقط دلار به لیر از API خودتان:** فقط یک ارز · کد USD · مسیر مثلاً data.price · ارز TRY.
+! اگر تابلوی شما روی «خودکار از بازار» باشد، نرخ‌های خرید و فروش هم از همین قیمت‌های شما حساب می‌شوند؛ در پنل، تصویر، تابلوی زنده و ارزینوی اختصاصی.`],
+en: ['Dedicated Arzino', `A complete Arzino in your office's name for your customers: your name and logo, your buy and sell rates at the top, your WhatsApp button, no ads and no other offices. Every Arzino feature (market, chart, converter, calculator) stays.
+## Link and install
+- Send the link to customers or put it in your WhatsApp or Instagram status. Customers can install it on their phone like an app, with your name and logo.
+- **Short name:** instead of a long code, e.g. ario-ex, so the link is short and readable.
+- **App name:** left empty, your office name is shown. The logo is your board logo.
+## Your own price source (API)
+If you don't want it, do nothing; all prices come from the default sources like the main Arzino. If you have your own prices:
+- **Which section:** all currencies, all crypto, metals, toman prices, or one currency. A single-currency source wins over its whole section.
+- **API address:** an address that answers in JSON. If it needs a key, put it in “Key header”; the key stays on the server and is never shown to customers.
+- **Test API:** shows the answer and how many prices were found.
+- **Path:** where the number is in the answer, e.g. data.price or rates.
+- **Prices are in:** e.g. USD, USDT, TRY or IRT (toman).
+- **What the number means:** “price of 1 unit” (e.g. 1 BTC = 65,000 USD) or “how many = 1 base unit” (e.g. 1 USD = 0.92 EUR).
+## Three ready examples
+- **All currencies:** https://open.er-api.com/v6/latest/USD · path rates · in USD · meaning “how many = 1 base unit”.
+- **All crypto:** https://data-api.binance.vision/api/v3/ticker/price · empty path · in USDT · price of 1 unit · advanced: code field symbol, price field price, remove from end USDT.
+- **Only USD to lira from your own API:** a single currency · code USD · path e.g. data.price · in TRY.
+! If your board is on “Automatic from market”, your buy and sell rates are calculated from these prices too — in the panel, the image, the live board and the dedicated Arzino.`],
+tr: ['Özel Arzino', `Müşterileriniz için büronuzun adıyla eksiksiz bir Arzino: adınız ve logonuz, üstte alış ve satış kurlarınız, WhatsApp düğmeniz, reklam yok ve başka büro yok. Arzino'nun tüm özellikleri (piyasa, grafik, çevirici, hesap makinesi) yerinde.
+## Bağlantı ve kurulum
+- Bağlantıyı müşterilere gönderin ya da WhatsApp veya Instagram durumunuza koyun. Müşteri onu telefona uygulama gibi, sizin adınız ve logonuzla kurabilir.
+- **Kısa ad:** uzun kod yerine, ör. ario-ex; bağlantı kısa ve okunur olur.
+- **Uygulama adı:** boş kalırsa büro adınız görünür. Logo, pano logonuzdur.
+## Kendi fiyat kaynağınız (API)
+İstemiyorsanız hiçbir şey yapmanız gerekmez; tüm fiyatlar ana Arzino gibi varsayılan kaynaklardan gelir. Kendi fiyatlarınız varsa:
+- **Hangi bölüm:** tüm dövizler, tüm kriptolar, metaller, toman fiyatları veya tek bir döviz. Tek döviz kaynağı bölümün tamamına göre önceliklidir.
+- **API adresi:** JSON yanıt veren bir adres. Anahtar gerekiyorsa “Anahtar başlığı”na yazın; anahtar sunucuda kalır, müşterilere gösterilmez.
+- **API'yi test et:** yanıtı ve kaç fiyat bulunduğunu gösterir.
+- **Yol:** sayının yanıttaki yeri, ör. data.price veya rates.
+- **Fiyatlar hangi dövizde:** ör. USD, USDT, TRY veya IRT (toman).
+- **Sayının anlamı:** “1 birimin fiyatı” (ör. 1 BTC = 65.000 USD) veya “kaç birim = 1 baz birim” (ör. 1 USD = 0,92 EUR).
+## Üç hazır örnek
+- **Tüm dövizler:** https://open.er-api.com/v6/latest/USD · yol rates · USD · anlam “kaç birim = 1 baz birim”.
+- **Tüm kriptolar:** https://data-api.binance.vision/api/v3/ticker/price · yol boş · USDT · 1 birimin fiyatı · gelişmiş: kod alanı symbol, fiyat alanı price, sondan sil USDT.
+- **Kendi API'nizden yalnızca dolar/lira:** tek döviz · kod USD · yol ör. data.price · TRY.
+! Panonuz “Piyasadan otomatik” ise alış ve satış kurlarınız da bu fiyatlardan hesaplanır; panelde, görselde, canlı panoda ve özel Arzino'da.`],
+ar: ['أرزينو الخاص', `أرزينو كامل باسم مكتبك لعملائك: اسمك وشعارك، وأسعار الشراء والبيع لديك في الأعلى، وزر واتساب الخاص بك، دون إعلانات ودون مكاتب أخرى. كل ميزات أرزينو (السوق والرسم والمحوّل والآلة الحاسبة) باقية.
+## الرابط والتثبيت
+- أرسل الرابط للعملاء أو ضعه في حالة واتساب أو إنستغرام. يستطيع العميل تثبيته على هاتفه كتطبيق، باسمك وشعارك.
+- **الاسم المختصر:** بدل الرمز الطويل، مثل ario-ex، ليكون الرابط قصيراً ومقروءاً.
+- **اسم التطبيق:** إن بقي فارغاً يظهر اسم المكتب. الشعار هو شعار لوحتك.
+## مصدر أسعارك الخاص (API)
+إن لم ترغب فلا شيء مطلوب؛ تأتي كل الأسعار من المصادر الافتراضية كأرزينو الأساسي. إذا كانت لديك أسعارك:
+- **لأي قسم:** كل العملات، كل العملات الرقمية، المعادن، أسعار التومان، أو عملة واحدة. مصدر العملة الواحدة مقدَّم على مصدر القسم كله.
+- **عنوان API:** عنوان يرد بصيغة JSON. إن احتاج مفتاحاً فاكتبه في «ترويسة المفتاح»؛ يبقى المفتاح على الخادم ولا يُعرض للعملاء.
+- **اختبار API:** يعرض الرد وعدد الأسعار التي عُثر عليها.
+- **المسار:** مكان الرقم في الرد، مثل data.price أو rates.
+- **الأسعار بأي عملة:** مثل USD أو USDT أو TRY أو IRT (تومان).
+- **معنى الرقم:** «سعر وحدة واحدة» (مثل 1 BTC = 65,000 USD) أو «كم وحدة = وحدة أساس واحدة» (مثل 1 USD = 0.92 EUR).
+## ثلاثة أمثلة جاهزة
+- **كل العملات:** https://open.er-api.com/v6/latest/USD · المسار rates · بالدولار USD · المعنى «كم وحدة = وحدة أساس».
+- **كل العملات الرقمية:** https://data-api.binance.vision/api/v3/ticker/price · مسار فارغ · USDT · سعر وحدة · متقدم: حقل الرمز symbol، حقل السعر price، حذف من النهاية USDT.
+- **الدولار مقابل الليرة فقط من API الخاص بك:** عملة واحدة · الرمز USD · المسار مثل data.price · بالليرة TRY.
+! إذا كانت لوحتك على «تلقائي من السوق» فتُحسب أسعار الشراء والبيع أيضاً من أسعارك هذه — في اللوحة والصورة واللوحة المباشرة وأرزينو الخاص.`],
+},
+});

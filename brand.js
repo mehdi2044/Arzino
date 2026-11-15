@@ -11,19 +11,21 @@ const BRAND = (() => {
     sales: {name: {fa: 'صرافینو', tr: 'Sarrafino', en: 'Sarrafino', ar: 'صرافينو'}},
     admin: {name: {fa: 'پنل مدیریت', tr: 'Yönetim paneli', en: 'Admin panel', ar: 'لوحة الإدارة'}},
   };
-  let B = {};
+  let B = {}, OV = {};                       // OV: runtime override (dedicated Arzino of an exchange), never saved
   try { B = JSON.parse(localStorage.getItem(LS) || '{}') || {}; } catch (e) {}
   const lang = () => (window.I18N ? I18N.lang : 'fa');
   const B_ = {
     DEF,
     get all() { return B; },
-    name(part, l = lang()) { const n = B[part] && B[part].name; return (n && (n[l] || n.en || n.fa)) || DEF[part].name[l] || DEF[part].name.en; },
+    override(part, v) { if (v) OV[part] = v; else delete OV[part]; },
+    name(part, l = lang()) { if (OV[part] && OV[part].name) return OV[part].name; const n = B[part] && B[part].name; return (n && (n[l] || n.en || n.fa)) || DEF[part].name[l] || DEF[part].name.en; },
     defName(part, l = lang()) { return DEF[part].name[l]; },
-    logo(part) { return (B[part] && B[part].logo) || ''; },
+    logo(part) { if (OV[part]) return OV[part].logo || ''; return (B[part] && B[part].logo) || ''; },
     // the logo as an <img>, or the first letter of the name in its place
     mark(part, fallback) { const l = B_.logo(part); return l ? `<img src="${l}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">` : (fallback ?? B_.name(part).trim()[0]); },
     // replace the default product name inside a text (page titles etc.)
     swap(part, text) { const d = DEF[part].name[lang()], n = B_.name(part); return d && n && d !== n ? String(text).split(d).join(n) : text; },
+    get overridden() { return Object.keys(OV).length > 0; },
     // replace the default name in every text of a page part (sales page, help texts)
     swapDom(part, root = document.body) {
       const d = DEF[part].name[lang()], n = B_.name(part); if (!d || d === n) return;

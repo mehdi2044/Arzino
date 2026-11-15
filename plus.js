@@ -135,6 +135,52 @@ const PLUS = (() => {
     save();
   }
 
+  /* ================================================================ dedicated Arzino of one exchange office (?x=short-name) */
+  const WLK = (() => { try { const q = new URLSearchParams(location.search).get('x');
+    if (q === 'off') { localStorage.removeItem('arzino.wl'); localStorage.removeItem('arzino.wl_d'); return ''; }
+    if (q) localStorage.setItem('arzino.wl', q); return q || localStorage.getItem('arzino.wl') || ''; } catch { return ''; } })();
+  let WLD = ls.get('arzino.wl_d', null); if (!WLK || (WLD && WLD.key !== WLK)) WLD = null;
+  if (WLK) document.documentElement.classList.add('wl-mode');
+  window.WL_OV = {usd: {}, irt: {}, t: 0};
+  const baseUsd = c => c === 'USD' ? 1 : c === 'IRT' ? (D.iran?.USD ? 1 / D.iran.USD : null) : (D.usd?.[c] ?? null);
+  function wlApply() {
+    if (!WLD) return;
+    window.WL_OV = WLX.overrides(WLD, baseUsd);
+    const letter = 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7d77a"/><stop offset="1" stop-color="#b7811a"/></linearGradient></defs><rect width="96" height="96" rx="24" fill="#0b1f3a"/><circle cx="48" cy="48" r="34" fill="url(#g)"/><text x="48" y="61" font-family="Vazirmatn,Arial" font-size="38" font-weight="900" text-anchor="middle" fill="#0b1f3a">${esc((WLD.name || '?').trim()[0])}</text></svg>`);
+    BRAND.override('arzino', {name: WLD.name, logo: WLD.logo || letter}); if (typeof applyBrand === 'function') applyBrand();
+    const abs = u => new URL(u, location.href).href;
+    const man = {name: WLD.name, short_name: WLD.name, start_url: location.origin + location.pathname + '?x=' + encodeURIComponent(WLK), scope: location.origin + location.pathname,
+      display: 'standalone', background_color: '#0b1f3a', theme_color: '#0b1f3a',
+      icons: WLD.logo ? [{src: WLD.logo, sizes: '256x256', type: 'image/png', purpose: 'any'}] : [{src: abs('icons/app-192.png'), sizes: '192x192', type: 'image/png'}, {src: abs('icons/app-512.png'), sizes: '512x512', type: 'image/png'}]};
+    const ml = document.querySelector('link[rel=manifest]'); if (ml) ml.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(man));
+    const ai = document.querySelector('link[rel=apple-touch-icon]'); if (ai && WLD.logo) ai.href = WLD.logo;
+  }
+  async function loadWL() {
+    if (!WLK) return;
+    try {
+      const d = await rest('rpc/public_wl', {method: 'POST', body: JSON.stringify({p_key: WLK})});
+      if (!d) {                                   // link no longer valid (package ended): back to the normal Arzino
+        localStorage.removeItem('arzino.wl'); ls.set('arzino.wl_d', null); WLD = null; window.WL_OV = {usd: {}, irt: {}, t: 0};
+        document.documentElement.classList.remove('wl-mode'); BRAND.override('arzino', null); if (typeof applyBrand === 'function') applyBrand(); renderAll(); return;
+      }
+      WLD = {...d, key: WLK}; ls.set('arzino.wl_d', WLD); wlApply(); renderAll();
+    } catch {}
+  }
+  const cname = c => I18N.has('s.' + c) ? t('s.' + c) : c;
+  function wlBoard() {
+    if (!WLD || WLD.show_board === false) return '';
+    const m = WLX.merge(D, window.WL_OV);
+    const rows = (WLD.rows && WLD.rows.length ? WLD.rows : [['USD', 'TRY'], ['EUR', 'TRY'], ['USDT', 'TRY'], ['USD', 'IRT']])
+      .map(([c, q]) => ({c, q, r: AUTORATE.rate(m, WLD.auto, c, q, (WLD.rates || []).find(x => x.ccy === c && x.quote === q))})).filter(x => x.r && (x.r.buy || x.r.sell));
+    if (!rows.length) return '';
+    const wa = (WLD.phone || '').replace(/[^\d]/g, '').replace(/^0(5\d{9})$/, '90$1');
+    return `<div class="wlb"><div class="wlh"><span class="xl">${WLD.logo ? `<img src="${esc(WLD.logo)}" alt="">` : esc((WLD.name || '?').trim()[0])}</span><div><b>${esc(WLD.name)}</b><span>${t('wl.today')}</span></div>
+        ${wa ? `<a class="btn sm wa" href="https://wa.me/${wa}" target="_blank" rel="noopener">💬 ${t('ad.wa')}</a>` : ''}</div>
+      <div class="xr hd"><span></span><b>${t('wl.buy')}</b><b>${t('wl.sell')}</b></div>
+      ${rows.map(({c, q, r}) => `<div class="xr"><span>${esc(cname(c))} → ${esc(cname(q))}</span><b class="up">${fmt(+r.buy)}</b><b class="down">${fmt(+r.sell)}</b></div>`).join('')}
+      ${WLD.note || WLD.address ? `<p class="muted small" style="margin:8px 2px 0">${esc(WLD.note || '')}${WLD.note && WLD.address ? ' · ' : ''}${WLD.address ? '📍 ' + esc(WLD.address) : ''}</p>` : ''}</div>`;
+  }
+
   /* ================================================================ partner exchanges (Sarrafino directory) */
   let DIR = ls.get('arzino.dir', {t: 0, list: []});
   let MKT = null;                                   // market data for exchanges whose board is automatic
@@ -181,7 +227,7 @@ const PLUS = (() => {
       if (curView() === 'market') renderMarket();
     } catch {}
   }
-  const adFree = () => !CFG.enabled || Number(localStorage.getItem('arzino.adfree_until') || 0) > Date.now();
+  const adFree = () => !!WLK || !CFG.enabled || Number(localStorage.getItem('arzino.adfree_until') || 0) > Date.now();
   const useAdsense = () => CFG.adsense?.client && (CFG.adsense.langs || []).includes(L());
   function pick(place) {
     const list = ADS.filter(a => (a.placements || []).includes(place) && tl(a.title));
@@ -238,7 +284,7 @@ const PLUS = (() => {
   }
   function rewardHTML() {
     const until = Number(localStorage.getItem('arzino.adfree_until') || 0);
-    if (!CFG.enabled) return '';
+    if (!CFG.enabled || WLK) return '';
     return `<div class="set"><div><b>📣 ${t('ad.set')}</b><div class="muted small">${until > Date.now() ? t('ad.freeUntil', {d: new Date(until).toLocaleString(I18N.dateLocale(S.digits), {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'})}) : t('ad.setD', {h: CFG.reward?.hours || 24})}</div></div>
       ${CFG.reward?.on && until <= Date.now() ? `<button class="btn alt sm" id="rwGo">🎁 ${t('ad.watch')}</button>` : ''}</div>`;
   }
@@ -250,12 +296,19 @@ const PLUS = (() => {
 
   function start() {
     loadFx().then(() => { if (S.custom.some(c => c.kind === 'fiat')) renderAll(); loadStocks().then(() => renderAll()); });
-    loadAds(); loadDir();
-    setInterval(() => { loadStocks().then(() => { if (curView() === 'market') renderMarket(); }); loadDir(); loadAds(); loadFx(); }, 90e3);
+    if (WLK) { wlApply(); loadWL(); setInterval(loadWL, 60e3); } else { loadAds(); loadDir(); }
+    setInterval(() => { loadStocks().then(() => { if (curView() === 'market') renderMarket(); }); if (!WLK) { loadDir(); loadAds(); } loadFx(); }, 90e3);
   }
-  return {injectCustom, customName, customUsd, customBars, addSheet, dirHTML, slot, afterRender, action, rewardHTML, bindReward, start, feedEvery: () => CFG.feed?.every || 8, hasDir: () => (DIR.list || []).length > 0};
+  return {injectCustom, customName, customUsd, customBars, addSheet, dirHTML, slot, afterRender, action, rewardHTML, bindReward, start, feedEvery: () => CFG.feed?.every || 8, hasDir: () => !WLK && (DIR.list || []).length > 0,
+    wlBoard, wlApply, isWL: () => !!WLK};
 })();
 
+I18N.add({
+fa: {'wl.today': 'نرخ خرید و فروش امروز ما', 'wl.buy': 'خرید', 'wl.sell': 'فروش'},
+tr: {'wl.today': 'Bugünkü alış ve satış kurlarımız', 'wl.buy': 'Alış', 'wl.sell': 'Satış'},
+en: {'wl.today': 'Our buy and sell rates today', 'wl.buy': 'Buy', 'wl.sell': 'Sell'},
+ar: {'wl.today': 'أسعار الشراء والبيع لدينا اليوم', 'wl.buy': 'شراء', 'wl.sell': 'بيع'},
+});
 I18N.add({
 fa: {'g.stock': '📈 سهام', 'ad.add': 'افزودن ارز، رمزارز یا سهام', 'ad.k.fiat': 'ارز', 'ad.k.crypto': 'رمزارز', 'ad.k.stock': 'سهام', 'ad.ph.fiat': 'جستجو: روپیه، PKR، ون…', 'ad.ph.crypto': 'نماد، مثلاً SOL یا DOGE', 'ad.ph.stock': 'نماد، مثلاً AAPL یا THYAO.IS یا 2222.SR',
   'ad.hint.fiat': 'همه‌ی ارزهای دنیا با نرخ مرجع روزانه.', 'ad.hint.crypto': 'هر رمزارزی که در بایننس با تتر معامله می‌شود؛ قیمت زنده.', 'ad.hint.stock': 'سهام بورس‌های دنیا؛ برای بورس استانبول ‎.IS و عربستان ‎.SR را بگذارید.',

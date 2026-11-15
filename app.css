@@ -263,3 +263,14 @@ html[dir=ltr] .chart-msg{direction:ltr}
   .ibtn.install::before{content:"📲";font-size:18px}
 }
 @media (max-width:400px){#refreshBtn{display:none}.ibtn.sarraf{padding:0 7px}.brand h1{font-size:19px}.brand .logo{width:38px;height:38px}}
+
+/* dedicated Arzino of an exchange office */
+.wl-mode .ibtn.sarraf{display:none!important}
+.wlb{background:var(--bg2);border:1px solid var(--line);border-radius:20px;padding:14px;margin:0 0 14px;box-shadow:var(--shadow)}
+.wlh{display:flex;align-items:center;gap:10px;margin-bottom:8px}.wlh>div{flex:1;min-width:0}.wlh b{display:block;font-size:16px}.wlh span:not(.xl){font-size:12.5px;color:var(--muted)}
+.wlh .xl{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:900;background:linear-gradient(145deg,#b7811a,#f2c14e);color:#3b2700;overflow:hidden;flex:none}
+.wlh .xl img{width:100%;height:100%;object-fit:cover}
+.wlb .xr{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:6px;padding:8px 6px;border-top:1px solid var(--line);align-items:center;font-size:14px}
+.wlb .xr.hd{border-top:0;color:var(--muted);font-size:12px;padding-top:0}.wlb .xr b{text-align:center;direction:ltr}
+.wlb .wa,.wlb a.btn{text-decoration:none!important}.wlb .btn.sm.wa{display:inline-flex;align-items:center;gap:4px;padding:7px 12px;border-radius:12px;background:linear-gradient(135deg,#1faa59,#25d366);color:#fff;font-weight:800;font-size:13px;flex:none}
+#wlTop:empty{display:none}
