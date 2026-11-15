@@ -33,14 +33,14 @@ function drawPlans() {
   }).join('');
 }
 async function load() {
-  try { plans = await api('plans?select=*&is_public=eq.true&order=sort'); drawPlans(); } catch { $('plans').innerHTML = ''; }
+  try { plans = await api('plans?select=*&is_public=eq.true&order=sort'); drawPlans(); applyBrand(); } catch { $('plans').innerHTML = ''; }
   try {
     const [c] = await api('platform_settings?select=value&key=eq.contact');
     const wa = (c?.value?.whatsapp || '').replace(/[^\d]/g, '');
     if (wa) { $('waBtn').href = `https://wa.me/${wa}?text=${encodeURIComponent(t('s.wa.msg'))}`; $('waBtn').hidden = false; }
   } catch {}
 }
-function all() { I18N.apply(); drawFeats(); drawFaq(); drawPlans(); $('langSlot').innerHTML = I18N.picker('lang-sel'); I18N.bindPickers(); }
+function all() { I18N.apply(); drawFeats(); drawFaq(); drawPlans(); $('langSlot').innerHTML = I18N.picker('lang-sel'); I18N.bindPickers(); if (window.applyBrand) applyBrand(); }
 $('per').querySelectorAll('button').forEach(b => b.onclick = () => { months = +b.dataset.m; $('per').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); drawPlans(); });
 $('yr').textContent = new Date().getFullYear();
 addEventListener('langchange', all);
@@ -52,3 +52,11 @@ const drawBack = () => { const el = document.getElementById('backSlot'); if (el)
 drawBack(); addEventListener('langchange', drawBack);
 document.getElementById('themeSlot').innerHTML = THEME.btn();
 addEventListener('langchange', () => { document.getElementById('themeSlot').innerHTML = THEME.btn(); });
+// product name and logo chosen in the admin panel
+function applyBrand() {
+  BRAND.swapDom('sales'); document.title = BRAND.swap('sales', t('doc.title'));
+  document.querySelectorAll('.coin').forEach(c => { if (BRAND.logo('sales')) c.innerHTML = BRAND.mark('sales'); });
+}
+addEventListener('brandchange', applyBrand); addEventListener('langchange', () => setTimeout(applyBrand, 0));
+$('faqList').addEventListener('toggle', () => applyBrand(), true);
+applyBrand(); BRAND.load();

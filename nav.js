@@ -180,6 +180,7 @@
       ensure();
       box.innerHTML = html + `<button type="button" class="hlp-x">${tt('help.close')}</button>`;
       box.querySelector('.hlp-x').onclick = () => HELP.close();
+      if (w.BRAND) { BRAND.swapDom('sarrafino', box); BRAND.swapDom('arzino', box); }   // names chosen by the admin
       box.scrollTop = 0; bg.classList.add('show'); box.classList.add('show');
       NAV.opened('help', () => { bg.classList.remove('show'); box.classList.remove('show'); });
     },

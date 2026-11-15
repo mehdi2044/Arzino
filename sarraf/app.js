@@ -149,7 +149,7 @@ async function openExchange(m) {
 function renderAuth(mode = 'login') {
   $('app').innerHTML = `<div class="auth">
     <div class="auth-lang">${NAV.btn()}<span style="flex:1"></span>${THEME.btn()}${HELP.ctxBtn()}${I18N.picker('lang-sel', true)}</div>
-    <div class="hero3d"><div class="coin">${_('ص')}</div><h1>${_('صرافینو')}</h1><div class="muted">${_('حسابداری ساده و امن برای صرافی‌ها')}</div></div>
+    <div class="hero3d"><div class="coin">${BRAND.mark('sarrafino')}</div><h1>${esc(BRAND.name('sarrafino'))}</h1><div class="muted">${_('حسابداری ساده و امن برای صرافی‌ها')}</div></div>
     <div class="card" style="margin-top:18px">
       <div class="seg" style="margin-bottom:12px"><button class="${mode === 'login' ? 'on' : ''}" data-m="login">${_('ورود')}</button><button class="${mode === 'signup' ? 'on' : ''}" data-m="signup">${_('ثبت‌نام')}</button></div>
       ${mode === 'signup' ? `<div class="grid g2"><div class="fld"><label>${_('نام')}</label><input class="in" id="aFirst" autocomplete="given-name"></div>
@@ -925,4 +925,8 @@ sb.auth.onAuthStateChange((ev) => {
   if (ev === 'PASSWORD_RECOVERY') { RECOVER = true; renderNewPass(); }
   if (ev === 'SIGNED_OUT') { S.user = null; renderAuth(); }
 });
+// product name and logo chosen in the admin panel
+const brandTitle = () => { document.title = BRAND.name('sarrafino') + (S.ex ? ' · ' + S.ex.name : ''); };
+addEventListener('brandchange', () => { brandTitle(); S.screen && S.screen(); });
+BRAND.load(); brandTitle();
 boot().catch(err);

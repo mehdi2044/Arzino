@@ -753,8 +753,16 @@ addEventListener('appinstalled', () => { $('installBtn').style.display = 'none';
 
 if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 
+// name and logo chosen in the admin panel
+function applyBrand() {
+  document.querySelectorAll('.brand h1').forEach(h => h.textContent = BRAND.name('arzino'));
+  document.querySelectorAll('.brand img.logo').forEach(i => i.src = BRAND.logo('arzino') || 'icons/app.svg');
+  document.title = BRAND.swap('arzino', t('doc.title'));
+  const m = document.querySelector('meta[name=apple-mobile-web-app-title]'); if (m) m.content = BRAND.name('arzino');
+}
+addEventListener('brandchange', applyBrand);
 function applyLang() {
-  I18N.apply();
+  I18N.apply(); applyBrand();
   $('langSlot').innerHTML = I18N.picker('lang-sel'); I18N.bindPickers();
   $('keys').innerHTML = '';                       // rebuild keypad digits
   if (chart) { chart.remove(); chart = null; series = null; }
@@ -766,7 +774,7 @@ const hv = location.hash.replace('#', '');
 show(['market','chart','convert','calc'].includes(hv) ? hv : (S.view || 'market'), 'init');
 refresh();
 fetchLive();
-PLUS.start();
+PLUS.start(); BRAND.load();
 setInterval(() => { if (!document.hidden) refresh(); }, 60000);
 setInterval(() => { if (!document.hidden) fetchLive(); }, 12000);
 setInterval(() => setStatus(lastOk ? 'ok' : (D.t ? 'err' : 'busy')), 30000);

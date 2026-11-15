@@ -29,3 +29,9 @@ textarea.in{min-height:84px;resize:vertical;font:inherit}
 .alink:hover{border-color:#d9a521}
 @media(max-width:520px){.alink{font-size:12.5px;padding:7px 10px}.atabs button{font-size:13px;padding:8px 11px}}
 @media(max-width:640px){.alinks{flex-wrap:wrap;overflow:visible}.alink{flex:1 1 auto;justify-content:center}}
+
+.bpart{border:1px solid var(--line);border-radius:16px;padding:12px;margin:10px 0;background:var(--soft)}
+.bhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}.bhead b{flex:1;min-width:140px}
+.coin.bl{width:44px;height:44px;font-size:20px;overflow:hidden}.coin.bl img{width:100%;height:100%;object-fit:cover}
+.coin img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+@media(max-width:640px){.bpart .g4{grid-template-columns:1fr 1fr;gap:8px}.bhead b{min-width:100%;order:-1}}

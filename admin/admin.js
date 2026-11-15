@@ -58,7 +58,7 @@ async function boardsSheet() {
 }
 function login() {
   $('app').innerHTML = `<div class="auth"><div class="auth-lang">${NAV.btn()}<span style="flex:1"></span>${THEME.btn()}${HELP.ctxBtn()}${I18N.picker('lang-sel', true)}</div>
-    <div class="hero3d"><div class="coin">⚙</div><h1>${_('پنل مدیریت')}</h1><div class="muted">Sarrafino · Arzino</div></div>
+    <div class="hero3d"><div class="coin">${BRAND.mark('admin', '⚙')}</div><h1>${esc(BRAND.name('admin'))}</h1><div class="muted">${esc(BRAND.name('sarrafino'))} · ${esc(BRAND.name('arzino'))}</div></div>
     <div class="card" style="margin-top:18px"><div class="fld"><label>${_('ایمیل')}</label><input class="in" id="lE" type="email" dir="ltr" autocomplete="email"></div>
     <div class="fld"><label>${_('رمز عبور')}</label><input class="in" id="lP" type="password" dir="ltr" autocomplete="current-password"></div>
     <button class="btn p w" id="lGo">${_('ورود')}</button></div></div>`;
@@ -74,7 +74,7 @@ const TABS = [['home', '📊', 'خلاصه'], ['payments', '💳', 'پرداخت
   ['users', '👥', 'کاربران'], ['ads', '📣', 'تبلیغات'], ['settings', '⚙️', 'تنظیمات']];
 function render() {
   $('app').innerHTML = `<div class="wrap">
-    <div class="top"><div class="brand"><div class="coin">⚙</div><div><h1>${_('پنل مدیریت')}</h1><small>${esc(A.user.email)}</small></div></div>
+    <div class="top"><div class="brand"><div class="coin">${BRAND.mark('admin', '⚙')}</div><div><h1>${esc(BRAND.name('admin'))}</h1><small>${esc(A.user.email)}</small></div></div>
       <div class="acts">${I18N.picker('lang-sel')}<button class="ibtn" id="aRe" title="${_('بروزرسانی')}">↻</button><button class="ibtn" id="aOut" title="${_('خروج از حساب')}">⎋</button></div></div>
     ${linkBar()}
     ${NAV.bar((TABS.find(x => x[0] === A.tab) || TABS[0])[1] + ' ' + _((TABS.find(x => x[0] === A.tab) || TABS[0])[2]))}
@@ -332,6 +332,11 @@ function adForm(a) {
     if ($('adDel')) $('adDel').onclick = async () => { if (!confirm(_('این تبلیغ حذف شود؟'))) return; const {error} = await sb.from('house_ads').delete().eq('id', a.id); if (error) return err(error); closeSheet(); render(); };
   });
 }
+function squareLogo(file, size) {
+  return new Promise((ok, no) => { const fr = new FileReader(); fr.onerror = no; fr.onload = () => { const img = new Image(); img.onerror = no; img.onload = () => {
+    const c = document.createElement('canvas'), s = Math.min(img.width, img.height); c.width = c.height = size;
+    c.getContext('2d').drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size); ok(c.toDataURL('image/png')); }; img.src = fr.result; }; fr.readAsDataURL(file); });
+}
 function shrinkToDataUrl(file, max) {
   return new Promise(ok => { const img = new Image(); img.onload = () => { const k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas');
     c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); ok(c.toDataURL('image/jpeg', .8)); }; img.src = URL.createObjectURL(file); });
@@ -341,7 +346,15 @@ function shrinkToDataUrl(file, max) {
 async function vSettings(el) {
   const [pay, trial, free, contact, plans] = await Promise.all([getSetting('payment'), getSetting('trial'), getSetting('free_plan'), getSetting('contact'), getPlans()]);
   const popt = sel => plans.map(p => `<option value="${p.id}" ${p.id === sel ? 'selected' : ''}>${esc(tl(p.name))}</option>`).join('');
-  el.innerHTML = MFA.card('admin.security') + `<div class="card"><h3>🏦 ${_('اطلاعات واریز (برای مشتری‌ها نمایش داده می‌شود)')}</h3>
+  const BP = [['arzino', '📈', 'ارزینو — برنامه‌ی عمومی نرخ ارز'], ['sarrafino', '🏪', 'صرافینو — پنل صرافی'], ['sales', '🛒', 'صفحه‌ی فروش'], ['admin', '⚙️', 'پنل مدیریت']];
+  const brand = JSON.parse(JSON.stringify(await getSetting('brand') || {}));
+  const bcard = `<div class="card" id="brandCard"><h3>🎨 ${_('نام و لوگوی هر بخش')}${HELP.btn('admin.brand')}</h3>
+    <p class="hint" style="margin-top:0">${_('نام هر بخش را در هر زبان و لوگوی آن را اینجا عوض کنید. خالی بماند = نام پیش‌فرض. نام و لوگوی هر صرافی را خود صرافی در پنلش عوض می‌کند.')}</p>
+    ${BP.map(([k, i, l]) => `<div class="bpart"><div class="bhead"><div class="coin bl" id="bl-${k}">${BRAND.logo(k) || brand[k]?.logo ? `<img src="${brand[k]?.logo || ''}" alt="">` : i}</div><b>${_(l)}</b>
+      <label class="btn g" style="min-width:auto;cursor:pointer">🖼 ${_('لوگو')}<input type="file" accept="image/*" data-blogo="${k}" hidden></label><button class="btn g" data-bdel="${k}" style="min-width:auto">${_('حذف لوگو')}</button></div>
+      <div class="g4">${L4.map(L => `<div class="fld"><label>${I18N.LANGS[L].name}</label><input class="in" data-bn="${k}" data-bl="${L}" value="${esc(brand[k]?.name?.[L] || '')}" placeholder="${esc(BRAND.defName(k, L))}" dir="auto"></div>`).join('')}</div></div>`).join('')}
+    <div class="btns"><button class="btn p" id="bSave">💾 ${_('ذخیره نام‌ها و لوگوها')}</button></div></div>`;
+  el.innerHTML = MFA.card('admin.security') + bcard + `<div class="card"><h3>🏦 ${_('اطلاعات واریز (برای مشتری‌ها نمایش داده می‌شود)')}</h3>
     <p class="hint" style="margin-top:0">${_('شماره حساب، IBAN، نام صاحب حساب، آدرس کیف پول تتر یا هر روش دیگری که می‌خواهید. هر زبان جدا؛ اگر خالی باشد متن فارسی نمایش داده می‌شود.')}</p>
     <div class="g4">${L4.map(l => `<div class="fld"><label>${I18N.LANGS[l].name}</label><textarea class="in" data-bk="${l}" dir="ltr">${esc(pay.bank?.[l] || '')}</textarea></div>`).join('')}</div>
     <div class="sec">📝 ${_('راهنمای زیر اطلاعات واریز')}</div>
@@ -360,7 +373,17 @@ async function vSettings(el) {
   $('sPay').onclick = () => { const bank = {}, note = {}; document.querySelectorAll('[data-bk]').forEach(i => bank[i.dataset.bk] = i.value.trim()); document.querySelectorAll('[data-bn]').forEach(i => note[i.dataset.bn] = i.value.trim()); putSetting('payment', {...pay, bank, note}, 'users'); };
   $('sTr').onclick = async () => { if (await putSetting('trial', {plan: $('sTP').value, days: Number($('sTD').value) || 0}, 'public')) putSetting('free_plan', {plan: $('sFP').value}, 'public'); };
   MFA.bindCard(sb);
+  const showLogo = k => { $('bl-' + k).innerHTML = brand[k]?.logo ? `<img src="${brand[k].logo}" alt="">` : BP.find(x => x[0] === k)[1]; };
+  el.querySelectorAll('[data-blogo]').forEach(i => i.onchange = async () => { const f = i.files[0]; if (!f) return; const k = i.dataset.blogo;
+    (brand[k] ||= {}).logo = await squareLogo(f, 256); showLogo(k); });
+  el.querySelectorAll('[data-bdel]').forEach(b => b.onclick = () => { const k = b.dataset.bdel; if (brand[k]) delete brand[k].logo; showLogo(k); });
+  $('bSave').onclick = async () => {
+    el.querySelectorAll('[data-bn]').forEach(i => { const k = i.dataset.bn, v = i.value.trim(); (brand[k] ||= {}).name ||= {}; if (v) brand[k].name[i.dataset.bl] = v; else delete brand[k].name[i.dataset.bl]; });
+    if (await putSetting('brand', brand, 'public')) { BRAND.set(brand); render(); }
+  };
   $('sCt').onclick = () => putSetting('contact', {whatsapp: $('sW').value.trim(), email: $('sE').value.trim(), brand: $('sBr').value.trim() || 'Sarrafino'}, 'public');
 }
 
+addEventListener('brandchange', () => { document.title = BRAND.name('admin') + ' · ' + BRAND.name('sarrafino'); });
+BRAND.load();
 boot().catch(err);

@@ -267,7 +267,7 @@ async function drawBoard(canvas, size = 'post') {
     rr(ctx, (W - tw) / 2, fy - 42, tw, 64, 32); ctx.fillStyle = T.accent; ctx.fill();
     ctx.fillStyle = st.board_theme === 'light' ? '#fff' : '#2b1d00'; ctx.fillText(contact, W / 2, fy);
   }
-  if (!feat('branding')) { ctx.textAlign = 'center'; ctx.fillStyle = T.muted; ctx.font = '600 22px Vazirmatn, "Segoe UI", Arial, sans-serif'; ctx.fillText('⚡ ' + _('صادر شده با صرافینو'), W / 2, H - 22); }
+  if (!feat('branding')) { ctx.textAlign = 'center'; ctx.fillStyle = T.muted; ctx.font = '600 22px Vazirmatn, "Segoe UI", Arial, sans-serif'; ctx.fillText('⚡ ' + _('صادر شده با {b}', {b: BRAND.name('sarrafino')}), W / 2, H - 22); }
 }
 function canvasBlob(canvas) { return new Promise(r => canvas.toBlob(r, 'image/png')); }
 const isMobile = () => navigator.userAgentData?.mobile ?? /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
@@ -322,7 +322,7 @@ function receiptText(x) {
     if (t.length) out.push(('🤝 ' + _('امانت:') + ' ') + t.map(([cc, v]) => `${money(Math.abs(v), cc)} ${v > 0 ? _('نزد شما') : _('نزد ما')}`).join(I18N.rtl ? '، ' : ', '));
   }
   out.push('', (_('با تشکر از اعتماد شما') + ' 🌿'));
-  if (!feat('branding')) out.push('— ' + _('صادر شده با صرافینو'));
+  if (!feat('branding')) out.push('— ' + _('صادر شده با {b}', {b: BRAND.name('sarrafino')}));
   if (settings().phone) out.push('📞 ' + ltr(settings().phone));
   return out.join('\n');
 }

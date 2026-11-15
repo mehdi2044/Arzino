@@ -239,6 +239,48 @@ ar: ['إعدادات المنصة', `- **🔐 أمان الحساب:** الدخ�
 - **الفترة التجريبية:** الخطة وعدد الأيام للمكاتب الجديدة. **الخطة المجانية:** الخطة المستخدمة بعد انتهاء الاشتراك.
 - **التواصل:** رقم واتساب الدعم (لزر صفحة البيع) والبريد واسم العلامة.`],
 },
+'admin.brand': {
+fa: ['نام و لوگوی هر بخش', `سامانه چهار بخش دارد و نام و لوگوی هر کدام اینجا عوض می‌شود:
+- **ارزینو:** برنامه‌ی عمومی نرخ ارز برای همه‌ی مردم؛ درآمدش از تبلیغات است.
+- **صرافینو:** پنل حسابداری که به صرافی‌ها اشتراک می‌فروشید.
+- **صفحه‌ی فروش:** سایت معرفی و قیمت‌ها برای جذب صرافی‌ها.
+- **پنل مدیریت:** همین پنل، فقط برای شما.
+## چطور
+- برای هر بخش، نام را در هر زبان بنویسید. اگر خالی بماند، نام پیش‌فرض (که کم‌رنگ نوشته شده) استفاده می‌شود.
+- با «🖼 لوگو» تصویر را انتخاب کنید؛ خودکار مربع و کوچک می‌شود. «حذف لوگو» به نشان پیش‌فرض برمی‌گردد.
+- «ذخیره» را بزنید؛ همه‌ی صفحه‌ها در بازدید بعدی نام و لوگوی تازه را نشان می‌دهند.
+! این‌ها برند خود شماست. نام و لوگوی هر صرافی (روی تابلو، رسید و سربرگ پنلش) را خود صرافی در «تابلو ← ظاهر و اطلاعات تابلو» و «بیشتر ← صرافی» عوض می‌کند. نام برنامه‌ی نصب‌شده‌ی اندروید و نام فایل نصب گوشی ثابت است و با به‌روزرسانی بعدی اپ عوض می‌شود.`],
+en: ['Name and logo of each part', `The system has four parts; each one's name and logo are changed here:
+- **Arzino:** the public exchange-rate app for everyone; it earns from ads.
+- **Sarrafino:** the accounting panel you sell to exchange offices by subscription.
+- **Sales page:** the website with features and prices to win offices.
+- **Admin panel:** this panel, for you only.
+## How
+- For each part, write the name in every language. Left empty, the default name (shown faintly) is used.
+- Pick an image with “🖼 Logo”; it is squared and shrunk automatically. “Remove logo” goes back to the default mark.
+- Tap “Save”; every page shows the new name and logo on the next visit.
+! These are your own brand. Each exchange office changes its own name and logo (on its board, receipts and panel header) in Board → Board look and More → Office. The installed Android app's name is fixed and changes with the next app build.`],
+tr: ['Her bölümün adı ve logosu', `Sistem dört bölümden oluşur; her birinin adı ve logosu burada değişir:
+- **Arzino:** herkese açık döviz kuru uygulaması; geliri reklamdır.
+- **Sarrafino:** döviz bürolarına abonelikle sattığınız muhasebe paneli.
+- **Satış sayfası:** büroları kazanmak için özellikler ve fiyatlar sitesi.
+- **Yönetim paneli:** bu panel, yalnızca sizin için.
+## Nasıl
+- Her bölüm için adı her dilde yazın. Boş kalırsa varsayılan ad (soluk yazılı) kullanılır.
+- “🖼 Logo” ile resim seçin; otomatik kare ve küçük yapılır. “Logoyu kaldır” varsayılan işarete döner.
+- “Kaydet”e dokunun; tüm sayfalar bir sonraki ziyarette yeni ad ve logoyu gösterir.
+! Bunlar sizin markanızdır. Her büro kendi adını ve logosunu (panosunda, makbuzlarında ve panel başlığında) Pano → Pano görünümü ve Diğer → Büro bölümünden değiştirir. Kurulu Android uygulamasının adı sabittir, bir sonraki uygulama derlemesinde değişir.`],
+ar: ['اسم وشعار كل قسم', `للمنظومة أربعة أقسام، ويُغيَّر هنا اسم كل منها وشعاره:
+- **أرزينو:** تطبيق أسعار الصرف العام للجميع؛ دخله من الإعلانات.
+- **صرافينو:** لوحة المحاسبة التي تبيعها لمكاتب الصرافة بالاشتراك.
+- **صفحة البيع:** موقع الميزات والأسعار لجذب المكاتب.
+- **لوحة الإدارة:** هذه اللوحة، لك وحدك.
+## الطريقة
+- اكتب اسم كل قسم بكل لغة. إن بقي فارغاً يُستخدم الاسم الافتراضي (المكتوب بلون باهت).
+- اختر صورة بـ «🖼 الشعار»؛ تُربَّع وتُصغَّر تلقائياً. «حذف الشعار» يعيد العلامة الافتراضية.
+- اضغط «حفظ»؛ تعرض كل الصفحات الاسم والشعار الجديدين في الزيارة التالية.
+! هذه علامتك التجارية. كل مكتب صرافة يغيّر اسمه وشعاره (على لوحته وإيصالاته ورأس لوحته) من اللوحة ← مظهر اللوحة ومن المزيد ← المكتب. اسم تطبيق أندرويد المثبّت ثابت ويتغير مع البناء التالي للتطبيق.`],
+},
 'admin.security': {
 fa: ['ورود دو مرحله‌ای مدیر', `حساب مدیر به همه‌ی صرافی‌ها و پرداخت‌ها دسترسی دارد؛ حتماً ورود دو مرحله‌ای را روشن کنید.
 1) Google Authenticator یا Microsoft Authenticator را روی گوشی نصب کنید.
