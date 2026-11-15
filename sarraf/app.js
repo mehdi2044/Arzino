@@ -1,6 +1,8 @@
 'use strict';
 /* صرافینو — multi-exchange accounting for small currency exchanges */
 
+const HASH0 = location.hash;                       // read before the auth library clears it
+let RECOVER = /[#&]type=recovery/.test(HASH0);     // opened from a password-reset email
 const sb = supabase.createClient(window.SARRAF_CONFIG.url, window.SARRAF_CONFIG.key, {global:{fetch:(u, o = {}) => fetch(u, {...o, cache:'no-store'})}});
 const MARKET_URL = 'https://raw.githubusercontent.com/mehdi2044/arzino/data/latest.json';
 const $ = id => document.getElementById(id);
@@ -126,7 +128,12 @@ function chipsFor(o, invert) {           // customer: + = owes us (red), - = we 
 async function boot() {
   const {data: {session}} = await sb.auth.getSession();
   S.user = session?.user || null;
-  if (!S.user) return renderAuth();
+  if (!S.user) {
+    renderAuth();
+    if (/otp_expired|access_denied/.test(HASH0) && !boot.warned) { boot.warned = true; toast(_('این لینک منقضی شده یا قبلاً استفاده شده است. دوباره درخواست بدهید.')); }
+    return;
+  }
+  if (RECOVER) return renderNewPass();
   await sb.rpc('accept_invites', {p_display_name: S.user.user_metadata?.name || null});
   const {data, error} = await sb.from('members').select('role, display_name, exchange_id, exchanges(id,name,base_ccy,settings)').eq('user_id', S.user.id);
   if (error) return err(error);
@@ -152,10 +159,12 @@ function renderAuth(mode = 'login') {
       <div class="fld"><label>${_('ایمیل')}</label><input class="in" id="aEmail" type="email" autocomplete="email" dir="ltr"></div>
       <div class="fld"><label>${_('رمز عبور')} ${mode === 'signup' ? _('(حداقل ۶ کاراکتر)') : ''}</label><input class="in" id="aPass" type="password" autocomplete="${mode === 'signup' ? 'new-password' : 'current-password'}" dir="ltr"></div>
       <button class="btn p w" id="aGo">${mode === 'login' ? _('ورود') : _('ساخت حساب')}</button>
+      ${mode === 'login' ? `<button class="lnk" id="aForgot" type="button">${_('رمز را فراموش کرده‌اید؟')}</button>` : ''}
       <p class="hint">${mode === 'signup' ? _('اگر صاحب صرافی شما را دعوت کرده، با همان ایمیلی که داده ثبت‌نام کنید تا خودکار به صرافی وصل شوید.') : ''}</p>
     </div></div>`;
   S.screen = () => renderAuth(mode); I18N.bindPickers();
   document.querySelectorAll('[data-m]').forEach(b => b.onclick = () => renderAuth(b.dataset.m));
+  if ($('aForgot')) $('aForgot').onclick = renderForgot;
   $('aGo').onclick = async () => {
     const email = $('aEmail').value.trim(), password = $('aPass').value;
     if (!email || password.length < 6) return toast(_('ایمیل و رمز (حداقل ۶ کاراکتر) را وارد کنید'));
@@ -169,6 +178,51 @@ function renderAuth(mode = 'login') {
       return;
     }
     boot();
+  };
+}
+/* forgot password: email a reset link, then let the user choose a new password */
+function renderForgot() {
+  S.screen = renderForgot;
+  $('app').innerHTML = `<div class="auth">
+    <div class="auth-lang">${I18N.picker('lang-sel', true)}</div>
+    <div class="card"><h2 style="margin-top:0">🔑 ${_('بازیابی رمز عبور')}</h2>
+      <p class="muted small">${_('ایمیل حساب خود را وارد کنید تا لینک ساخت رمز جدید برایتان فرستاده شود.')}</p>
+      <div class="fld"><label>${_('ایمیل')}</label><input class="in" id="fEmail" type="email" autocomplete="email" dir="ltr"></div>
+      <button class="btn p w" id="fGo">${_('ارسال لینک بازیابی')}</button>
+      <button class="lnk" id="fBack" type="button">${_('بازگشت به ورود')}</button>
+    </div></div>`;
+  I18N.bindPickers();
+  $('fBack').onclick = () => renderAuth();
+  $('fGo').onclick = async () => {
+    const email = $('fEmail').value.trim();
+    if (!/^\S+@\S+\.\S+$/.test(email)) return toast(_('ایمیل معتبر وارد کنید'));
+    $('fGo').disabled = true;
+    const {error} = await sb.auth.resetPasswordForEmail(email, {redirectTo: location.origin + location.pathname});
+    $('fGo').disabled = false;
+    if (error) return toast(/rate limit/i.test(error.message) ? _('تعداد ایمیل‌های ارسالی به سقف رسیده است. حدود یک ساعت دیگر دوباره امتحان کنید.') : error.message);
+    const sent = () => { $('app').innerHTML = `<div class="auth"><div class="card center"><h2>📧 ${_('ایمیل خود را چک کنید')}</h2><p>${_('اگر این ایمیل ثبت شده باشد، لینک ساخت رمز جدید به {e} فرستاده شد. روی لینک بزنید و رمز تازه بگذارید.', {e: `<b dir="ltr">${esc(email)}</b>`})}</p><p class="hint">${_('اگر نیامد، پوشه‌ی Spam را هم ببینید.')}</p><button class="btn g w" id="fDone">${_('بازگشت به ورود')}</button></div></div>`; $('fDone').onclick = () => renderAuth(); };
+    S.screen = sent; sent();
+  };
+}
+function renderNewPass() {
+  S.screen = renderNewPass;
+  $('app').innerHTML = `<div class="auth">
+    <div class="auth-lang">${I18N.picker('lang-sel', true)}</div>
+    <div class="card"><h2 style="margin-top:0">🔑 ${_('رمز عبور جدید')}</h2>
+      <div class="fld"><label>${_('رمز عبور جدید')} ${_('(حداقل ۶ کاراکتر)')}</label><input class="in" id="nP1" type="password" autocomplete="new-password" dir="ltr"></div>
+      <div class="fld"><label>${_('تکرار رمز جدید')}</label><input class="in" id="nP2" type="password" autocomplete="new-password" dir="ltr"></div>
+      <button class="btn p w" id="nGo">${_('ذخیره رمز جدید')}</button>
+    </div></div>`;
+  I18N.bindPickers();
+  $('nGo').onclick = async () => {
+    const p1 = $('nP1').value, p2 = $('nP2').value;
+    if (p1.length < 6) return toast(_('رمز باید حداقل ۶ کاراکتر باشد'));
+    if (p1 !== p2) return toast(_('دو رمز یکسان نیستند'));
+    $('nGo').disabled = true;
+    const {error} = await sb.auth.updateUser({password: p1});
+    $('nGo').disabled = false;
+    if (error) return err(error);
+    RECOVER = false; toast(_('رمز جدید ذخیره شد')); boot().catch(err);
   };
 }
 function renderCreateExchange() {
@@ -201,6 +255,7 @@ function localizeNames() {
   for (const c of S.customers) if (c.is_walkin) { c.raw ??= c.name; c.rawN ??= c.notes; c.name = _(c.raw); c.notes = c.rawN && _(c.rawN); }
 }
 function render() {
+  if (RECOVER) return renderNewPass();
   S.screen = render; localizeNames();
   const V = {home:vHome, txns:vTxns, customers:vCustomers, customer:vCustomer, board:vBoard, reports:vReports, more:vMore}[S.view] || vHome;
   $('app').innerHTML = `<div class="wrap">
@@ -435,6 +490,52 @@ async function vReports(el) {
       [x.no, jd(x.occurred_at), TYPE[x.type]?.[1], cust(x.customer_id)?.name || (x.member_id ? memberName(x.member_id) : x.category || ''), txSummary(x).replace(/<[^>]+>/g, ''), x.note || '', x.meta?.profit_base ?? '', memberName(x.created_by), x.voided ? _('باطل') : ''])));
   };
 }
+function xlsxBook(name, sheets) {            // several sheets in one Excel file
+  if (!window.XLSX) { toast(_('کتابخانه اکسل هنوز بارگذاری نشده، دوباره امتحان کنید')); return false; }
+  const wb = XLSX.utils.book_new(); wb.Workbook = {Views:[{RTL: I18N.rtl}]};
+  for (const [title, rows] of sheets) {
+    const ws = XLSX.utils.aoa_to_sheet(rows); ws['!cols'] = rows[0].map(() => ({wch:18}));
+    XLSX.utils.book_append_sheet(wb, ws, title.replace(/[\[\]:*?\/\\]/g, ' ').slice(0, 31));
+  }
+  XLSX.writeFile(wb, `${name}-${new Date().toISOString().slice(0, 10)}.xlsx`); return true;
+}
+/* full backup: everything the exchange owns, as one Excel workbook or one JSON file */
+async function backup(kind) {
+  toast(_('در حال آماده‌سازی پشتیبان…'));
+  const txns = await fetchAll(() => sb.from('txns').select('*, lines(*)').eq('exchange_id', S.ex.id).order('occurred_at', {ascending:true}));
+  const stamp = new Date().toISOString();
+  let ok = true;
+  if (kind === 'json') {
+    const plain = (o, extra) => { const c = {...o, ...extra}; delete c.raw; delete c.rawN; return c; };
+    const data = {app: 'sarrafino', version: 1, exported_at: stamp, exchange: S.ex, members: S.members,
+      customers: S.customers.map(c => plain(c, c.raw ? {name: c.raw, notes: c.rawN ?? null} : {})),
+      boxes: S.boxes.map(b => plain(b, b.raw ? {name: b.raw} : {})), rates: S.board, balances: S.bal, txns};
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], {type: 'application/json'}));
+    a.download = `sarraf-backup-${stamp.slice(0, 10)}.json`; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  } else {
+    const PARTY = {box: _('صندوق'), customer: _('مشتری'), trust: _('امانت'), expense: _('هزینه'), equity: _('سرمایه')};
+    const KIND = {cash: _('نقد'), bank: _('حساب بانکی'), wallet: _('کیف پول')};
+    const who = x => cust(x.customer_id)?.name || (x.member_id ? memberName(x.member_id) : x.category ? _(x.category) : '');
+    ok = xlsxBook('sarraf-backup', [
+      [_('تراکنش‌ها'), [[_('شماره'), _('تاریخ'), _('نوع'), _('مشتری/طرف'), _('شرح'), _('توضیح'), _('ثبت‌کننده'), _('وضعیت')]].concat(txns.map(x =>
+        [x.no, jd(x.occurred_at), TYPE[x.type]?.[1], who(x), txSummary(x).replace(/<[^>]+>/g, ''), x.note || '', memberName(x.created_by), x.voided ? _('باطل') : '']))],
+      [_('ردیف‌ها'), [[_('شماره'), _('تاریخ'), _('حساب'), _('صندوق'), _('مشتری/طرف'), _('ارز'), _('مبلغ'), _('وضعیت')]].concat(txns.flatMap(x => (x.lines || []).map(l =>
+        [x.no, jd(x.occurred_at), PARTY[l.party] || l.party, box(l.box_id)?.name || '', cust(l.customer_id)?.name || (l.member_id ? memberName(l.member_id) : ''), l.currency, Number(l.amount), x.voided ? _('باطل') : ''])))],
+      [_('مانده‌ها'), [[_('حساب'), _('صندوق'), _('مشتری'), _('ارز'), _('مانده')]].concat(S.bal.filter(r => Math.abs(r.amount) > 1e-9).map(r =>
+        [PARTY[r.party] || r.party, box(r.box_id)?.name || '', cust(r.customer_id)?.name || '', r.currency, Number(r.amount)]))],
+      [_('مشتری‌ها'), [[_('نام'), _('تلفن'), _('توضیحات'), _('وضعیت')]].concat(S.customers.map(c => [c.name, c.phone || '', c.notes || '', c.archived ? _('(بایگانی)') : '']))],
+      [_('صندوق‌ها'), [[_('صندوق'), _('ارز'), _('نوع'), _('موجودی'), _('وضعیت')]].concat(S.boxes.map(b => [b.name, b.currency, KIND[b.kind] || b.kind, balOf('box', 'box_id', b.id)[b.currency] || 0, b.archived ? _('(بایگانی)') : '']))],
+      [_('نرخ‌ها'), [[_('نرخ'), _('خرید'), _('فروش')]].concat(S.board.map(r => [_('{a} به {b}', {a: cn(r.ccy), b: cn(r.quote)}), Number(r.buy) || '', Number(r.sell) || '']))],
+      [_('اعضا'), [[_('نام'), _('ایمیل'), _('نقش'), _('سهم سود (٪)')]].concat(S.members.map(m => [m.display_name || '', m.email || '', ROLE[m.role], Number(m.share_pct) || 0]))],
+    ]);
+  }
+  if (!ok) return;
+  localStorage.setItem('sarraf.bk.' + S.ex.id, stamp);
+  if ($('bkLast')) $('bkLast').textContent = _('آخرین پشتیبان:') + ' ' + jd(stamp);
+  toast(_('پشتیبان دانلود شد'));
+}
 function xlsx(name, rows) {
   if (!window.XLSX) return toast(_('کتابخانه اکسل هنوز بارگذاری نشده، دوباره امتحان کنید'));
   const ws = XLSX.utils.aoa_to_sheet(rows); ws['!cols'] = rows[0].map(() => ({wch:18}));
@@ -449,6 +550,10 @@ function vMore(el) {
     <div class="card"><h3>💰 ${_('صندوق‌ها')}</h3><div class="list">${S.boxes.map(b => `<div class="row" data-box="${b.id}"><div class="ic">${b.kind === 'bank' ? '🏦' : b.kind === 'wallet' ? '👛' : '💵'}</div><div class="m"><b>${esc(b.name)}${b.archived ? (' ' + _('(بایگانی)')) : ''}</b><span>${cn(b.currency) || b.currency}</span></div><div class="e">${money(balOf('box', 'box_id', b.id)[b.currency] || 0, b.currency)}</div></div>`).join('')}</div></div>
     <div class="card"><h3>👔 ${_('اعضای صرافی')}</h3><div class="list">${S.members.map(m => `<div class="row" data-mem="${m.user_id}"><div class="ic">${m.role === 'owner' ? '👑' : m.role === 'partner' ? '🤝' : '🧑‍💼'}</div><div class="m"><b>${esc(m.display_name || m.email)}</b><span>${ROLE[m.role]}${m.role !== 'staff' ? (' · ' + _('سهم سود') + ' ') + fmt(m.share_pct, 2) + PC() : ''} · ${esc(m.email || '')}</span></div></div>`).join('')}</div>
       ${mgr ? ('<div class="btns">' + '<button class="btn p" id="mInv">' + '+ ' + _('دعوت شریک یا کارمند') + '</button>' + '</div>' + '<div id="invList">' + '</div>') : ''}</div>
+    ${mgr ? `<div class="card"><h3>🗄 ${_('پشتیبان کامل')}</h3>
+      <p class="hint" style="margin-top:0">${_('همه‌ی مشتری‌ها، صندوق‌ها، مانده‌ها، تراکنش‌ها و نرخ‌ها در یک فایل. پیشنهاد می‌شود هفته‌ای یک بار دانلود و در جای امن نگه دارید.')}</p>
+      <div class="btns"><button class="btn p" id="bkX">📊 ${_('دانلود اکسل کامل')}</button><button class="btn g" id="bkJ">💾 ${_('دانلود فایل بازیابی (JSON)')}</button></div>
+      <p class="hint" id="bkLast">${_('آخرین پشتیبان:')} ${localStorage.getItem('sarraf.bk.' + S.ex.id) ? jd(localStorage.getItem('sarraf.bk.' + S.ex.id)) : _('هنوز پشتیبانی گرفته نشده')}</p></div>` : ''}
     <div class="card"><h3>🏪 ${_('صرافی')}</h3>
       ${S.role === 'owner' ? `<div class="fld"><label>${_('نام صرافی')}</label><input class="in" id="exN" value="${esc(S.ex.name)}"></div>
       <div class="fld"><label>${_('ارز گزارش سود')}</label><select class="in" id="exB">${ccyOpts(base(), ['USD','TRY','IRT','EUR'])}</select></div><button class="btn p w" id="exSave">${_('ذخیره')}</button>` : `<p>${esc(S.ex.name)}</p>`}
@@ -460,6 +565,7 @@ function vMore(el) {
   el.querySelectorAll('[data-mem]').forEach(r => r.onclick = () => S.role === 'owner' && formMember(S.members.find(m => m.user_id === r.dataset.mem)));
   if ($('mInv')) { $('mInv').onclick = formInvite; loadInvites(); }
   if ($('exSave')) $('exSave').onclick = async () => { const {error} = await sb.from('exchanges').update({name:$('exN').value.trim(), base_ccy:$('exB').value}).eq('id', S.ex.id); if (error) return err(error); S.ex.name = $('exN').value.trim(); S.ex.base_ccy = $('exB').value; toast(_('ذخیره شد')); render(); };
+  if ($('bkX')) { $('bkX').onclick = () => backup('xlsx').catch(err); $('bkJ').onclick = () => backup('json').catch(err); }
   $('newEx').onclick = renderCreateExchange;
   $('logout').onclick = async () => { await sb.auth.signOut(); location.reload(); };
 }
@@ -785,5 +891,8 @@ function formMember(m) {
 
 // language switch: redraw whatever screen is open, in the new language
 addEventListener('langchange', () => { closeSheet(); if (S.screen) S.screen(); });
-sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT') { S.user = null; renderAuth(); } });
+sb.auth.onAuthStateChange((ev) => {
+  if (ev === 'PASSWORD_RECOVERY') { RECOVER = true; renderNewPass(); }
+  if (ev === 'SIGNED_OUT') { S.user = null; renderAuth(); }
+});
 boot().catch(err);

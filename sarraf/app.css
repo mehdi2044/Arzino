@@ -167,3 +167,4 @@ html[dir=ltr] .tbl td.n{text-align:right}
 .top .lang-sel{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.22);color:#fff}
 .lang-sel option{color:#0b1f3a;background:#fff}
 .auth-lang{display:flex;justify-content:flex-end;margin-bottom:6px}
+.lnk{display:block;width:100%;margin-top:10px;background:none;border:0;color:var(--em);font:inherit;font-weight:700;font-size:13.5px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
