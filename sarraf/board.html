@@ -51,15 +51,16 @@ body.tv .coin{width:6vh;height:6vh;font-size:2.6vh}
 <div class="w" id="app"><div class="err">…</div></div>
 <script src="vendor/supabase.js"></script>
 <script src="config.js?v=1"></script>
-<script src="../i18n.js?v=1"></script>
+<script src="../i18n.js?v=2"></script>
 <script>
 (() => { const l = new URLSearchParams(location.search).get('lang'); if (l && I18N.LANGS[l] && l !== I18N.lang) { I18N.lang = l; I18N.apply(); } })();
 I18N.addPhrases({
   tr: {'این تابلو در دسترس نیست یا هنوز فعال نشده است.': 'Bu pano kullanılamıyor ya da henüz etkinleştirilmedi.', 'نرخ ارز': 'Döviz kurları', 'تابلوی نرخ ارز': 'Döviz kur panosu', 'ارز': 'Döviz', 'خرید از شما': 'Sizden alış', 'فروش به شما': 'Size satış', 'به {b}': '{b} karşılığı', 'نرخی ثبت نشده است': 'Kayıtlı kur yok', 'واتس‌اپ': 'WhatsApp', 'آخرین بروزرسانی نرخ‌ها:': 'Kurların son güncellemesi:'},
   en: {'این تابلو در دسترس نیست یا هنوز فعال نشده است.': 'This board is not available or not enabled yet.', 'نرخ ارز': 'Exchange rates', 'تابلوی نرخ ارز': 'Exchange rate board', 'ارز': 'Currency', 'خرید از شما': 'We buy', 'فروش به شما': 'We sell', 'به {b}': 'in {b}', 'نرخی ثبت نشده است': 'No rates saved', 'واتس‌اپ': 'WhatsApp', 'آخرین بروزرسانی نرخ‌ها:': 'Rates last updated:'},
+  ar: {'این تابلو در دسترس نیست یا هنوز فعال نشده است.': 'هذه اللوحة غير متاحة أو لم تُفعَّل بعد.', 'نرخ ارز': 'أسعار الصرف', 'تابلوی نرخ ارز': 'لوحة أسعار الصرف', 'ارز': 'العملة', 'خرید از شما': 'نشتري منك', 'فروش به شما': 'نبيع لك', 'به {b}': 'مقابل {b}', 'نرخی ثبت نشده است': 'لا توجد أسعار محفوظة', 'واتس‌اپ': 'واتساب', 'آخرین بروزرسانی نرخ‌ها:': 'آخر تحديث للأسعار:'},
 });
 const SYMS = {USD:'$',TRY:'₺',IRT:'ت',EUR:'€',USDT:'₮',GBP:'£',AED:'AED',CAD:'C$',CHF:'CHF',CNY:'¥',IQD:'IQD'};
-const nameOf = c => I18N.has('s.' + c) ? t('s.' + c) : c, symOf = c => c === 'IRT' && I18N.lang !== 'fa' ? 'IRT' : (SYMS[c] || c);
+const nameOf = c => I18N.has('s.' + c) ? t('s.' + c) : c, symOf = c => c === 'IRT' && !I18N.rtl ? 'IRT' : (SYMS[c] || c);
 document.getElementById('lang').innerHTML = I18N.picker('lang-sel', true); I18N.bindPickers();
 addEventListener('langchange', () => load());
 

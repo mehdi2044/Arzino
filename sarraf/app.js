@@ -14,7 +14,7 @@ const CCY = {
 const CCYS = Object.keys(CCY);
 const PC = () => I18N.lang === 'fa' ? '٪' : '%';
 const cn = c => I18N.has('s.' + c) ? t('s.' + c) : c;                       // currency name in current language
-const sym = c => c === 'IRT' && I18N.lang !== 'fa' ? 'IRT' : (CCY[c]?.s || c);
+const sym = c => c === 'IRT' && I18N.lang !== 'fa' ? (I18N.lang === 'ar' ? 'تومان' : 'IRT') : (CCY[c]?.s || c); // i18n-skip
 const ROLE_FA = {owner:'مالک', partner:'شریک', staff:'کارمند'}; // i18n-skip
 const ROLE = new Proxy(ROLE_FA, {get: (o, k) => _(o[k])});
 const TYPE_FA = {

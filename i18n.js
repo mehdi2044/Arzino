@@ -1,14 +1,15 @@
 'use strict';
-/* Shared language engine for Arzino and Sarraf — Persian · Türkçe · English
+/* Shared language engine for Arzino and Sarraf — Persian · Türkçe · English · العربية
    One saved choice ('arzino.lang') drives both apps: text, direction (RTL/LTR), dates and numbers. */
 (function (w) {
   const LANGS = {
     fa: {name: 'فارسی', short: 'FA', dir: 'rtl', date: 'fa-IR-u-ca-persian', num: 'fa-IR'},
     tr: {name: 'Türkçe', short: 'TR', dir: 'ltr', date: 'tr-TR', num: 'en-US'},
     en: {name: 'English', short: 'EN', dir: 'ltr', date: 'en-GB', num: 'en-US'},
+    ar: {name: 'العربية', short: 'AR', dir: 'rtl', date: 'ar-u-ca-gregory-nu-latn', num: 'en-US'},
   };
-  const DICT = {fa: {}, tr: {}, en: {}};
-  const PH = {tr: {}, en: {}};          // phrase book: Persian source text -> translation
+  const DICT = {fa: {}, tr: {}, en: {}, ar: {}};
+  const PH = {tr: {}, en: {}, ar: {}};          // phrase book: Persian source text -> translation
   const KEY = 'arzino.lang';
   function detect() {
     try { const s = localStorage.getItem(KEY); if (LANGS[s]) return s; } catch {}
@@ -52,7 +53,7 @@
     },
     // compact language picker: <select class="lang-sel">
     picker(cls = 'lang-sel', full) {
-      return `<select class="${cls}" aria-label="Language" title="Language · Dil · زبان">${Object.entries(LANGS).map(([k, v]) => `<option value="${k}" ${k === I.lang ? 'selected' : ''}>${full ? v.name : v.short}</option>`).join('')}</select>`;
+      return `<select class="${cls}" aria-label="Language" title="Language · Dil · زبان · اللغة">${Object.entries(LANGS).map(([k, v]) => `<option value="${k}" ${k === I.lang ? 'selected' : ''}>${full ? v.name : v.short}</option>`).join('')}</select>`;
     },
     bindPickers(root = document) { root.querySelectorAll('select.lang-sel').forEach(s => { s.value = I.lang; s.onchange = () => I.set(s.value); }); },
     // big numbers in words: 25.76 million
@@ -60,6 +61,7 @@
       if (!isFinite(v) || Math.abs(v) < 1000) return '';
       const u = I.lang === 'fa' ? [[1e12, 'هزار میلیارد'], [1e9, 'میلیارد'], [1e6, 'میلیون'], [1e3, 'هزار']]
         : I.lang === 'tr' ? [[1e12, 'trilyon'], [1e9, 'milyar'], [1e6, 'milyon'], [1e3, 'bin']]
+        : I.lang === 'ar' ? [[1e12, 'تريليون'], [1e9, 'مليار'], [1e6, 'مليون'], [1e3, 'ألف']]
         : [[1e12, 'trillion'], [1e9, 'billion'], [1e6, 'million'], [1e3, 'thousand']];
       for (const [n, w2] of u) if (Math.abs(v) >= n) return fmt(v / n, v / n >= 100 ? 1 : 2) + ' ' + w2;
       return '';
@@ -98,6 +100,16 @@
       'u.toman': 'Toman', 'u.rial': 'Rial', 'lang.label': 'Language',
     },
   });
+  I.add({ar: {
+    'c.USD': 'الدولار الأمريكي', 'c.EUR': 'اليورو', 'c.TRY': 'الليرة التركية', 'c.CAD': 'الدولار الكندي', 'c.CNY': 'اليوان الصيني', 'c.CHF': 'الفرنك السويسري',
+    'c.GBP': 'الجنيه الإسترليني', 'c.AED': 'الدرهم الإماراتي', 'c.JPY': 'الين الياباني', 'c.AUD': 'الدولار الأسترالي', 'c.RUB': 'الروبل الروسي', 'c.IRT': 'التومان الإيراني',
+    'c.IQD': 'الدينار العراقي', 'c.XAU': 'الذهب (أونصة)', 'c.XAG': 'الفضة (أونصة)', 'c.G18': 'ذهب عيار 18 (غرام)', 'c.G24': 'ذهب عيار 24 (غرام)',
+    'c.MESGHAL': 'مثقال الذهب', 'c.SEKE': 'سكة إمامي الذهبية', 'c.SEKE_B': 'سكة بهار آزادي', 'c.NIM': 'نصف سكة', 'c.ROB': 'ربع سكة',
+    'c.BTC': 'بيتكوين', 'c.ETH': 'إيثيريوم', 'c.USDT': 'تيثر (USDT)', 'c.XRP': 'ريبل', 'c.TRX': 'ترون',
+    's.USD': 'دولار', 's.EUR': 'يورو', 's.TRY': 'ليرة', 's.IRT': 'تومان', 's.USDT': 'تيثر', 's.GBP': 'جنيه', 's.AED': 'درهم', 's.CAD': 'دولار كندي',
+    's.CHF': 'فرنك', 's.CNY': 'يوان', 's.IQD': 'دينار عراقي',
+    'u.toman': 'تومان', 'u.rial': 'ريال', 'lang.label': 'اللغة',
+  }});
   w.I18N = I;
   w.t = I.t;
   w._ = I.tr;

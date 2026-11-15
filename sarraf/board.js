@@ -154,8 +154,9 @@ function coin(ctx, cx, cy, r, ccy) {
   ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = r * .5; ctx.shadowOffsetY = r * .18;
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill(); ctx.restore();
   ctx.beginPath(); ctx.arc(cx, cy, r * .82, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = r * .06; ctx.stroke();
-  ctx.fillStyle = '#fff'; ctx.font = `900 ${r * (sym(ccy).length > 2 ? .5 : .8)}px Vazirmatn, Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(sym(ccy), cx, cy + r * .04);
+  ctx.fillStyle = '#fff'; const cs = ccy === 'IRT' && I18N.rtl ? CCY.IRT.s : sym(ccy);
+  ctx.font = `900 ${r * (cs.length > 2 ? .5 : .8)}px Vazirmatn, Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(cs, cx, cy + r * .04);
 }
 function bgPaint(ctx, W, H, T) {
   const g = ctx.createLinearGradient(0, 0, W, H); g.addColorStop(0, T.bg[0]); g.addColorStop(.5, T.bg[1]); g.addColorStop(1, T.bg[2]);

@@ -381,7 +381,7 @@ function renderConv() {
   const one = fmt(1, 0);
   $('rateLine').innerHTML = r == null ? t('cv.noRate') :
     `${one} ${esc(nm(from))} = <b>${moneyTxt(r, to)}</b><br>${one} ${esc(nm(to))} = <b>${moneyTxt(inv, from)}</b>` +
-    (man.length ? `<br><span class="badge b-man">${t('cv.manualOn', {l: man.map(nm).join(I18N.lang === 'fa' ? '، ' : ', ')})}</span>` : '') +
+    (man.length ? `<br><span class="badge b-man">${t('cv.manualOn', {l: man.map(nm).join(I18N.rtl ? '، ' : ', ')})}</span>` : '') +
     ([from, to].some(isEstimate) ? `<br><span class="badge b-flat">${t('cv.est')}</span>` : '') +
     ((from === 'IRT' || to === 'IRT' || AM[from]?.ir || AM[to]?.ir) && !man.length ? srcPicker(from === 'IRT' ? to : from) : '');
   const qa = from === 'IRT' ? [100000, 1e6, 10e6, 100e6, 1e9] : ['BTC','ETH','XAU','SEKE'].includes(from) ? [0.01, 0.1, 0.5, 1, 2] : [1, 10, 100, 500, 1000, 5000];
