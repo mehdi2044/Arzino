@@ -7,13 +7,13 @@
   const tt = k => (w.I18N ? I18N.t(k) : k);
   if (w.I18N) I18N.add({
     fa: {'nav.back': 'بازگشت', 'nav.backT': 'بازگشت به صفحه‌ی قبل', 'help.btn': 'راهنما', 'help.btnT': 'راهنمای این بخش', 'help.close': 'متوجه شدم',
-      'help.all': 'همه‌ی راهنماها', 'help.allT': '📖 راهنمای کامل', 'help.none': 'برای این بخش هنوز راهنما نوشته نشده است.'},
+      'help.all': 'همه‌ی راهنماها', 'help.allT': '📖 راهنمای کامل', 'help.none': 'برای این بخش هنوز راهنما نوشته نشده است.', 'th.dark': 'حالت شب', 'th.light': 'حالت روز'},
     tr: {'nav.back': 'Geri', 'nav.backT': 'Önceki sayfaya dön', 'help.btn': 'Yardım', 'help.btnT': 'Bu bölümün rehberi', 'help.close': 'Anladım',
-      'help.all': 'Tüm rehberler', 'help.allT': '📖 Tam kullanım rehberi', 'help.none': 'Bu bölüm için henüz rehber yazılmadı.'},
+      'help.all': 'Tüm rehberler', 'help.allT': '📖 Tam kullanım rehberi', 'help.none': 'Bu bölüm için henüz rehber yazılmadı.', 'th.dark': 'Gece modu', 'th.light': 'Gündüz modu'},
     en: {'nav.back': 'Back', 'nav.backT': 'Go back to the previous page', 'help.btn': 'Help', 'help.btnT': 'Guide to this section', 'help.close': 'Got it',
-      'help.all': 'All guides', 'help.allT': '📖 Full user guide', 'help.none': 'No guide has been written for this section yet.'},
+      'help.all': 'All guides', 'help.allT': '📖 Full user guide', 'help.none': 'No guide has been written for this section yet.', 'th.dark': 'Night mode', 'th.light': 'Day mode'},
     ar: {'nav.back': 'رجوع', 'nav.backT': 'العودة إلى الصفحة السابقة', 'help.btn': 'مساعدة', 'help.btnT': 'دليل هذا القسم', 'help.close': 'فهمت',
-      'help.all': 'كل الأدلة', 'help.allT': '📖 دليل الاستخدام الكامل', 'help.none': 'لم يُكتب دليل لهذا القسم بعد.'},
+      'help.all': 'كل الأدلة', 'help.allT': '📖 دليل الاستخدام الكامل', 'help.none': 'لم يُكتب دليل لهذا القسم بعد.', 'th.dark': 'الوضع الليلي', 'th.light': 'الوضع النهاري'},
   });
 
   /* ------------------------------------------------------------------ styles */
@@ -45,9 +45,31 @@
 .subbar .ibtn{height:36px;min-width:36px;padding:0 12px;font-size:14px;font-weight:800;border-radius:12px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;
   border:1px solid var(--line,#dce4ee);background:var(--bg2,var(--card,#fff));color:var(--text,#0b1324);box-shadow:none;flex:none;white-space:nowrap}
 .subbar .ibtn .lbl{display:inline!important}
+.subbar .themebtn{padding:0;width:38px;justify-content:center;font-size:17px}
 .subbar .hlp-ctx{color:#0fa47a}[data-theme=dark] .subbar .hlp-ctx{color:#4ee6b4}
 @media(max-width:360px){.subbar .ibtn{padding:0 9px}.subbar .t{font-size:14px}}`;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+
+  /* ------------------------------------------------------------------ THEME: one day/night choice for every page */
+  const TKEY = 'arzino.theme', mq = matchMedia('(prefers-color-scheme: dark)');
+  const THEME = {
+    get pref() { try { return localStorage.getItem(TKEY) || localStorage.getItem('sarraf.theme') || 'auto'; } catch (e) { return 'auto'; } },
+    get dark() { const p = THEME.pref; return p === 'dark' || (p === 'auto' && mq.matches); },
+    apply() {
+      const d = THEME.dark; document.documentElement.dataset.theme = d ? 'dark' : 'light';
+      const m = document.querySelector('meta[name=theme-color]'); if (m && !m.dataset.fixed) m.content = d ? '#060c18' : '#0b1f3a';
+      document.querySelectorAll('[data-themebtn]').forEach(b => { b.innerHTML = THEME.icon(); b.title = tt(d ? 'th.light' : 'th.dark'); b.setAttribute('aria-label', b.title); });
+      w.dispatchEvent(new CustomEvent('themechange', {detail: d}));
+    },
+    set(p) { try { localStorage.setItem(TKEY, p); localStorage.removeItem('sarraf.theme'); } catch (e) {} THEME.apply(); },
+    toggle() { THEME.set(THEME.dark ? 'light' : 'dark'); },
+    icon() { return THEME.dark ? '☀️' : '🌙'; },
+    btn(extra = '') { const d = THEME.dark; return `<button type="button" class="ibtn themebtn ${extra}" data-themebtn title="${tt(d ? 'th.light' : 'th.dark')}" aria-label="${tt(d ? 'th.light' : 'th.dark')}">${THEME.icon()}</button>`; },
+  };
+  mq.addEventListener && mq.addEventListener('change', () => { if (THEME.pref === 'auto') THEME.apply(); });
+  document.addEventListener('click', e => { if (e.target.closest('[data-themebtn]')) { e.preventDefault(); THEME.toggle(); } });
+  THEME.apply();
+  w.THEME = THEME;
 
   /* ------------------------------------------------------------------ NAV */
   const depth = () => (history.state && history.state.nd) || 0;
@@ -97,7 +119,7 @@
       return `<button type="button" class="ibtn navback ${extra}" data-navback title="${tt('nav.backT')}" aria-label="${tt('nav.backT')}" ${NAV.can() ? '' : 'hidden'}><span class="ar">${arrow}</span><span class="lbl">${tt('nav.back')}</span></button>`;
     },
     // slim bar under the header: [back] title [help]
-    bar(title) { return `<div class="subbar">${NAV.btn()}<div class="t">${title || ''}</div>${w.HELP ? HELP.ctxBtn() : ''}</div>`; },
+    bar(title) { return `<div class="subbar">${NAV.btn()}<div class="t">${title || ''}</div>${THEME.btn()}${w.HELP ? HELP.ctxBtn() : ''}</div>`; },
     update() { const c = NAV.can(); document.querySelectorAll('[data-navback]').forEach(b => { b.hidden = !c; }); },
   };
   addEventListener('popstate', e => {

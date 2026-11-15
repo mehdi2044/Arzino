@@ -50,3 +50,5 @@ all(); load();
 NAV.fallback = '../';
 const drawBack = () => { const el = document.getElementById('backSlot'); if (el) el.innerHTML = NAV.btn('sback'); };
 drawBack(); addEventListener('langchange', drawBack);
+document.getElementById('themeSlot').innerHTML = THEME.btn();
+addEventListener('langchange', () => { document.getElementById('themeSlot').innerHTML = THEME.btn(); });

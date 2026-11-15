@@ -90,3 +90,10 @@ footer .in{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .nav .sback{display:inline-flex;align-items:center;gap:4px;height:38px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font:inherit;font-weight:800;cursor:pointer}
 @media (max-width:720px){.nav .in{gap:8px}.nav .sback .lbl{display:none}.nav .sback{padding:0 10px}}
 @media (max-width:420px){.nav .logo b{display:none}}
+
+/* night mode */
+.nav .themebtn{height:38px;min-width:38px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:16px;display:inline-grid;place-items:center}
+[data-theme=dark]{--bg:#060c18;--card:#0e1a2d;--text:#e8eef8;--muted:#8fa3bf;--line:#1c2b45}
+[data-theme=dark] .sec.alt{background:linear-gradient(180deg,#0a1526,#060c18)}
+[data-theme=dark] .seg{background:#14223a}[data-theme=dark] .seg button.on{background:#1e3152;color:#e8eef8}
+[data-theme=dark] .rcpt{background:#14223a}

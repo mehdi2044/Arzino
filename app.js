@@ -487,7 +487,7 @@ function renderSettings() {
   seg($('setIran'), [['1', t('st.free')],['0', t('st.calc')]], S.iranMarket ? '1' : '0', v => { S.iranMarket = v === '1'; save(); renderSettings(); renderAll(); });
   seg($('setSrc'), SRCS.map(([k]) => [k, SRC_NAME[k] + (D.iran_by?.[k]?.USD ? ' · ' + fmt(D.iran_by[k].USD, 0) : '')]), S.src, v => { S.src = v; save(); renderSettings(); renderAll(); });
   seg($('setDigits'), [['fa','۱۲۳'],['en','123']], S.digits, v => { S.digits = v; save(); renderSettings(); renderAll(); });
-  seg($('setTheme'), [['auto', t('st.auto')],['light','☀️'],['dark','🌙']], S.theme, v => { S.theme = v; save(); applyTheme(); renderSettings(); if (chart) { chart.remove(); chart = null; drawChart(true); } });
+  seg($('setTheme'), [['auto', t('st.auto')],['light','☀️'],['dark','🌙']], THEME.pref, v => THEME.set(v));
   const B = S.setBase || 'IRT';
   $('setBaseSel').innerHTML = baseOptions(B);
   $('setBaseSel').onchange = () => { S.setBase = $('setBaseSel').value; save(); renderSettings(); };
@@ -509,12 +509,11 @@ $('settingsBtn').onclick = () => { renderSettings(); openSheet('settingsSheet');
 $('closeSettings').onclick = closeSheets;
 $('refreshBtn').onclick = () => { refresh(true); fetchLive(); Object.keys(chartCache).forEach(k => delete chartCache[k]); if (curView() === 'chart') drawChart(true); toast(t('toast.refreshing')); };
 
-function applyTheme() {
-  const dark = S.theme === 'dark' || (S.theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
-  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-  document.querySelector('meta[name=theme-color]').content = dark ? '#060c18' : '#0b1f3a';
-}
-matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => { if (S.theme === 'auto') applyTheme(); });
+// day / night: shared with Sarrafino and the admin panel (nav.js THEME)
+try { if (!localStorage.getItem('arzino.theme') && S.theme && S.theme !== 'auto') localStorage.setItem('arzino.theme', S.theme); } catch {}
+function applyTheme() { S.theme = THEME.pref; THEME.apply(); }
+addEventListener('themechange', () => { if (S.theme !== THEME.pref) { S.theme = THEME.pref; save(); }
+  if ($('settingsSheet').classList.contains('show')) renderSettings(); if (chart) { chart.remove(); chart = null; if (curView() === 'chart') drawChart(true); } });
 
 /* ---------------------------------------------------------------- charts */
 let chart = null, series = null;

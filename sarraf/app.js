@@ -60,20 +60,9 @@ function err(e) {
 }
 
 /* ---------------------------------------------------------------- theme */
-function applyTheme() {
-  let t = 'auto'; try { t = localStorage.getItem('sarraf.theme') || 'auto'; } catch {}
-  const dark = t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
-  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-  document.querySelector('meta[name=theme-color]').content = dark ? '#060c18' : '#0b1f3a';
-  return t;
-}
-function cycleTheme() {
-  const order = ['auto', 'light', 'dark']; let t = 'auto'; try { t = localStorage.getItem('sarraf.theme') || 'auto'; } catch {}
-  const n = order[(order.indexOf(t) + 1) % 3]; try { localStorage.setItem('sarraf.theme', n); } catch {}
-  applyTheme(); toast(n === 'auto' ? _('پوسته: خودکار') : n === 'dark' ? (_('پوسته: شب') + ' 🌙') : (_('پوسته: روز') + ' ☀️'));
-}
-applyTheme();
-matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyTheme);
+function applyTheme() { THEME.apply(); return THEME.pref; }
+function cycleTheme() { THEME.toggle(); toast(THEME.dark ? (_('پوسته: شب') + ' 🌙') : (_('پوسته: روز') + ' ☀️')); }
+
 
 /* ---------------------------------------------------------------- market */
 async function loadMarket() {
@@ -159,7 +148,7 @@ async function openExchange(m) {
 }
 function renderAuth(mode = 'login') {
   $('app').innerHTML = `<div class="auth">
-    <div class="auth-lang">${NAV.btn()}<span style="flex:1"></span>${HELP.ctxBtn()}${I18N.picker('lang-sel', true)}</div>
+    <div class="auth-lang">${NAV.btn()}<span style="flex:1"></span>${THEME.btn()}${HELP.ctxBtn()}${I18N.picker('lang-sel', true)}</div>
     <div class="hero3d"><div class="coin">${_('ص')}</div><h1>${_('صرافینو')}</h1><div class="muted">${_('حسابداری ساده و امن برای صرافی‌ها')}</div></div>
     <div class="card" style="margin-top:18px">
       <div class="seg" style="margin-bottom:12px"><button class="${mode === 'login' ? 'on' : ''}" data-m="login">${_('ورود')}</button><button class="${mode === 'signup' ? 'on' : ''}" data-m="signup">${_('ثبت‌نام')}</button></div>
@@ -199,7 +188,7 @@ function renderAuth(mode = 'login') {
 function renderForgot() {
   S.screen = renderForgot;
   $('app').innerHTML = `<div class="auth">
-    <div class="auth-lang">${NAV.btn()}<span style="flex:1"></span>${HELP.ctxBtn()}${I18N.picker('lang-sel', true)}</div>
+    <div class="auth-lang">${NAV.btn()}<span style="flex:1"></span>${THEME.btn()}${HELP.ctxBtn()}${I18N.picker('lang-sel', true)}</div>
     <div class="card"><h2 style="margin-top:0">🔑 ${_('بازیابی رمز عبور')}</h2>
       <p class="muted small">${_('ایمیل حساب خود را وارد کنید تا لینک ساخت رمز جدید برایتان فرستاده شود.')}</p>
       <div class="fld"><label>${_('ایمیل')}</label><input class="in" id="fEmail" type="email" autocomplete="email" dir="ltr"></div>
@@ -222,7 +211,7 @@ function renderForgot() {
 function renderNewPass() {
   S.screen = renderNewPass;
   $('app').innerHTML = `<div class="auth">
-    <div class="auth-lang">${NAV.btn()}<span style="flex:1"></span>${HELP.ctxBtn()}${I18N.picker('lang-sel', true)}</div>
+    <div class="auth-lang">${NAV.btn()}<span style="flex:1"></span>${THEME.btn()}${HELP.ctxBtn()}${I18N.picker('lang-sel', true)}</div>
     <div class="card"><h2 style="margin-top:0">🔑 ${_('رمز عبور جدید')}</h2>
       <div class="fld"><label>${_('رمز عبور جدید')} ${_('(حداقل ۶ کاراکتر)')}</label><input class="in" id="nP1" type="password" autocomplete="new-password" dir="ltr"></div>
       <div class="fld"><label>${_('تکرار رمز جدید')}</label><input class="in" id="nP2" type="password" autocomplete="new-password" dir="ltr"></div>
@@ -290,11 +279,11 @@ function render() {
   const V = {home:vHome, txns:vTxns, customers:vCustomers, customer:vCustomer, board:vBoard, reports:vReports, more:vMore}[S.view] || vHome;
   $('app').innerHTML = `<div class="wrap">
     <div class="top"><div class="brand"><div class="coin">${S.ex.settings?.logo ? `<img src="${S.ex.settings.logo}" alt="">` : esc((S.ex.name || _('ص')).trim()[0])}</div><div><h1>${esc(S.ex.name)}</h1><small>${esc(memberName(S.user.id))} · ${ROLE[S.role]}</small></div></div>
-      <div class="acts">${I18N.picker('lang-sel')}<a class="ibtn" href="../" title="${_('نرخ لحظه‌ای ارزینو')}">📈<span class="lbl"> ${_('ارزینو')}</span></a><button class="ibtn" id="thm" title="${_('روز / شب')}">🌓</button><button class="ibtn" id="reload" title="${_('بروزرسانی')}">↻</button>${S.mems.length > 1 ? '<button class="ibtn" id="swEx">🏪</button>' : ''}</div></div>
+      <div class="acts">${I18N.picker('lang-sel')}<a class="ibtn" href="../" title="${_('نرخ لحظه‌ای ارزینو')}">📈<span class="lbl"> ${_('ارزینو')}</span></a><button class="ibtn" id="reload" title="${_('بروزرسانی')}">↻</button>${S.mems.length > 1 ? '<button class="ibtn" id="swEx">🏪</button>' : ''}</div></div>
     ${NAV.bar(viewTitle())}<div id="view"></div></div>
     <nav class="tabs">${VIEWS.map(([k, i, l]) => `<button class="tab ${S.view === k || (S.view === 'customer' && k === 'customers') ? 'on' : ''}" data-v="${k}"><span>${i}</span>${_(l)}</button>`).join('')}</nav>`;
   document.querySelectorAll('.tab').forEach(t => t.onclick = () => t.dataset.v !== S.view && go(t.dataset.v));
-  $('thm').onclick = cycleTheme; I18N.bindPickers();
+  I18N.bindPickers();
   $('reload').onclick = async () => { toast(_('در حال بروزرسانی…')); await Promise.all([loadExchangeData(), loadMarket(), loadPlan()]); render(); };
   if ($('swEx')) $('swEx').onclick = () => openSheet(`<h2>${_('انتخاب صرافی')}</h2><div class="list">${S.mems.map(m => `<div class="row" data-ex="${m.exchange_id}"><div class="ic">🏪</div><div class="m"><b>${esc(m.exchanges.name)}</b><span>${ROLE[m.role]}</span></div></div>`).join('')}</div>`,
     () => document.querySelectorAll('[data-ex]').forEach(r => r.onclick = () => { closeSheet(); openExchange(S.mems.find(m => m.exchange_id === r.dataset.ex)); }));

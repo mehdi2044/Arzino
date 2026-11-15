@@ -57,7 +57,7 @@ async function boardsSheet() {
   $('bsX').onclick = closeSheet;
 }
 function login() {
-  $('app').innerHTML = `<div class="auth"><div class="auth-lang">${NAV.btn()}<span style="flex:1"></span>${HELP.ctxBtn()}${I18N.picker('lang-sel', true)}</div>
+  $('app').innerHTML = `<div class="auth"><div class="auth-lang">${NAV.btn()}<span style="flex:1"></span>${THEME.btn()}${HELP.ctxBtn()}${I18N.picker('lang-sel', true)}</div>
     <div class="hero3d"><div class="coin">⚙</div><h1>${_('پنل مدیریت')}</h1><div class="muted">Sarrafino · Arzino</div></div>
     <div class="card" style="margin-top:18px"><div class="fld"><label>${_('ایمیل')}</label><input class="in" id="lE" type="email" dir="ltr" autocomplete="email"></div>
     <div class="fld"><label>${_('رمز عبور')}</label><input class="in" id="lP" type="password" dir="ltr" autocomplete="current-password"></div>
