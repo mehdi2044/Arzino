@@ -168,3 +168,32 @@ html[dir=ltr] .tbl td.n{text-align:right}
 .lang-sel option{color:#0b1f3a;background:#fff}
 .auth-lang{display:flex;justify-content:flex-end;margin-bottom:6px}
 .lnk{display:block;width:100%;margin-top:10px;background:none;border:0;color:var(--em);font:inherit;font-weight:700;font-size:13.5px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+/* ---- plans & subscription ---- */
+.qa button.lk{filter:saturate(.35) brightness(.92)}
+.qa button.lk:after{content:"🔒";position:absolute;top:6px;inset-inline-end:8px;font-size:12px}
+.plan-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px 14px;font-weight:800;
+  background:linear-gradient(120deg,rgba(15,164,122,.14),rgba(217,165,33,.14));border-color:rgba(15,164,122,.35)}
+.plan-banner.warn{background:linear-gradient(120deg,rgba(220,80,60,.12),rgba(217,165,33,.14));border-color:rgba(220,80,60,.35)}
+.plan-banner .btn{min-width:auto;padding:8px 14px}
+.usage{display:grid;gap:10px;margin-top:12px}
+.usage .ul{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
+.usage .bar{height:8px;border-radius:8px;background:var(--soft2);overflow:hidden}
+.usage .bar i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,var(--em),var(--em2))}
+.usage .bar i.hot{background:linear-gradient(90deg,var(--gold),#e0603c)}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+.pcard{position:relative;border:1px solid var(--line);border-radius:20px;padding:16px;background:linear-gradient(180deg,var(--card),var(--soft));
+  box-shadow:0 10px 26px -18px rgba(11,31,58,.5);display:flex;flex-direction:column;gap:6px;transition:transform .2s}
+.pcard:hover{transform:translateY(-3px)}
+.pcard.hl{border:2px solid var(--gold);box-shadow:0 16px 34px -18px rgba(217,165,33,.7)}
+.pcard.cur{outline:3px solid rgba(15,164,122,.35)}
+.pcard h3{margin:0;font-size:19px}
+.pcard .rib{position:absolute;top:-11px;inset-inline-start:16px;background:linear-gradient(90deg,var(--gold),var(--gold2));color:#3a2a00;font-weight:900;font-size:12px;padding:3px 10px;border-radius:20px}
+.pcard .price{font-size:28px;font-weight:900;direction:ltr;text-align:start;margin:6px 0;color:var(--em)}
+html[dir=rtl] .pcard .price{text-align:right}
+.pcard .price small{font-size:13px;color:var(--muted);font-weight:700}
+.pcard ul{list-style:none;padding:0;margin:4px 0 10px;display:grid;gap:5px;font-size:13px;flex:1}
+.pcard li.no{color:var(--muted);opacity:.65}
+.bankbox pre.bank{white-space:pre-wrap;font:inherit;font-weight:700;direction:ltr;text-align:start;background:var(--soft);border:1px dashed var(--line);border-radius:12px;padding:10px;margin:0 0 8px}
+.locked{padding:28px 18px}
+.langs{display:flex;gap:14px;flex-wrap:wrap;margin:8px 0}

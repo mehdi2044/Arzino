@@ -55,8 +55,8 @@ const ASSETS = [
   {id:'TRX', fa:'ترون', en:'TRON', sym:'TRX', ic:'icons/crypto/trx.svg', g:'crypto', bn:'TRXUSDT'},
 ];
 const AM = Object.fromEntries(ASSETS.map(a => [a.id, a]));
-const nm = id => t('c.' + id);                 // asset name in the current language
-const GROUPS = () => ['all','fav','fiat','arab','metal','crypto'].map(g => [g, t('g.' + g)]);
+const nm = id => AM[id]?.custom ? PLUS.customName(id) : t('c.' + id);                 // asset name in the current language
+const GROUPS = () => ['all','fav','fiat','arab','metal','crypto', ...(ASSETS.some(a => a.g === 'stock') ? ['stock'] : [])].map(g => [g, t('g.' + g)]);
 const QUOTES = () => ['IRT','USD','TRY','EUR'].map(q => [q, t('s.' + q)]);
 const PCT = () => I18N.lang === 'fa' ? '٪' : '%';
 const RANGES = {
@@ -74,6 +74,7 @@ const DEF = {quote:'IRT', group:'all', digits:'fa', theme:'auto', iranMarket:tru
   src:'bonbast', conv:{from:'USD', to:'IRT', amt:'1'}, chart:{a:'USD', q:'IRT', r:'1D', type:'area'}, calcHist:[], view:'market'};
 let S = load('arzino.s', DEF);
 S = Object.assign(structuredClone(DEF), S);
+PLUS.injectCustom();           // user-added currencies, crypto and stocks
 let D = load('arzino.d', {t:0, usd:{USD:1}, iran:{}, chg:{}, spark:{}});
 const live = {};      // live crypto prices from Binance
 const chartCache = {};
@@ -120,7 +121,7 @@ function moneyTxt(v, q) { return money(v, q).replace(/<[^>]+>/g, ''); }
 function usdRaw(a) {               // USD per unit, online only
   if (a === 'USD') return 1;
   if (live[a]) return live[a];
-  return D.usd?.[a] ?? null;
+  return D.usd?.[a] ?? PLUS.customUsd(a) ?? null;
 }
 const SRCS = [['bonbast','bonbast'],['tgju','tgju']];
 const SRC_NAME = new Proxy({}, {get: (o, k) => ({bonbast:'bonbast.com', tgju:'tgju.org'})[k] || (I18N.has('src.' + k) ? t('src.' + k) : k)});
@@ -285,12 +286,13 @@ function changeIn(a, q) {            // 24h % change of a priced in q
 /* ---------------------------------------------------------------- views */
 function curView() { return S.view; }
 function show(v) {
+  if (S.view !== v) PLUS.action();
   S.view = v; save();
   document.querySelectorAll('.view').forEach(x => x.classList.toggle('active', x.id === 'view-' + v));
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.v === v));
   window.scrollTo({top:0, behavior:'smooth'});
   if (v === 'chart') setTimeout(() => drawChart(true), 30);
-  if (v === 'convert') renderConv();
+  if (v === 'convert') { renderConv(); $('convAd').innerHTML = PLUS.slot('converter'); PLUS.afterRender($('convAd')); }
   if (v === 'calc') renderCalc();
   if (v === 'market') renderMarket();
 }
@@ -320,15 +322,17 @@ function renderMarket() {
   seg($('quoteSeg'), qs, S.quote, v => { S.quote = v; save(); renderMarket(); });
   $('quoteSel').innerHTML = baseOptions(S.quote);
   $('quoteSel').onchange = () => { S.quote = $('quoteSel').value; save(); renderMarket(); };
-  $('groupChips').innerHTML = GROUPS().map(([v, l]) => `<button class="chip ${v === S.group ? 'active' : ''}" data-v="${v}">${l}</button>`).join('');
-  $('groupChips').onclick = e => { const b = e.target.closest('button'); if (b) { S.group = b.dataset.v; save(); renderMarket(); } };
+  $('groupChips').innerHTML = GROUPS().map(([v, l]) => `<button class="chip ${v === S.group ? 'active' : ''}" data-v="${v}">${l}</button>`).join('') + `<button class="chip add" data-add>${t('ad.addBtn')}</button>`;
+  $('groupChips').onclick = e => { const b = e.target.closest('button'); if (!b) return; if (b.hasAttribute('data-add')) return PLUS.addSheet(); S.group = b.dataset.v; save(); renderMarket(); };
+  $('mkExtra').innerHTML = PLUS.slot('banner') + (PLUS.hasDir() ? PLUS.dirHTML() : '');
   const q = S.quote;
   let list = ASSETS.filter(a => a.id !== q);
   if (S.group === 'fav') list = list.filter(a => S.favs.includes(a.id));
   else if (S.group === 'arab') list = list.filter(a => a.arab);
   else if (S.group !== 'all') list = list.filter(a => a.g === S.group);
   list = list.filter(a => !a.ir || IR()[a.id] || isManual(a.id) || usdRaw('XAU'));
-  $('marketList').innerHTML = list.map(a => {
+  const every = PLUS.feedEvery();
+  $('marketList').innerHTML = list.map((a, i) => (i && i % every === 0 && i / every <= 3 ? PLUS.slot('feed') : '') + (() => {
     const per = a.id === 'IRT' ? 1e6 : 1;           // Toman row: per 1 million Toman
     const p = rate(a.id, q) == null ? null : rate(a.id, q) * per;
     let secTxt = '';
@@ -349,7 +353,8 @@ function renderMarket() {
       <div class="pr"><b class="${p != null && Math.abs(p) >= 1e8 ? 'long' : ''}">${money(p, q)}</b><span>${chgBadge(ch)} ${secTxt}</span></div>
       <button class="star ${S.favs.includes(a.id) ? 'on' : ''}" data-star="${a.id}" title="${t('mk.fav')}">⭐</button>
     </div>`;
-  }).join('') || `<p class="muted">${t('mk.empty')}</p>`;
+  })()).join('') || `<p class="muted">${t('mk.empty')}</p>`;
+  PLUS.afterRender($('view-market'));
   $('marketList').onclick = e => {
     const st = e.target.closest('[data-star]');
     if (st) { const id = st.dataset.star; S.favs = S.favs.includes(id) ? S.favs.filter(x => x !== id) : [...S.favs, id]; save(); renderMarket(); return; }
@@ -466,6 +471,7 @@ $('clearAllManual').onclick = () => { S.manual = {}; save(); renderSettings(); r
 
 /* ---------------- settings */
 function renderSettings() {
+  $('adSet').innerHTML = PLUS.rewardHTML(); PLUS.bindReward();
   seg($('setLang'), Object.entries(I18N.LANGS).map(([k, v]) => [k, v.name]), I18N.lang, v => I18N.set(v));
   $('digitsRow').style.display = I18N.lang === 'fa' ? '' : 'none';
   seg($('setIran'), [['1', t('st.free')],['0', t('st.calc')]], S.iranMarket ? '1' : '0', v => { S.iranMarket = v === '1'; save(); renderSettings(); renderAll(); });
@@ -548,6 +554,7 @@ async function usdBars(a, src, range) {
     const k = nowUsd / gNow;
     return g.map(([t, o, h, l, c]) => [t, o * k, h * k, l * k, c * k]);
   }
+  if (AM[a]?.custom) return PLUS.customBars(a, src, range);
   const lk = await liveKlines(a, range);
   if (lk && lk.length) return lk;
   const d = await getChart(a);
@@ -749,6 +756,7 @@ const hv = location.hash.replace('#', '');
 show(['market','chart','convert','calc'].includes(hv) ? hv : (S.view || 'market'));
 refresh();
 fetchLive();
+PLUS.start();
 setInterval(() => { if (!document.hidden) refresh(); }, 60000);
 setInterval(() => { if (!document.hidden) fetchLive(); }, 12000);
 setInterval(() => setStatus(lastOk ? 'ok' : (D.t ? 'err' : 'busy')), 30000);

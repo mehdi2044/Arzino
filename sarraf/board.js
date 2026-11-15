@@ -38,6 +38,7 @@ function roundRate(v, quote) {
 
 /* ---------------------------------------------------------------- board view */
 function vBoard(el) {
+  if (!feat('board')) { el.innerHTML = lockedCard('board', _('تابلو')); bindPlanLinks(el); return; }
   const st = settings(), rows = boardRows();
   const sb_ = st.spread_buy ?? 0.3, ss_ = st.spread_sell ?? 0.3;
   const times = st.board_times || ['10:00', '14:00', '18:00'];
@@ -83,7 +84,9 @@ function vBoard(el) {
       <div class="fld"><label>${_('متن پایین تابلو')}</label><input class="in" id="stNote" value="${esc(st.board_note || '')}" placeholder="${_('نرخ‌ها لحظه‌ای است؛ پیش از معامله تماس بگیرید')}"></div>
       <div class="fld"><label>${_('رنگ تابلو')}</label><select class="in" id="stTheme">${Object.entries(BOARD_THEMES).map(([k, t]) => `<option value="${k}" ${(st.board_theme || 'navy') === k ? 'selected' : ''}>${_(t.name)}</option>`).join('')}</select></div>
       <div class="fld"><label>${_('ارقام تابلو')}</label><select class="in" id="stDigits"><option value="fa" ${st.board_digits !== 'en' ? 'selected' : ''}>${_('فارسی (۱۲۳)')}</option><option value="en" ${st.board_digits === 'en' ? 'selected' : ''}>${_('انگلیسی (123)')}</option></select></div>
-      <div class="fld"><label>${_('تابلوی زنده (لینک عمومی + تلویزیون مغازه)')}</label><label class="chk"><input type="checkbox" id="stPub" ${st.board_public ? 'checked' : ''}> ${_('فعال باشد')}</label></div>
+      <div class="fld"><label>${_('تابلوی زنده (لینک عمومی + تلویزیون مغازه)')} ${feat('public_board') ? '' : '🔒'}</label><label class="chk"><input type="checkbox" id="stPub" ${st.board_public && feat('public_board') ? 'checked' : ''}> ${_('فعال باشد')}</label></div>
+      <div class="fld"><label>${_('نمایش در «صرافی‌های همکار» ارزینو')} ${feat('directory') ? '' : '🔒'}</label><label class="chk"><input type="checkbox" id="stDir" ${st.directory && feat('directory') ? 'checked' : ''}> ${_('صرافی من در ارزینو دیده شود')}</label></div>
+      <div class="fld"><label>${_('شهر')}</label><input class="in" id="stCity" value="${esc(st.city || '')}" placeholder="${_('مثلاً استانبول')}"></div>
     </div>
     <div id="pubBox"></div>
     <div class="btns"><button class="btn p" id="stSave">💾 ${_('ذخیره تنظیمات تابلو')}</button></div></div>${isMgr() ? '' : '-->'}`;
@@ -131,8 +134,10 @@ function vBoard(el) {
     if ($('pubCopy')) $('pubCopy').onclick = () => navigator.clipboard?.writeText(url).then(() => toast(_('لینک کپی شد')));
   };
   pubInfo();
+  $('stPub').onchange = () => { if (!feat('public_board')) { $('stPub').checked = false; upsell('public_board'); } };
+  $('stDir').onchange = () => { if (!feat('directory')) { $('stDir').checked = false; upsell('directory'); } };
   $('stSave').onclick = async () => {
-    if (await saveSettings({phone: $('stPhone').value.trim(), address: $('stAddr').value.trim(), board_note: $('stNote').value.trim(), board_theme: $('stTheme').value, board_digits: $('stDigits').value, board_public: $('stPub').checked})) { toast((_('تنظیمات تابلو ذخیره شد') + ' ✅')); pubInfo(); render(); }
+    if (await saveSettings({phone: $('stPhone').value.trim(), address: $('stAddr').value.trim(), board_note: $('stNote').value.trim(), board_theme: $('stTheme').value, board_digits: $('stDigits').value, board_public: $('stPub').checked && feat('public_board'), directory: $('stDir').checked && feat('directory'), city: $('stCity').value.trim()})) { toast((_('تنظیمات تابلو ذخیره شد') + ' ✅')); pubInfo(); render(); }
   };
 }
 function boardText(short) {
@@ -235,6 +240,7 @@ async function drawBoard(canvas, size = 'post') {
     rr(ctx, (W - tw) / 2, fy - 42, tw, 64, 32); ctx.fillStyle = T.accent; ctx.fill();
     ctx.fillStyle = st.board_theme === 'light' ? '#fff' : '#2b1d00'; ctx.fillText(contact, W / 2, fy);
   }
+  if (!feat('branding')) { ctx.textAlign = 'center'; ctx.fillStyle = T.muted; ctx.font = '600 22px Vazirmatn, "Segoe UI", Arial, sans-serif'; ctx.fillText('⚡ ' + _('صادر شده با صرافینو'), W / 2, H - 22); }
 }
 function canvasBlob(canvas) { return new Promise(r => canvas.toBlob(r, 'image/png')); }
 const isMobile = () => navigator.userAgentData?.mobile ?? /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
@@ -289,6 +295,7 @@ function receiptText(x) {
     if (t.length) out.push(('🤝 ' + _('امانت:') + ' ') + t.map(([cc, v]) => `${money(Math.abs(v), cc)} ${v > 0 ? _('نزد شما') : _('نزد ما')}`).join(I18N.rtl ? '، ' : ', '));
   }
   out.push('', (_('با تشکر از اعتماد شما') + ' 🌿'));
+  if (!feat('branding')) out.push('— ' + _('صادر شده با صرافینو'));
   if (settings().phone) out.push('📞 ' + ltr(settings().phone));
   return out.join('\n');
 }

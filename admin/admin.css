@@ -1,0 +1,23 @@
+/* Sarrafino admin panel — builds on the Sarraf theme */
+.wrap{max-width:1100px}
+.atabs{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 10px;margin-bottom:6px;scrollbar-width:none}
+.atabs button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-weight:800;font-size:13.5px;padding:9px 14px;border-radius:14px;cursor:pointer;white-space:nowrap}
+.atabs button.on{background:linear-gradient(135deg,var(--em),var(--em2));color:#fff;border-color:transparent;box-shadow:0 8px 18px -10px rgba(15,164,122,.8)}
+.atabs .badge{display:inline-block;min-width:20px;padding:0 6px;margin-inline-start:6px;border-radius:10px;background:#e0603c;color:#fff;font-size:11.5px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
+table.at{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+table.at th,table.at td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:start;vertical-align:top}
+table.at th{background:var(--soft);font-size:12px;color:var(--muted);position:sticky;top:0}
+table.at tr.click{cursor:pointer}table.at tr.click:hover td{background:var(--soft)}
+table.at td.n{direction:ltr;text-align:end;white-space:nowrap}
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11.5px;font-weight:800;background:var(--soft2)}
+.pill.ok{background:rgba(15,164,122,.15);color:var(--em)}.pill.tr{background:rgba(217,165,33,.18);color:#9a6a00}.pill.bad{background:rgba(224,96,60,.15);color:#c0442a}
+.g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.ftable{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center;font-size:13.5px}
+.ftable select{min-width:120px}
+.rcpt{max-width:100%;max-height:60vh;border-radius:12px;border:1px solid var(--line);display:block;margin:8px auto}
+.adprev{border:1px dashed var(--line);border-radius:14px;padding:10px;background:var(--soft)}
+textarea.in{min-height:84px;resize:vertical;font:inherit}
+.sec{font-weight:900;margin:14px 0 6px;font-size:14.5px}
+.mini{font-size:12px;color:var(--muted)}

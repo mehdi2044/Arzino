@@ -51,7 +51,13 @@ const jd = (t, o) => new Intl.DateTimeFormat(I18N.dateLocale(), o || {year:'nume
 function toast(t) { const e = $('toast'); e.textContent = t; e.classList.add('show'); clearTimeout(e._t); e._t = setTimeout(() => e.classList.remove('show'), 2600); }
 const isMgr = () => S.role === 'owner' || S.role === 'partner';
 const ccyOpts = (sel, list = CCYS) => list.map(c => `<option value="${c}" ${c === sel ? 'selected' : ''}>${cn(c)} (${c})</option>`).join('');
-function err(e) { console.error(e); toast((_('خطا:') + ' ') + (e?.message || e)); }
+function err(e) {
+  console.error(e); const m = String(e?.message || e);
+  const lim = m.match(/LIMIT_(CUSTOMERS|STAFF|EXCHANGES)/);
+  if (lim && typeof upsell === 'function' && S.ex) return upsell({CUSTOMERS: 'customers', STAFF: 'staff', EXCHANGES: 'exchanges'}[lim[1]]);
+  if (lim) return toast(_('به سقف پلن فعلی رسیده‌اید.'));
+  toast((_('خطا:') + ' ') + m);
+}
 
 /* ---------------------------------------------------------------- theme */
 function applyTheme() {
@@ -147,7 +153,7 @@ async function boot() {
 async function openExchange(m) {
   S.ex = m.exchanges; S.role = m.role; localStorage.setItem('sarraf.ex', S.ex.id);
   $('app').innerHTML = ('<div class="boot">' + _('در حال بارگذاری حساب‌ها…') + '</div>');
-  try { await Promise.all([loadExchangeData(), loadMarket()]); } catch (e) { return err(e); }
+  try { await Promise.all([loadExchangeData(), loadMarket(), loadPlan()]); } catch (e) { return err(e); }
   render();
 }
 function renderAuth(mode = 'login') {
@@ -156,7 +162,10 @@ function renderAuth(mode = 'login') {
     <div class="hero3d"><div class="coin">${_('ص')}</div><h1>${_('صرافینو')}</h1><div class="muted">${_('حسابداری ساده و امن برای صرافی‌ها')}</div></div>
     <div class="card" style="margin-top:18px">
       <div class="seg" style="margin-bottom:12px"><button class="${mode === 'login' ? 'on' : ''}" data-m="login">${_('ورود')}</button><button class="${mode === 'signup' ? 'on' : ''}" data-m="signup">${_('ثبت‌نام')}</button></div>
-      ${mode === 'signup' ? ('<div class="fld">' + '<label>' + _('نام شما') + '</label>' + '<input class="in" id="aName" autocomplete="name">' + '</div>') : ''}
+      ${mode === 'signup' ? `<div class="grid g2"><div class="fld"><label>${_('نام')}</label><input class="in" id="aFirst" autocomplete="given-name"></div>
+        <div class="fld"><label>${_('نام خانوادگی')}</label><input class="in" id="aLast" autocomplete="family-name"></div></div>
+        <div class="fld"><label>${_('شماره موبایل')}</label><input class="in" id="aPhone" type="tel" inputmode="tel" autocomplete="tel" dir="ltr" placeholder="+90 5xx xxx xx xx"></div>
+        <div class="fld"><label>${_('کشور محل سکونت')}</label><select class="in" id="aCountry" autocomplete="country">${countryOptions('TR')}</select></div>` : ''}
       <div class="fld"><label>${_('ایمیل')}</label><input class="in" id="aEmail" type="email" autocomplete="email" dir="ltr"></div>
       <div class="fld"><label>${_('رمز عبور')} ${mode === 'signup' ? _('(حداقل ۶ کاراکتر)') : ''}</label><input class="in" id="aPass" type="password" autocomplete="${mode === 'signup' ? 'new-password' : 'current-password'}" dir="ltr"></div>
       <button class="btn p w" id="aGo">${mode === 'login' ? _('ورود') : _('ساخت حساب')}</button>
@@ -169,9 +178,12 @@ function renderAuth(mode = 'login') {
   $('aGo').onclick = async () => {
     const email = $('aEmail').value.trim(), password = $('aPass').value;
     if (!email || password.length < 6) return toast(_('ایمیل و رمز (حداقل ۶ کاراکتر) را وارد کنید'));
+    const prof = mode === 'signup' ? {first_name: $('aFirst').value.trim(), last_name: $('aLast').value.trim(), phone: $('aPhone').value.trim(), country: $('aCountry').value} : null;
+    if (prof && (!prof.first_name || !prof.last_name)) return toast(_('نام و نام خانوادگی را وارد کنید'));
+    if (prof && prof.phone.replace(/\D/g, '').length < 8) return toast(_('شماره موبایل را کامل وارد کنید (با کد کشور)'));
     $('aGo').disabled = true;
     const r = mode === 'login' ? await sb.auth.signInWithPassword({email, password})
-      : await sb.auth.signUp({email, password, options:{data:{name: $('aName').value.trim()}, emailRedirectTo: location.origin + location.pathname}});
+      : await sb.auth.signUp({email, password, options:{data:{...prof, name: prof.first_name + ' ' + prof.last_name}, emailRedirectTo: location.origin + location.pathname}});
     $('aGo').disabled = false;
     if (r.error) return toast(r.error.message.includes('Invalid login') ? _('ایمیل یا رمز اشتباه است') : r.error.message);
     if (mode === 'signup' && !r.data.session) {
@@ -266,24 +278,26 @@ function render() {
     <nav class="tabs">${VIEWS.map(([k, i, l]) => `<button class="tab ${S.view === k || (S.view === 'customer' && k === 'customers') ? 'on' : ''}" data-v="${k}"><span>${i}</span>${_(l)}</button>`).join('')}</nav>`;
   document.querySelectorAll('.tab').forEach(t => t.onclick = () => { S.view = t.dataset.v; render(); scrollTo(0, 0); });
   $('thm').onclick = cycleTheme; I18N.bindPickers();
-  $('reload').onclick = async () => { toast(_('در حال بروزرسانی…')); await Promise.all([loadExchangeData(), loadMarket()]); render(); };
+  $('reload').onclick = async () => { toast(_('در حال بروزرسانی…')); await Promise.all([loadExchangeData(), loadMarket(), loadPlan()]); render(); };
   if ($('swEx')) $('swEx').onclick = () => openSheet(`<h2>${_('انتخاب صرافی')}</h2><div class="list">${S.mems.map(m => `<div class="row" data-ex="${m.exchange_id}"><div class="ic">🏪</div><div class="m"><b>${esc(m.exchanges.name)}</b><span>${ROLE[m.role]}</span></div></div>`).join('')}</div>`,
     () => document.querySelectorAll('[data-ex]').forEach(r => r.onclick = () => { closeSheet(); openExchange(S.mems.find(m => m.exchange_id === r.dataset.ex)); }));
-  V($('view'));
+  if (applyLangLimit()) return;
+  V($('view')); bindPlanLinks();
 }
-async function refresh() { await loadExchangeData(); render(); }
+async function refresh() { await Promise.all([loadExchangeData(), loadPlan()]); render(); }
 
 /* ---------------------------------------------------------------- views */
 function quickActions() {
   return `<div class="qa">
     <button class="c1" data-act="trade"><span>💱</span>${_('معامله')}</button>
     <button class="c2" data-act="money"><span>⬇️⬆️</span>${_('واریز / پرداخت')}</button>
-    <button class="c3" data-act="trust"><span>🤝</span>${_('امانت')}</button>
-    <button class="c4" data-act="expense"><span>🧾</span>${_('هزینه')}</button>
+    <button class="c3 ${feat('trusts') ? '' : 'lk'}" data-act="trust"><span>🤝</span>${_('امانت')}</button>
+    <button class="c4 ${feat('expenses') ? '' : 'lk'}" data-act="expense"><span>🧾</span>${_('هزینه')}</button>
   </div>`;
 }
+const ACT_FEAT = {trust: 'trusts', expense: 'expenses', capital: 'partners'};
 function bindQA(root, pre = {}) {
-  root.querySelectorAll('[data-act]').forEach(b => b.onclick = () => ({trade:formTrade, money:formMoney, trust:formTrust, expense:formExpense,
+  root.querySelectorAll('[data-act]').forEach(b => b.onclick = () => ACT_FEAT[b.dataset.act] && !feat(ACT_FEAT[b.dataset.act]) ? upsell(ACT_FEAT[b.dataset.act]) : ({trade:formTrade, money:formMoney, trust:formTrust, expense:formExpense,
     transfer:formTransfer, capital:formCapital, opening:formOpening})[b.dataset.act](pre));
 }
 function boxTotals() {
@@ -302,7 +316,7 @@ function vHome(el) {
   const todayProfit = S.recentTrades.filter(t => new Date(t.occurred_at) >= today).reduce((s, t) => s + (t.meta?.profit_base || 0), 0);
   const todayCount = S.recentTrades.filter(t => new Date(t.occurred_at) >= today).length;
   const due = dueBoardSlot();
-  el.innerHTML = (due ? `<div class="card remind"><h3>📣 ${_('وقت ارسال تابلوی نرخ ساعت {t} است', {t: due.time})} <span><button class="btn wa" id="remGo">${_('ارسال تابلو')}</button> <button class="btn g" id="remDone">${_('ارسال شد')} ✓</button></span></h3></div>` : '') + quickActions() + `
+  el.innerHTML = planBanner() + (due ? `<div class="card remind"><h3>📣 ${_('وقت ارسال تابلوی نرخ ساعت {t} است', {t: due.time})} <span><button class="btn wa" id="remGo">${_('ارسال تابلو')}</button> <button class="btn g" id="remDone">${_('ارسال شد')} ✓</button></span></h3></div>` : '') + quickActions() + `
     <div class="card"><h3>💰 ${_('موجودی صندوق‌ها')} <button class="ibtn small" data-act="transfer">🔁 ${_('انتقال')}</button></h3>
       <div class="grid g3">${bt.map(({b, v}) => `<div class="stat"><div class="l">${esc(b.name)}</div><div class="v ${v < 0 ? 'down' : ''}">${money(v, b.currency)}</div></div>`).join('') || ('<p class="muted">' + _('صندوقی تعریف نشده') + '</p>')}</div></div>
     <div class="grid g2">
@@ -404,7 +418,7 @@ function vCustomers(el) {
     $('cList').querySelectorAll('[data-c]').forEach(r => r.onclick = () => { S.view = 'customer'; S.custId = r.dataset.c; render(); scrollTo(0, 0); });
   };
   $('cQ').oninput = draw; $('cF').onclick = e => { const b = e.target.closest('button'); if (!b) return; f = b.dataset.f; $('cF').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); draw(); };
-  $('cAdd').onclick = () => formCustomer(null, () => draw());
+  $('cAdd').onclick = () => customerCount() >= lim('customers') ? upsell('customers') : formCustomer(null, () => draw());
   draw();
 }
 async function vCustomer(el) {
@@ -427,12 +441,13 @@ async function vCustomer(el) {
     `<tr><td class="small">${jd(l.txns.occurred_at, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', hour12:false})}</td><td class="small">${TYPE[l.txns.type]?.[1] || ''}${l.party === 'trust' ? (' ' + _('(امانت)')) : ''}${l.txns.note ? ' · ' + esc(l.txns.note) : ''}</td>
     <td class="n ${l.amount > 0 ? 'down' : 'up'}">${money(l.amount, l.currency)}</td><td class="n">${money(bal, l.currency)}</td></tr>`).join('')}</table>
     <p class="hint">${_('مبلغ مثبت یعنی مشتری بدهکار شده، منفی یعنی طلبکار شده.')}</p>` : ('<div class="empty">' + _('هنوز تراکنشی ندارد') + '</div>');
-  $('cXls').onclick = () => xlsx(`statement-${c.name}`, [[_('تاریخ'), _('نوع'), _('توضیح'), _('ارز'), _('مبلغ'), _('مانده'), _('حساب')]].concat(rows.map(({l, bal}) =>
+  $('cXls').onclick = () => !feat('excel') ? upsell('excel') : xlsx(`statement-${c.name}`, [[_('تاریخ'), _('نوع'), _('توضیح'), _('ارز'), _('مبلغ'), _('مانده'), _('حساب')]].concat(rows.map(({l, bal}) =>
     [jd(l.txns.occurred_at), TYPE[l.txns.type]?.[1], l.txns.note || '', l.currency, Number(l.amount), bal, l.party === 'trust' ? _('امانت') : _('جاری')])));
 }
 
 /* ---------------------------------------------------------------- reports */
 async function vReports(el) {
+  if (isMgr() && !feat('reports')) { el.innerHTML = lockedCard('reports', _('گزارش سود و زیان')); return; }
   if (!isMgr()) {
     el.innerHTML = `<div class="card"><h3>💰 ${_('موجودی صندوق‌ها')}</h3><div class="grid g3">${boxTotals().map(({b, v}) => `<div class="stat"><div class="l">${esc(b.name)}</div><div class="v">${money(v, b.currency)}</div></div>`).join('')}</div></div><p class="muted center">${_('گزارش سود و زیان فقط برای مالک و شرکا نمایش داده می‌شود.')}</p>`;
     return;
@@ -481,11 +496,12 @@ async function vReports(el) {
   };
   $('rP').onclick = e => { const b = e.target.closest('button'); if (!b) return; days = +b.dataset.p; $('rP').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); loadPnl(); };
   loadPnl().catch(err);
-  $('xBx').onclick = () => xlsx('boxes', [[_('صندوق'), _('ارز'), _('موجودی')]].concat(boxTotals().map(({b, v}) => [b.name, b.currency, v])));
-  $('xCu').onclick = () => { const rows = [[_('مشتری'), _('تلفن'), _('حساب'), _('ارز'), _('مانده (+بدهکار / -طلبکار)')]];
+  $('xBx').onclick = () => !feat('excel') ? upsell('excel') : xlsx('boxes', [[_('صندوق'), _('ارز'), _('موجودی')]].concat(boxTotals().map(({b, v}) => [b.name, b.currency, v])));
+  $('xCu').onclick = () => { if (!feat('excel')) return upsell('excel'); const rows = [[_('مشتری'), _('تلفن'), _('حساب'), _('ارز'), _('مانده (+بدهکار / -طلبکار)')]];
     for (const r of S.bal) if ((r.party === 'customer' || r.party === 'trust') && Math.abs(r.amount) > 1e-9) { const c = cust(r.customer_id); rows.push([c?.name, c?.phone || '', r.party === 'trust' ? _('امانت') : _('جاری'), r.currency, Number(r.amount)]); }
     xlsx('customers', rows); };
   $('xTx').onclick = async () => {
+    if (!feat('excel')) return upsell('excel');
     const rows = await fetchAll(() => sb.from('txns').select('*, lines(*)').eq('exchange_id', S.ex.id).order('occurred_at', {ascending:false}));
     xlsx('ledger', [[_('شماره'), _('تاریخ'), _('نوع'), _('مشتری/طرف'), _('شرح'), _('توضیح'), (_('سود') + ' (') + B + ')', _('ثبت‌کننده'), _('وضعیت')]].concat(rows.map(x =>
       [x.no, jd(x.occurred_at), TYPE[x.type]?.[1], cust(x.customer_id)?.name || (x.member_id ? memberName(x.member_id) : x.category || ''), txSummary(x).replace(/<[^>]+>/g, ''), x.note || '', x.meta?.profit_base ?? '', memberName(x.created_by), x.voided ? _('باطل') : ''])));
@@ -547,7 +563,7 @@ function xlsx(name, rows) {
 /* ---------------------------------------------------------------- more / settings */
 function vMore(el) {
   const mgr = isMgr();
-  el.innerHTML = `${mgr ? `<div class="qa"><button class="c5" data-act="capital"><span>🏦</span>${_('آورده / برداشت شریک')}</button><button class="c6" data-act="opening"><span>📌</span>${_('موجودی اول دوره')}</button><button class="c2" data-act="transfer"><span>🔁</span>${_('انتقال بین صندوق‌ها')}</button><button class="c1" id="mBoxAdd"><span>➕</span>${_('صندوق جدید')}</button></div>` : ''}
+  el.innerHTML = planCard() + langCard() + `${mgr ? `<div class="qa"><button class="c5" data-act="capital"><span>🏦</span>${_('آورده / برداشت شریک')}</button><button class="c6" data-act="opening"><span>📌</span>${_('موجودی اول دوره')}</button><button class="c2" data-act="transfer"><span>🔁</span>${_('انتقال بین صندوق‌ها')}</button><button class="c1" id="mBoxAdd"><span>➕</span>${_('صندوق جدید')}</button></div>` : ''}
     <div class="card"><h3>💰 ${_('صندوق‌ها')}</h3><div class="list">${S.boxes.map(b => `<div class="row" data-box="${b.id}"><div class="ic">${b.kind === 'bank' ? '🏦' : b.kind === 'wallet' ? '👛' : '💵'}</div><div class="m"><b>${esc(b.name)}${b.archived ? (' ' + _('(بایگانی)')) : ''}</b><span>${cn(b.currency) || b.currency}</span></div><div class="e">${money(balOf('box', 'box_id', b.id)[b.currency] || 0, b.currency)}</div></div>`).join('')}</div></div>
     <div class="card"><h3>👔 ${_('اعضای صرافی')}</h3><div class="list">${S.members.map(m => `<div class="row" data-mem="${m.user_id}"><div class="ic">${m.role === 'owner' ? '👑' : m.role === 'partner' ? '🤝' : '🧑‍💼'}</div><div class="m"><b>${esc(m.display_name || m.email)}</b><span>${ROLE[m.role]}${m.role !== 'staff' ? (' · ' + _('سهم سود') + ' ') + fmt(m.share_pct, 2) + PC() : ''} · ${esc(m.email || '')}</span></div></div>`).join('')}</div>
       ${mgr ? ('<div class="btns">' + '<button class="btn p" id="mInv">' + '+ ' + _('دعوت شریک یا کارمند') + '</button>' + '</div>' + '<div id="invList">' + '</div>') : ''}</div>
@@ -560,7 +576,7 @@ function vMore(el) {
       <div class="fld"><label>${_('ارز گزارش سود')}</label><select class="in" id="exB">${ccyOpts(base(), ['USD','TRY','IRT','EUR'])}</select></div><button class="btn p w" id="exSave">${_('ذخیره')}</button>` : `<p>${esc(S.ex.name)}</p>`}
       <div class="btns"><button class="btn g" id="newEx">+ ${_('ساخت صرافی دیگر')}</button><button class="btn r" id="logout">${_('خروج از حساب')}</button></div>
       <p class="hint">${_('نسخه‌ی آزمایشی. داده‌ها در پایگاه داده‌ی ابری ذخیره می‌شود و هر صرافی فقط به اطلاعات خودش دسترسی دارد.')}</p></div>`;
-  bindQA(el);
+  bindQA(el); bindLangCard();
   if ($('mBoxAdd')) $('mBoxAdd').onclick = () => formBox(null);
   el.querySelectorAll('[data-box]').forEach(r => r.onclick = () => mgr && formBox(box(r.dataset.box)));
   el.querySelectorAll('[data-mem]').forEach(r => r.onclick = () => S.role === 'owner' && formMember(S.members.find(m => m.user_id === r.dataset.mem)));
@@ -861,17 +877,18 @@ function formBox(b) {
   });
 }
 function formInvite() {
+  if (S.members.length >= lim('staff')) return upsell('staff');
   openSheet(`<h2>✉️ ${_('دعوت شریک یا کارمند')}</h2>
     <div class="fld"><label>${_('نام')}</label><input class="in" id="iN"></div>
     <div class="fld"><label>${_('ایمیل')}</label><input class="in" id="iE" type="email" dir="ltr"></div>
-    <div class="fld"><label>${_('نقش')}</label><select class="in" id="iR"><option value="staff">${_('کارمند (فقط ثبت، بدون دیدن سود)')}</option><option value="partner">${_('شریک (دسترسی کامل)')}</option></select></div>
-    <div class="fld"><label>${_('سهم سود شریک (٪)')}</label><input class="in num" id="iS" inputmode="decimal" value="0"></div>
+    <div class="fld"><label>${_('نقش')}</label><select class="in" id="iR"><option value="staff">${_('کارمند (فقط ثبت، بدون دیدن سود)')}</option>${feat('partners') ? `<option value="partner">${_('شریک (دسترسی کامل)')}</option>` : ''}</select></div>
+    ${feat('partners') ? `<div class="fld"><label>${_('سهم سود شریک (٪)')}</label><input class="in num" id="iS" inputmode="decimal" value="0"></div>` : ''}
     <div class="btns"><button class="btn p" id="iGo">${_('ثبت دعوت')}</button><button class="btn g" id="iX">${_('انصراف')}</button></div>
     <p class="hint">${_('بعد از ثبت، لینک برنامه را برای او بفرستید تا با همین ایمیل ثبت‌نام کند؛ خودکار به صرافی شما وصل می‌شود.')}</p>`, () => {
     $('iX').onclick = closeSheet;
     $('iGo').onclick = async () => {
       const email = $('iE').value.trim().toLowerCase(); if (!email.includes('@')) return toast(_('ایمیل معتبر وارد کنید'));
-      const {error} = await sb.from('invites').insert({exchange_id:S.ex.id, email, role:$('iR').value, display_name:$('iN').value.trim() || null, share_pct:num($('iS').value) || 0});
+      const {error} = await sb.from('invites').insert({exchange_id:S.ex.id, email, role:$('iR').value, display_name:$('iN').value.trim() || null, share_pct:num($('iS')?.value) || 0});
       if (error) return err(error);
       closeSheet(); toast((_('دعوت ثبت شد. لینک:') + ' ') + location.href.split('#')[0]);
       navigator.clipboard?.writeText(location.href.split('#')[0]).catch(() => {}); render();
