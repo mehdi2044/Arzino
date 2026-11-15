@@ -12,6 +12,7 @@ const CCY = {
   USD:{fa:'دلار', s:'$'}, TRY:{fa:'لیر', s:'₺'}, IRT:{fa:'تومان', s:'ت'}, EUR:{fa:'یورو', s:'€'}, // i18n-skip
   USDT:{fa:'تتر', s:'₮'}, GBP:{fa:'پوند', s:'£'}, AED:{fa:'درهم', s:'AED'}, CAD:{fa:'دلار کانادا', s:'C$'}, // i18n-skip
   CHF:{fa:'فرانک', s:'CHF'}, CNY:{fa:'یوان', s:'¥'}, IQD:{fa:'دینار عراق', s:'IQD'}, // i18n-skip
+  SAR:{fa:'ریال سعودی', s:'SAR'}, QAR:{fa:'ریال قطر', s:'QAR'}, KWD:{fa:'دینار کویت', s:'KWD'}, BHD:{fa:'دینار بحرین', s:'BHD'}, OMR:{fa:'ریال عمان', s:'OMR'}, JOD:{fa:'دینار اردن', s:'JOD'}, EGP:{fa:'پوند مصر', s:'EGP'}, SYP:{fa:'لیر سوریه', s:'SYP'}, LBP:{fa:'لیر لبنان', s:'LBP'}, LYD:{fa:'دینار لیبی', s:'LYD'}, TND:{fa:'دینار تونس', s:'TND'}, DZD:{fa:'دینار الجزایر', s:'DZD'}, MAD:{fa:'درهم مراکش', s:'MAD'}, SDG:{fa:'پوند سودان', s:'SDG'}, YER:{fa:'ریال یمن', s:'YER'}, MRU:{fa:'اوقیه موریتانی', s:'MRU'}, SOS:{fa:'شیلینگ سومالی', s:'SOS'}, DJF:{fa:'فرانک جیبوتی', s:'DJF'}, KMF:{fa:'فرانک کومور', s:'KMF'}, // i18n-skip
 };
 const CCYS = Object.keys(CCY);
 const PC = () => I18N.lang === 'fa' ? '٪' : '%';

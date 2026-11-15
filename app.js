@@ -14,11 +14,31 @@ const ASSETS = [
   {id:'CNY', fa:'یوان چین', en:'Chinese Yuan', sym:'¥', ic:'icons/flags/cn.svg', g:'fiat'},
   {id:'CHF', fa:'فرانک سوئیس', en:'Swiss Franc', sym:'CHF', ic:'icons/flags/ch.svg', g:'fiat'},
   {id:'GBP', fa:'پوند انگلیس', en:'British Pound', sym:'£', ic:'icons/flags/gb.svg', g:'fiat'},
-  {id:'AED', fa:'درهم امارات', en:'UAE Dirham', sym:'AED', ic:'icons/flags/ae.svg', g:'fiat'},
+  {id:'AED', fa:'درهم امارات', en:'UAE Dirham', sym:'AED', ic:'icons/flags/ae.svg', g:'fiat', arab:true},
   {id:'JPY', fa:'ین ژاپن', en:'Japanese Yen', sym:'JP¥', ic:'icons/flags/jp.svg', g:'fiat'},
   {id:'AUD', fa:'دلار استرالیا', en:'Australian Dollar', sym:'A$', ic:'icons/flags/au.svg', g:'fiat'},
   {id:'RUB', fa:'روبل روسیه', en:'Russian Ruble', sym:'₽', ic:'icons/flags/ru.svg', g:'fiat'},
   {id:'IRT', fa:'تومان ایران', en:'Iranian Toman', sym:'تومان', ic:'icons/flags/ir.svg', g:'fiat'},
+  {id:'SAR', fa:'ریال سعودی', en:'Saudi Riyal', sym:'SAR', ic:'icons/flags/sa.svg', g:'fiat', arab:true},
+  {id:'QAR', fa:'ریال قطر', en:'Qatari Riyal', sym:'QAR', ic:'icons/flags/qa.svg', g:'fiat', arab:true},
+  {id:'KWD', fa:'دینار کویت', en:'Kuwaiti Dinar', sym:'KWD', ic:'icons/flags/kw.svg', g:'fiat', arab:true},
+  {id:'BHD', fa:'دینار بحرین', en:'Bahraini Dinar', sym:'BHD', ic:'icons/flags/bh.svg', g:'fiat', arab:true},
+  {id:'OMR', fa:'ریال عمان', en:'Omani Rial', sym:'OMR', ic:'icons/flags/om.svg', g:'fiat', arab:true},
+  {id:'JOD', fa:'دینار اردن', en:'Jordanian Dinar', sym:'JOD', ic:'icons/flags/jo.svg', g:'fiat', arab:true},
+  {id:'IQD', fa:'دینار عراق', en:'Iraqi Dinar', sym:'IQD', ic:'icons/flags/iq.svg', g:'fiat', arab:true},
+  {id:'EGP', fa:'پوند مصر', en:'Egyptian Pound', sym:'EGP', ic:'icons/flags/eg.svg', g:'fiat', arab:true},
+  {id:'SYP', fa:'لیر سوریه', en:'Syrian Pound', sym:'SYP', ic:'icons/flags/sy.svg', g:'fiat', arab:true},
+  {id:'LBP', fa:'لیر لبنان', en:'Lebanese Pound', sym:'LBP', ic:'icons/flags/lb.svg', g:'fiat', arab:true},
+  {id:'LYD', fa:'دینار لیبی', en:'Libyan Dinar', sym:'LYD', ic:'icons/flags/ly.svg', g:'fiat', arab:true},
+  {id:'TND', fa:'دینار تونس', en:'Tunisian Dinar', sym:'TND', ic:'icons/flags/tn.svg', g:'fiat', arab:true},
+  {id:'DZD', fa:'دینار الجزایر', en:'Algerian Dinar', sym:'DZD', ic:'icons/flags/dz.svg', g:'fiat', arab:true},
+  {id:'MAD', fa:'درهم مراکش', en:'Moroccan Dirham', sym:'MAD', ic:'icons/flags/ma.svg', g:'fiat', arab:true},
+  {id:'SDG', fa:'پوند سودان', en:'Sudanese Pound', sym:'SDG', ic:'icons/flags/sd.svg', g:'fiat', arab:true},
+  {id:'YER', fa:'ریال یمن', en:'Yemeni Rial', sym:'YER', ic:'icons/flags/ye.svg', g:'fiat', arab:true},
+  {id:'MRU', fa:'اوقیه موریتانی', en:'Mauritanian Ouguiya', sym:'MRU', ic:'icons/flags/mr.svg', g:'fiat', arab:true},
+  {id:'SOS', fa:'شیلینگ سومالی', en:'Somali Shilling', sym:'SOS', ic:'icons/flags/so.svg', g:'fiat', arab:true},
+  {id:'DJF', fa:'فرانک جیبوتی', en:'Djiboutian Franc', sym:'DJF', ic:'icons/flags/dj.svg', g:'fiat', arab:true},
+  {id:'KMF', fa:'فرانک کومور', en:'Comorian Franc', sym:'KMF', ic:'icons/flags/km.svg', g:'fiat', arab:true},
   {id:'XAU', fa:'انس جهانی طلا', en:'Gold ounce', sym:'oz', ic:'icons/gold.svg', g:'metal'},
   {id:'XAG', fa:'انس جهانی نقره', en:'Silver ounce', sym:'oz', ic:'icons/silver.svg', g:'metal'},
   {id:'G18', fa:'طلای ۱۸ عیار (گرم)', en:'18K gold gram', sym:'g', ic:'icons/g18.svg', g:'metal', ir:true, k:0.75/31.1034768},
@@ -36,7 +56,7 @@ const ASSETS = [
 ];
 const AM = Object.fromEntries(ASSETS.map(a => [a.id, a]));
 const nm = id => t('c.' + id);                 // asset name in the current language
-const GROUPS = () => ['all','fav','fiat','metal','crypto'].map(g => [g, t('g.' + g)]);
+const GROUPS = () => ['all','fav','fiat','arab','metal','crypto'].map(g => [g, t('g.' + g)]);
 const QUOTES = () => ['IRT','USD','TRY','EUR'].map(q => [q, t('s.' + q)]);
 const PCT = () => I18N.lang === 'fa' ? '٪' : '%';
 const RANGES = {
@@ -305,6 +325,7 @@ function renderMarket() {
   const q = S.quote;
   let list = ASSETS.filter(a => a.id !== q);
   if (S.group === 'fav') list = list.filter(a => S.favs.includes(a.id));
+  else if (S.group === 'arab') list = list.filter(a => a.arab);
   else if (S.group !== 'all') list = list.filter(a => a.g === S.group);
   list = list.filter(a => !a.ir || IR()[a.id] || isManual(a.id) || usdRaw('XAU'));
   $('marketList').innerHTML = list.map(a => {
@@ -336,7 +357,7 @@ function renderMarket() {
     let ca = it.dataset.id, cq = q; if (ca === 'IRT') [ca, cq] = [q, 'IRT'];
     S.chart.a = ca; S.chart.q = cq === ca ? 'USD' : cq; save(); show('chart');
   };
-  $('marketFoot').textContent = t('mk.foot');
+  $('marketFoot').textContent = (S.group === 'arab' ? t('mk.arabNote') + ' ' : '') + t('mk.foot');
   setStatus(lastOk || !D.t ? 'ok' : 'err');
 }
 $('hero').onclick = e => {

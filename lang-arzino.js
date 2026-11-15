@@ -152,3 +152,23 @@ I18N.add({ar: {
   'ch.nManual': '✍️ السعر أعلاه بالسعر اليدوي', 'ch.pickA': 'رسم بياني لأي أصل؟',
   'calc.tapUse': 'اضغط للاستخدام', 'calc.none': 'لا توجد حسابات بعد.', 'toast.calcFirst': 'احسب أولاً', 'toast.sentConv': 'أُرسل إلى المحوّل 💱', 'toast.installed': 'تم تثبيت أرزينو 🎉',
 }});
+
+/* Arab currencies group */
+I18N.add({
+"fa": {
+"g.arab": "🌙 ارزهای عربی",
+"mk.arabNote": "نرخ ارزهای عربی نرخ رسمی و بین‌المللی است و در بعضی کشورها با بازار آزاد فرق دارد."
+},
+"tr": {
+"g.arab": "🌙 Arap paraları",
+"mk.arabNote": "Arap para birimlerinin kurları resmî/uluslararası kurlardır; bazı ülkelerde serbest piyasadan farklıdır."
+},
+"en": {
+"g.arab": "🌙 Arab currencies",
+"mk.arabNote": "Arab currency rates are official / international rates and differ from the street market in some countries."
+},
+"ar": {
+"g.arab": "🌙 العملات العربية",
+"mk.arabNote": "أسعار العملات العربية هي الأسعار الرسمية والدولية، وقد تختلف عن السوق الموازية في بعض الدول."
+}
+});
