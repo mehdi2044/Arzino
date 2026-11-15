@@ -748,7 +748,8 @@ document.querySelectorAll('.tab').forEach(t => t.onclick = () => show(t.dataset.
 
 let dip = null;
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); dip = e; $('installBtn').style.display = 'inline-flex'; });
-$('installBtn').onclick = async () => { if (dip) { dip.prompt(); await dip.userChoice; dip = null; $('installBtn').style.display = 'none'; } };
+$('installBtn').onclick = async () => { if (dip) { dip.prompt(); await dip.userChoice; dip = null; $('installBtn').style.display = 'none'; } else INSTALL.guide(); };
+if (INSTALL.ios && !INSTALL.standalone) $('installBtn').style.display = 'inline-flex';   // iPhone: no automatic prompt, show the step-by-step guide
 addEventListener('appinstalled', () => { $('installBtn').style.display = 'none'; toast(t('toast.installed')); });
 
 if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));

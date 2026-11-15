@@ -214,5 +214,61 @@
     .observe(document.documentElement, {childList: true, subtree: true});
   document.addEventListener('DOMContentLoaded', () => eyes(document));
 
-  w.NAV = NAV; w.HELP = HELP;
+  /* ------------------------------------------------------------------ install on the phone (iPhone has no automatic prompt) */
+  const ua = navigator.userAgent || '';
+  const G = {
+    fa: {t: '📲 نصب روی گوشی', ios: `## آیفون و آیپد
+1) این صفحه را در **Safari** باز کنید. اگر از داخل واتس‌اپ یا اینستاگرام آمده‌اید، از منوی ⋯ گزینه‌ی «باز کردن در Safari» را بزنید.
+2) دکمه‌ی **اشتراک‌گذاری** (مربع با فلش رو به بالا) را بزنید. در iOS 26 اول روی ⋯ پایین صفحه بزنید.
+3) پایین‌تر بروید و **Add to Home Screen** (افزودن به صفحه‌ی اصلی) را بزنید.
+4) «Open as Web App» روشن بماند و **Add** را بزنید.
+! حالا آیکون روی صفحه‌ی اصلی گوشی است و مثل یک برنامه، تمام‌صفحه و بدون نوار مرورگر باز می‌شود.`, and: `## اندروید
+1) صفحه را در **Chrome** باز کنید.
+2) منوی ⋮ بالای صفحه را بزنید.
+3) **Install app** یا **Add to Home screen** را بزنید و تأیید کنید.`},
+    tr: {t: '📲 Telefona yükle', ios: `## iPhone ve iPad
+1) Bu sayfayı **Safari**'de açın. WhatsApp veya Instagram içinden geldiyseniz ⋯ menüsünden “Safari'de aç”ı seçin.
+2) **Paylaş** düğmesine (yukarı oklu kare) dokunun. iOS 26'da önce alttaki ⋯'ya dokunun.
+3) Aşağı kaydırıp **Ana Ekrana Ekle**'ye dokunun.
+4) “Web Uygulaması Olarak Aç” açık kalsın, **Ekle**'ye dokunun.
+! Simge artık ana ekranda; bir uygulama gibi tam ekran ve tarayıcı çubuğu olmadan açılır.`, and: `## Android
+1) Sayfayı **Chrome**'da açın.
+2) Üstteki ⋮ menüsüne dokunun.
+3) **Uygulamayı yükle** veya **Ana ekrana ekle**'ye dokunup onaylayın.`},
+    en: {t: '📲 Install on your phone', ios: `## iPhone and iPad
+1) Open this page in **Safari**. If you came from inside WhatsApp or Instagram, choose “Open in Safari” from the ⋯ menu.
+2) Tap the **Share** button (a square with an up arrow). On iOS 26 tap ⋯ at the bottom first.
+3) Scroll down and tap **Add to Home Screen**.
+4) Keep “Open as Web App” on and tap **Add**.
+! The icon is now on your Home Screen and opens full screen like an app, without the browser bar.`, and: `## Android
+1) Open the page in **Chrome**.
+2) Tap the ⋮ menu at the top.
+3) Tap **Install app** or **Add to Home screen** and confirm.`},
+    ar: {t: '📲 التثبيت على الهاتف', ios: `## آيفون وآيباد
+1) افتح هذه الصفحة في **Safari**. إذا جئت من داخل واتساب أو إنستغرام فاختر «فتح في Safari» من قائمة ⋯.
+2) اضغط زر **المشاركة** (مربع بسهم للأعلى). في iOS 26 اضغط أولاً ⋯ أسفل الشاشة.
+3) مرّر للأسفل واضغط **إضافة إلى الشاشة الرئيسية**.
+4) أبقِ «فتح كتطبيق ويب» مفعّلاً واضغط **إضافة**.
+! أصبحت الأيقونة على شاشتك الرئيسية وتفتح بملء الشاشة كتطبيق، دون شريط المتصفح.`, and: `## أندرويد
+1) افتح الصفحة في **Chrome**.
+2) اضغط قائمة ⋮ في الأعلى.
+3) اضغط **تثبيت التطبيق** أو **إضافة إلى الشاشة الرئيسية** وأكّد.`},
+  };
+  let bip = null;
+  addEventListener('beforeinstallprompt', e => { bip = e; });
+  const INSTALL = {
+    ios: /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1),
+    get standalone() { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; },
+    get can() { return !INSTALL.standalone; },
+    label() { return (G[w.I18N ? I18N.lang : 'fa'] || G.en).t; },
+    guide() {
+      const g = G[w.I18N ? I18N.lang : 'fa'] || G.en;
+      HELP.show(`<h2>${esc(g.t)}</h2>${md(INSTALL.ios ? g.ios : /Android/.test(ua) ? g.and : g.ios + '\n' + g.and)}`);
+    },
+    async run() {
+      if (bip) { bip.prompt(); try { await bip.userChoice; } catch (e) {} bip = null; return; }
+      INSTALL.guide();
+    },
+  };
+  w.NAV = NAV; w.HELP = HELP; w.INSTALL = INSTALL;
 })(window);

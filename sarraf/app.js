@@ -172,9 +172,10 @@ function renderAuth(mode = 'login') {
       <button class="btn p w" id="aGo">${mode === 'login' ? _('ورود') : _('ساخت حساب')}</button>
       ${mode === 'login' ? `<button class="lnk" id="aForgot" type="button">${_('رمز را فراموش کرده‌اید؟')}</button>` : ''}
       <p class="hint">${mode === 'signup' ? _('اگر صاحب صرافی شما را دعوت کرده، با همان ایمیلی که داده ثبت‌نام کنید تا خودکار به صرافی وصل شوید.') : ''}</p>
-    </div></div>`;
+    </div>${INSTALL.can ? `<button class="lnk" id="aInst" type="button" style="display:block;margin:14px auto 0">${INSTALL.label()}</button>` : ''}</div>`;
   S.screen = () => renderAuth(mode); I18N.bindPickers();
   document.querySelectorAll('[data-m]').forEach(b => b.onclick = () => renderAuth(b.dataset.m));
+  if ($('aInst')) $('aInst').onclick = () => INSTALL.run();
   if ($('aForgot')) $('aForgot').onclick = () => { NAV.push({auth: 'forgot'}); renderForgot(); };
   $('aGo').onclick = async () => {
     const email = $('aEmail').value.trim(), password = $('aPass').value;
@@ -584,7 +585,7 @@ function xlsx(name, rows) {
 /* ---------------------------------------------------------------- more / settings */
 function vMore(el) {
   const mgr = isMgr();
-  el.innerHTML = planCard() + langCard() + MFA.card('sarraf.security') + `<div class="card"><h3>📖 ${_('راهنما')}</h3><p class="hint" style="margin-top:0">${_('روی دکمه‌ی ❔ بالای هر صفحه یا کنار هر فرم بزنید تا توضیح کامل همان بخش را ببینید.')}</p><div class="btns">${HELP.allBtn('sarraf.', 'btn p')}</div></div>` + `${mgr ? `<div class="qa"><button class="c5" data-act="capital"><span>🏦</span>${_('آورده / برداشت شریک')}</button><button class="c6" data-act="opening"><span>📌</span>${_('موجودی اول دوره')}</button><button class="c2" data-act="transfer"><span>🔁</span>${_('انتقال بین صندوق‌ها')}</button><button class="c1" id="mBoxAdd"><span>➕</span>${_('صندوق جدید')}</button></div>` : ''}
+  el.innerHTML = planCard() + langCard() + MFA.card('sarraf.security') + (INSTALL.can ? `<div class="card"><h3>${INSTALL.label()}</h3><p class="hint" style="margin-top:0">${_('صرافینو را مثل یک برنامه روی صفحه‌ی اصلی گوشی بگذارید؛ تمام‌صفحه و سریع باز می‌شود. روی آیفون و اندروید کار می‌کند.')}</p><div class="btns"><button class="btn p" id="instGo">${INSTALL.label()}</button></div></div>` : '') + `<div class="card"><h3>📖 ${_('راهنما')}</h3><p class="hint" style="margin-top:0">${_('روی دکمه‌ی ❔ بالای هر صفحه یا کنار هر فرم بزنید تا توضیح کامل همان بخش را ببینید.')}</p><div class="btns">${HELP.allBtn('sarraf.', 'btn p')}</div></div>` + `${mgr ? `<div class="qa"><button class="c5" data-act="capital"><span>🏦</span>${_('آورده / برداشت شریک')}</button><button class="c6" data-act="opening"><span>📌</span>${_('موجودی اول دوره')}</button><button class="c2" data-act="transfer"><span>🔁</span>${_('انتقال بین صندوق‌ها')}</button><button class="c1" id="mBoxAdd"><span>➕</span>${_('صندوق جدید')}</button></div>` : ''}
     <div class="card"><h3>💰 ${_('صندوق‌ها')}</h3><div class="list">${S.boxes.map(b => `<div class="row" data-box="${b.id}"><div class="ic">${b.kind === 'bank' ? '🏦' : b.kind === 'wallet' ? '👛' : '💵'}</div><div class="m"><b>${esc(b.name)}${b.archived ? (' ' + _('(بایگانی)')) : ''}</b><span>${cn(b.currency) || b.currency}</span></div><div class="e">${money(balOf('box', 'box_id', b.id)[b.currency] || 0, b.currency)}</div></div>`).join('')}</div></div>
     <div class="card"><h3>👔 ${_('اعضای صرافی')}</h3><div class="list">${S.members.map(m => `<div class="row" data-mem="${m.user_id}"><div class="ic">${m.role === 'owner' ? '👑' : m.role === 'partner' ? '🤝' : '🧑‍💼'}</div><div class="m"><b>${esc(m.display_name || m.email)}</b><span>${ROLE[m.role]}${m.role !== 'staff' ? (' · ' + _('سهم سود') + ' ') + fmt(m.share_pct, 2) + PC() : ''} · ${esc(m.email || '')}</span></div></div>`).join('')}</div>
       ${mgr ? ('<div class="btns">' + '<button class="btn p" id="mInv">' + '+ ' + _('دعوت شریک یا کارمند') + '</button>' + '</div>' + '<div id="invList">' + '</div>') : ''}</div>
@@ -598,6 +599,7 @@ function vMore(el) {
       <div class="btns"><button class="btn g" id="newEx">+ ${_('ساخت صرافی دیگر')}</button><button class="btn r" id="logout">${_('خروج از حساب')}</button></div>
       <p class="hint">${_('نسخه‌ی آزمایشی. داده‌ها در پایگاه داده‌ی ابری ذخیره می‌شود و هر صرافی فقط به اطلاعات خودش دسترسی دارد.')}</p></div>`;
   bindQA(el); bindLangCard(); MFA.bindCard(sb);
+  if ($('instGo')) $('instGo').onclick = () => INSTALL.run();
   if ($('mBoxAdd')) $('mBoxAdd').onclick = () => formBox(null);
   el.querySelectorAll('[data-box]').forEach(r => r.onclick = () => mgr && formBox(box(r.dataset.box)));
   el.querySelectorAll('[data-mem]').forEach(r => r.onclick = () => S.role === 'owner' && formMember(S.members.find(m => m.user_id === r.dataset.mem)));

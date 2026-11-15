@@ -251,3 +251,15 @@ html[dir=ltr] .chart-msg{direction:ltr}
 .xa{display:flex;gap:6px;margin-top:4px}.xa .btn{flex:1}
 .xa .btn,.adcard,.xcard{text-decoration:none}
 .adcard.big .adtag{display:none}
+/* narrow phones: header must fit in one row (iPhone shows the install button too) */
+@media (max-width:480px){
+  .top{gap:6px}.brand{gap:7px;min-width:0;flex:1 1 auto}.brand>div{min-width:0}
+  .brand .logo{width:42px;height:42px}.brand h1{font-size:22px}
+  .upd{font-size:11px;gap:4px}.upd span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px;display:inline-block}
+  .top-actions{gap:4px;flex:none}
+  .ibtn{height:38px;min-width:38px;border-radius:12px;font-size:16px}
+  .ibtn.sarraf{padding:0 8px;font-size:12px}
+  .ibtn.install{font-size:0;padding:0;width:38px;justify-content:center;align-items:center}
+  .ibtn.install::before{content:"📲";font-size:18px}
+}
+@media (max-width:400px){#refreshBtn{display:none}.ibtn.sarraf{padding:0 7px}.brand h1{font-size:19px}.brand .logo{width:38px;height:38px}}
