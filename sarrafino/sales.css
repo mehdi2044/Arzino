@@ -43,9 +43,20 @@ html[dir=ltr] .board{transform:rotateY(12deg) rotateX(6deg)}
 .br:nth-child(odd):not(.hd){background:rgba(255,255,255,.04)}
 .br.hd{font-size:12.5px;opacity:.6}
 .br b{direction:ltr;text-align:center;font-size:19px}.br .b{color:#4ee6b4}.br .s{color:var(--gold2)}
-.rcpt{position:absolute;bottom:-26px;inset-inline-start:-10px;background:#fff;color:var(--text);border-radius:16px;padding:10px 14px;display:flex;gap:10px;align-items:center;
-  box-shadow:0 20px 40px -18px rgba(0,0,0,.6);font-size:13.5px;max-width:300px}
-.rcpt i{color:#34b7f1;font-style:normal;font-weight:900}
+.cc{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;margin-inline-end:8px;font-style:normal;font-size:13px;font-weight:900;color:#fff;vertical-align:middle;
+  background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--c) 70%,#fff),var(--c));box-shadow:0 3px 8px rgba(0,0,0,.35),inset 0 1px 2px rgba(255,255,255,.4)}
+/* WhatsApp receipt: a chat message under the board, never on top of the rates */
+.mock{padding-bottom:168px}
+.rcpt{position:absolute;bottom:0;inset-inline-end:6%;width:min(300px,84%);background:#0b141a;border-radius:18px;padding:10px 12px 12px;
+  box-shadow:0 24px 48px -20px rgba(0,0,0,.75),0 0 0 1px rgba(255,255,255,.06);font-size:13.5px;animation:pop .6s .4s both}
+.rcpt .wa{display:flex;align-items:center;gap:6px;color:#25d366;font-weight:800;font-size:12.5px;margin-bottom:8px}
+.rcpt .wa-dot{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#25d366;color:#0b141a;font-size:12px}
+.rcpt .bub{background:#005c4b;color:#e9edef;border-radius:12px 12px 12px 4px;padding:8px 11px;display:flex;flex-direction:column;gap:2px}
+html[dir=rtl] .rcpt .bub{border-radius:12px 12px 4px 12px}
+.rcpt .amt{font-weight:800;font-size:15px;text-align:start}
+.rcpt small{display:flex;justify-content:space-between;gap:8px;align-items:flex-end;font-size:11.5px;opacity:.85}
+.rcpt small em{font-style:normal;white-space:nowrap;color:#53bdeb;font-weight:800}
+@keyframes pop{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 /* sections */
 .sec{padding:70px 0}
 .sec.alt{background:linear-gradient(180deg,#eaf1f9,#f4f7fb)}
@@ -96,4 +107,4 @@ footer .in{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 [data-theme=dark]{--bg:#060c18;--card:#0e1a2d;--text:#e8eef8;--muted:#8fa3bf;--line:#1c2b45}
 [data-theme=dark] .sec.alt{background:linear-gradient(180deg,#0a1526,#060c18)}
 [data-theme=dark] .seg{background:#14223a}[data-theme=dark] .seg button.on{background:#1e3152;color:#e8eef8}
-[data-theme=dark] .rcpt{background:#14223a}
+
