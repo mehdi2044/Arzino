@@ -21,3 +21,11 @@ table.at td.n{direction:ltr;text-align:end;white-space:nowrap}
 textarea.in{min-height:84px;resize:vertical;font:inherit}
 .sec{font-weight:900;margin:14px 0 6px;font-size:14.5px}
 .mini{font-size:12px;color:var(--muted)}
+
+.alinks{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 10px;margin-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.alinks::-webkit-scrollbar,.atabs::-webkit-scrollbar{display:none}
+.alink{flex:none;display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(217,165,33,.45);background:linear-gradient(180deg,rgba(247,215,122,.16),rgba(247,215,122,.06));
+  color:var(--text);font:inherit;font-weight:800;font-size:13px;padding:8px 12px;border-radius:12px;text-decoration:none;white-space:nowrap;cursor:pointer}
+.alink:hover{border-color:#d9a521}
+@media(max-width:520px){.alink{font-size:12.5px;padding:7px 10px}.atabs button{font-size:13px;padding:8px 11px}}
+@media(max-width:640px){.alinks{flex-wrap:wrap;overflow:visible}.alink{flex:1 1 auto;justify-content:center}}

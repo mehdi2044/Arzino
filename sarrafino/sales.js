@@ -45,3 +45,8 @@ $('per').querySelectorAll('button').forEach(b => b.onclick = () => { months = +b
 $('yr').textContent = new Date().getFullYear();
 addEventListener('langchange', all);
 all(); load();
+
+// back to the previous page (or to Arzino when the page was opened directly)
+NAV.fallback = '../';
+const drawBack = () => { const el = document.getElementById('backSlot'); if (el) el.innerHTML = NAV.btn('sback'); };
+drawBack(); addEventListener('langchange', drawBack);

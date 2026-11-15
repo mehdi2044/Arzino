@@ -1424,3 +1424,49 @@ I18N.addPhrases({
 "صرافی / شعبه": "مكتب / فرع"
 }
 });
+
+/* back / help / automatic rates */
+I18N.addPhrases({
+  en: {
+    "بروزرسانی خودکار:": "Auto-updated:",
+    "دستی": "Manual",
+    "خودکار از بازار": "Automatic from market",
+    "نرخ‌ها هر چند دقیقه خودکار از نرخ بازار و درصدهای زیر حساب می‌شوند؛ در تابلو، تصویر، تابلوی زنده و فرم معامله. برای ثابت نگه داشتن یک ردیف، 📌 را بزنید.": "Rates are recalculated every few minutes from the market rate and the percentages below — on the board, the image, the live board and the trade form. Tap 📌 to keep a row fixed.",
+    "برگرداندن به خودکار": "Back to automatic",
+    "ثابت نگه داشتن این ردیف": "Keep this row fixed",
+    "ذخیره درصدها و ردیف‌های ثابت": "Save percentages and fixed rows",
+    "نرخ‌ها از این به بعد خودکار بروز می‌شوند": "Rates now update automatically",
+    "حالت دستی: نرخ‌ها فقط با ذخیره‌ی شما عوض می‌شوند": "Manual mode: rates change only when you save them",
+    "تابلوی نرخ (خودکار)": "rate board (automatic)",
+    "راهنما": "Guide",
+    "روی دکمه‌ی ❔ بالای هر صفحه یا کنار هر فرم بزنید تا توضیح کامل همان بخش را ببینید.": "Tap the ❔ button at the top of any page or next to any form for a full explanation of that part.",
+  },
+  tr: {
+    "بروزرسانی خودکار:": "Otomatik güncelleme:",
+    "دستی": "Elle",
+    "خودکار از بازار": "Piyasadan otomatik",
+    "نرخ‌ها هر چند دقیقه خودکار از نرخ بازار و درصدهای زیر حساب می‌شوند؛ در تابلو، تصویر، تابلوی زنده و فرم معامله. برای ثابت نگه داشتن یک ردیف، 📌 را بزنید.": "Kurlar birkaç dakikada bir piyasa kuru ve aşağıdaki yüzdelerle yeniden hesaplanır — panoda, görselde, canlı panoda ve işlem formunda. Bir satırı sabit tutmak için 📌'a dokunun.",
+    "برگرداندن به خودکار": "Otomatiğe döndür",
+    "ثابت نگه داشتن این ردیف": "Bu satırı sabit tut",
+    "ذخیره درصدها و ردیف‌های ثابت": "Yüzdeleri ve sabit satırları kaydet",
+    "نرخ‌ها از این به بعد خودکار بروز می‌شوند": "Kurlar artık otomatik güncellenir",
+    "حالت دستی: نرخ‌ها فقط با ذخیره‌ی شما عوض می‌شوند": "Elle mod: kurlar yalnızca siz kaydedince değişir",
+    "تابلوی نرخ (خودکار)": "kur panosu (otomatik)",
+    "راهنما": "Rehber",
+    "روی دکمه‌ی ❔ بالای هر صفحه یا کنار هر فرم بزنید تا توضیح کامل همان بخش را ببینید.": "Bir bölümün tam açıklaması için her sayfanın üstündeki veya formun yanındaki ❔ düğmesine dokunun.",
+  },
+  ar: {
+    "بروزرسانی خودکار:": "تحديث تلقائي:",
+    "دستی": "يدوي",
+    "خودکار از بازار": "تلقائي من السوق",
+    "نرخ‌ها هر چند دقیقه خودکار از نرخ بازار و درصدهای زیر حساب می‌شوند؛ در تابلو، تصویر، تابلوی زنده و فرم معامله. برای ثابت نگه داشتن یک ردیف، 📌 را بزنید.": "تُعاد حساب الأسعار كل بضع دقائق من سعر السوق والنسب أدناه — في اللوحة والصورة واللوحة المباشرة ونموذج المعاملة. اضغط 📌 لتثبيت صف.",
+    "برگرداندن به خودکار": "العودة إلى التلقائي",
+    "ثابت نگه داشتن این ردیف": "تثبيت هذا الصف",
+    "ذخیره درصدها و ردیف‌های ثابت": "حفظ النسب والصفوف الثابتة",
+    "نرخ‌ها از این به بعد خودکار بروز می‌شوند": "الأسعار تتحدث تلقائياً من الآن",
+    "حالت دستی: نرخ‌ها فقط با ذخیره‌ی شما عوض می‌شوند": "الوضع اليدوي: تتغير الأسعار فقط عند حفظك لها",
+    "تابلوی نرخ (خودکار)": "لوحة الأسعار (تلقائي)",
+    "راهنما": "الدليل",
+    "روی دکمه‌ی ❔ بالای هر صفحه یا کنار هر فرم بزنید تا توضیح کامل همان بخش را ببینید.": "اضغط زر ❔ أعلى أي صفحة أو بجانب أي نموذج لشرح كامل لذلك القسم.",
+  },
+});

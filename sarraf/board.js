@@ -11,6 +11,11 @@ const CCY_COLORS = {USD:['#1f6f43','#3fb27a'], EUR:['#1e3a8a','#3b82f6'], TRY:['
 
 const settings = () => S.ex?.settings || {};
 const boardRows = () => (settings().board_rows?.length ? settings().board_rows : BOARD_DEFAULT);
+// effective board rate: manual (saved) or automatic (market ± margin), see ../autorate.js
+const rateCfg = () => { const st = settings(); return {mode: st.rate_mode || 'manual', sb: st.spread_buy ?? 0.3, ss: st.spread_sell ?? 0.3, round: st.round_irt || 10, fixed: st.board_fixed || []}; };
+const isAutoMode = () => rateCfg().mode === 'auto';
+function effRate(c, q) { return AUTORATE.rate(S.market, rateCfg(), c, q, S.board.find(x => x.ccy === c && x.quote === q)); }
+const lastRateTime = () => { const t = boardRows().map(([c, q]) => effRate(c, q)).filter(Boolean).map(r => +new Date(r.updated_at)).filter(isFinite); return t.length ? Math.max(...t) : 0; };
 async function saveSettings(patch) {
   const next = {...settings(), ...patch};
   const {error} = await sb.from('exchanges').update({settings: next}).eq('id', S.ex.id);
@@ -40,24 +45,25 @@ function roundRate(v, quote) {
 function vBoard(el) {
   if (!feat('board')) { el.innerHTML = lockedCard('board', _('تابلو')); bindPlanLinks(el); return; }
   const st = settings(), rows = boardRows();
-  const sb_ = st.spread_buy ?? 0.3, ss_ = st.spread_sell ?? 0.3;
+  const sb_ = st.spread_buy ?? 0.3, ss_ = st.spread_sell ?? 0.3, auto = isAutoMode(), fixed = new Set(st.board_fixed || []);
   const times = st.board_times || ['10:00', '14:00', '18:00'];
   el.innerHTML = `
-  <div class="card"><h3>📋 ${_('نرخ‌های امروز صرافی')} <span class="muted small">${S.board.length ? (_('آخرین ذخیره:') + ' ') + jd(Math.max(...S.board.map(r => +new Date(r.updated_at)))) : ''}</span></h3>
-    <p class="hint" style="margin-top:-6px">${_('«خرید» = نرخی که از مشتری می‌خرید · «فروش» = نرخی که به مشتری می‌فروشید. این نرخ‌ها پیش‌فرض فرم معامله و تابلو هستند.')}</p>
+  <div class="card"><h3>📋 ${_('نرخ‌های امروز صرافی')}${HELP.btn('sarraf.board')} <span class="muted small" id="bLast">${lastRateTime() ? (auto ? _('بروزرسانی خودکار:') : _('آخرین ذخیره:')) + ' ' + jd(lastRateTime(), {hour:'2-digit', minute:'2-digit', day:'numeric', month:'short', hour12:false}) : ''}</span></h3>
+    <div class="seg rmode" id="bMode"><button data-m="manual" class="${auto ? '' : 'on'}">✋ ${_('دستی')}</button><button data-m="auto" class="${auto ? 'on' : ''}">⚡ ${_('خودکار از بازار')}</button></div>
+    <p class="hint">${auto ? _('نرخ‌ها هر چند دقیقه خودکار از نرخ بازار و درصدهای زیر حساب می‌شوند؛ در تابلو، تصویر، تابلوی زنده و فرم معامله. برای ثابت نگه داشتن یک ردیف، 📌 را بزنید.') : _('«خرید» = نرخی که از مشتری می‌خرید · «فروش» = نرخی که به مشتری می‌فروشید. این نرخ‌ها پیش‌فرض فرم معامله و تابلو هستند.')}</p>
     <div class="grid g3 keep" style="margin:10px 0">
       <div class="fld"><label>${_('درصد کمتر از بازار برای خرید')}</label><input class="in num" id="spB" inputmode="decimal" value="${sb_}"></div>
       <div class="fld"><label>${_('درصد بیشتر از بازار برای فروش')}</label><input class="in num" id="spS" inputmode="decimal" value="${ss_}"></div>
       <div class="fld"><label>${_('گرد کردن نرخ تومان')}</label><select class="in" id="rIrt">${[1, 10, 50, 100, 1000].map(v => `<option value="${v}" ${Number(st.round_irt || 10) === v ? 'selected' : ''}>${v === 1 ? _('بدون گرد کردن') : _('به {v} تومان', {v: fmt(v)})}</option>`).join('')}</select></div>
     </div>
-    <div class="tbl-wrap"><table class="tbl" id="bTbl"><tr><th>${_('ارز')}</th><th>${_('بازار')}</th><th>${_('خرید')}</th><th>${_('فروش')}</th><th></th></tr>
-    ${rows.map(([c, q], i) => { const r = S.board.find(x => x.ccy === c && x.quote === q); return `<tr>
-      <td>${cn(c)} → ${cn(q)}</td><td class="n muted">${fmt(mktRate(c, q))}</td>
-      <td><input class="in num" data-bb="${i}" value="${r?.buy ?? ''}" inputmode="decimal"></td>
-      <td><input class="in num" data-bs="${i}" value="${r?.sell ?? ''}" inputmode="decimal"></td>
-      <td><button class="ibtn small" data-del="${i}" title="${_('حذف ردیف')}">✕</button></td></tr>`; }).join('')}</table></div>
+    <div class="tbl-wrap"><table class="tbl" id="bTbl"><tr><th>${_('ارز')}</th><th class="mkc">${_('بازار')}</th><th>${_('خرید')}</th><th>${_('فروش')}</th><th></th></tr>
+    ${rows.map(([c, q], i) => { const r = effRate(c, q), fx = fixed.has(AUTORATE.key(c, q)), ro = auto && !fx ? 'readonly' : ''; return `<tr class="${auto ? (fx ? 'fx' : 'au') : ''}">
+      <td class="pr"><b>${cn(c)} → ${cn(q)}</b><small class="mk">${_('بازار')}: <bdi>${fmt(mktRate(c, q))}</bdi></small></td><td class="n muted mkc">${fmt(mktRate(c, q))}</td>
+      <td><input class="in num" data-bb="${i}" value="${r?.buy ?? ''}" inputmode="decimal" ${ro}></td>
+      <td><input class="in num" data-bs="${i}" value="${r?.sell ?? ''}" inputmode="decimal" ${ro}></td>
+      <td class="racts">${auto ? `<button class="ibtn small pin ${fx ? 'on' : ''}" data-pin="${i}" title="${fx ? _('برگرداندن به خودکار') : _('ثابت نگه داشتن این ردیف')}">📌</button>` : ''}<button class="ibtn small" data-del="${i}" title="${_('حذف ردیف')}">✕</button></td></tr>`; }).join('')}</table></div>
     <div class="pair" style="margin-top:8px"><select class="in" id="addC">${ccyOpts('AED')}</select><select class="in" id="addQ">${ccyOpts('TRY', ['TRY','IRT','USD','EUR'])}</select><button class="btn g" id="addRow" style="flex:none">+ ${_('ردیف')}</button></div>
-    <div class="btns"><button class="btn g" id="bFill">⚡ ${_('پر کردن از بازار با درصدهای بالا')}</button><button class="btn p" id="bSave">💾 ${_('ذخیره نرخ‌ها')}</button></div></div>
+    <div class="btns">${auto ? '' : `<button class="btn g" id="bFill">⚡ ${_('پر کردن از بازار با درصدهای بالا')}</button>`}<button class="btn p" id="bSave">💾 ${auto ? _('ذخیره درصدها و ردیف‌های ثابت') : _('ذخیره نرخ‌ها')}</button></div></div>
 
   <div class="card"><h3>🖼 ${_('تابلوی دیجیتال برای واتس‌اپ')}</h3>
     <div class="grid g2">
@@ -93,17 +99,31 @@ function vBoard(el) {
 
   // --- rates table
   const readRows = () => rows.map(([c, q], i) => ({c, q, buy: num(el.querySelector(`[data-bb="${i}"]`).value), sell: num(el.querySelector(`[data-bs="${i}"]`).value)}));
-  $('bFill').onclick = () => {
+  $('bMode').onclick = async e => { const b = e.target.closest('button'); if (!b || b.dataset.m === rateCfg().mode) return;
+    if (await saveSettings({rate_mode: b.dataset.m, spread_buy: num($('spB').value) || 0, spread_sell: num($('spS').value) || 0, round_irt: Number($('rIrt').value)})) {
+      toast(b.dataset.m === 'auto' ? _('نرخ‌ها از این به بعد خودکار بروز می‌شوند') + ' ⚡' : _('حالت دستی: نرخ‌ها فقط با ذخیره‌ی شما عوض می‌شوند')); vBoard(el); } };
+  const recalc = () => { if (!isAutoMode()) return;      // live preview while typing the percentages
+    S.ex.settings = {...settings(), spread_buy: num($('spB').value) || 0, spread_sell: num($('spS').value) || 0, round_irt: Number($('rIrt').value)};
+    rows.forEach(([c, q], i) => { if (fixed.has(AUTORATE.key(c, q))) return; const r = effRate(c, q); if (!r) return;
+      el.querySelector(`[data-bb="${i}"]`).value = r.buy ?? ''; el.querySelector(`[data-bs="${i}"]`).value = r.sell ?? ''; });
+    redraw(); };
+  $('spB').oninput = $('spS').oninput = recalc;
+  el.querySelectorAll('[data-pin]').forEach(b => b.onclick = async () => { const [c, q] = rows[+b.dataset.pin], k = AUTORATE.key(c, q), f = new Set(settings().board_fixed || []);
+    if (f.has(k)) f.delete(k); else { f.add(k); const r = effRate(c, q);   // keep today's value as the fixed one
+      if (r) await sb.from('rates').upsert({exchange_id: S.ex.id, ccy: c, quote: q, buy: r.buy, sell: r.sell, updated_at: new Date().toISOString(), updated_by: S.user.id}); }
+    if (await saveSettings({board_fixed: [...f]})) { await loadExchangeData(); vBoard(el); } });
+  if ($('bFill')) $('bFill').onclick = () => {
     const pb = num($('spB').value) || 0, ps = num($('spS').value) || 0;
     rows.forEach(([c, q], i) => { const m = mktRate(c, q); if (!m) return;
       el.querySelector(`[data-bb="${i}"]`).value = roundRate(m * (1 - pb / 100), q);
       el.querySelector(`[data-bs="${i}"]`).value = roundRate(m * (1 + ps / 100), q); });
     toast(_('از بازار پر شد؛ در صورت نیاز ویرایش و ذخیره کنید'));
   };
-  $('rIrt').onchange = () => { S.ex.settings = {...settings(), round_irt: Number($('rIrt').value)}; };
+  $('rIrt').onchange = () => { S.ex.settings = {...settings(), round_irt: Number($('rIrt').value)}; recalc(); };
   $('bSave').onclick = async () => {
-    const data = readRows().map(r => ({exchange_id: S.ex.id, ccy: r.c, quote: r.q, buy: isFinite(r.buy) ? r.buy : null, sell: isFinite(r.sell) ? r.sell : null, updated_at: new Date().toISOString(), updated_by: S.user.id}));
-    const {error} = await sb.from('rates').upsert(data); if (error) return err(error);
+    const keep = r => !isAutoMode() || fixed.has(AUTORATE.key(r.c, r.q));
+    const data = readRows().filter(keep).map(r => ({exchange_id: S.ex.id, ccy: r.c, quote: r.q, buy: isFinite(r.buy) ? r.buy : null, sell: isFinite(r.sell) ? r.sell : null, updated_at: new Date().toISOString(), updated_by: S.user.id}));
+    if (data.length) { const {error} = await sb.from('rates').upsert(data); if (error) return err(error); }
     await saveSettings({spread_buy: num($('spB').value) || 0, spread_sell: num($('spS').value) || 0, round_irt: Number($('rIrt').value)});
     toast((_('نرخ‌ها ذخیره شد') + ' ✅')); await loadExchangeData(); vBoard(el);
   };
@@ -116,6 +136,13 @@ function vBoard(el) {
   const redraw = () => drawBoard($('bCanvas'), size);
   $('bSize').onclick = e => { const b = e.target.closest('button'); if (!b) return; size = b.dataset.s; $('bSize').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); redraw(); };
   redraw();
+  clearInterval(S.boardTick);
+  S.boardTick = setInterval(async () => {                  // auto mode: follow the market while this screen is open
+    if (!document.body.contains(el) || S.view !== 'board') return clearInterval(S.boardTick);
+    if (!isAutoMode() || document.activeElement?.matches('input,select')) return;
+    await loadMarket(); recalc();
+    const t = lastRateTime(); if (t && $('bLast')) $('bLast').textContent = _('بروزرسانی خودکار:') + ' ' + jd(t, {hour:'2-digit', minute:'2-digit', day:'numeric', month:'short', hour12:false});
+  }, 120000);
   $('bShare').onclick = () => shareCanvas($('bCanvas'), `board-${size}.png`, boardText(true));
   $('bDl').onclick = () => downloadCanvas($('bCanvas'), `board-${new Date().toISOString().slice(0, 10)}.png`);
   $('bText').onclick = () => window.open(waLink('', boardText()), '_blank');
@@ -141,7 +168,7 @@ function vBoard(el) {
   };
 }
 function boardText(short) {
-  const rows = boardRows().map(([c, q]) => ({c, q, r: S.board.find(x => x.ccy === c && x.quote === q)})).filter(x => x.r?.buy || x.r?.sell);
+  const rows = boardRows().map(([c, q]) => ({c, q, r: effRate(c, q)})).filter(x => x.r?.buy || x.r?.sell);
   const lines = [`🏦 ${S.ex.name}`, `📅 ${jd(Date.now(), {weekday:'long', day:'numeric', month:'long', hour:'2-digit', minute:'2-digit', hour12:false})}`, ''];
   for (const {c, q, r} of rows) lines.push(`${_('{a} به {b}', {a: cn(c), b: cn(q)})}:  ${_('خرید')} ${faNum(Number(r.buy))}  |  ${_('فروش')} ${faNum(Number(r.sell))}`);
   if (!short) { if (settings().board_note) lines.push('', settings().board_note); if (settings().phone) lines.push('📞 ' + ltr(settings().phone)); }
@@ -203,7 +230,7 @@ async function drawBoard(canvas, size = 'post') {
   ctx.fillText(`${_('تابلوی نرخ ارز')} · ${dfmt} · ${_('ساعت')} ${tfmt}`, W / 2, y);
   y += 40;
   // table card
-  const rows = boardRows().map(([c, q]) => ({c, q, r: S.board.find(x => x.ccy === c && x.quote === q)})).filter(x => x.r?.buy || x.r?.sell);
+  const rows = boardRows().map(([c, q]) => ({c, q, r: effRate(c, q)})).filter(x => x.r?.buy || x.r?.sell);
   const footH = (st.board_note ? 60 : 0) + ((st.phone || st.address) ? 110 : 30), x0 = 60, cw = W - 120;
   const avail = H - y - footH - 30;
   const headH = 76, rowH = Math.min(150, Math.max(58, (avail - headH - 16) / Math.max(rows.length, 1)));
@@ -322,7 +349,7 @@ async function drawReceipt(canvas, x) {
 }
 function receiptSheet(x) {
   const c = cust(x.customer_id), phone = c && !c.is_walkin ? normPhone(c.phone) : '';
-  openSheet(`<h2>🧾 ${_('رسید')} ${TYPE[x.type]?.[1] || ''} #${x.no}</h2>
+  openSheet(`<h2>🧾 ${_('رسید')} ${TYPE[x.type]?.[1] || ''} #${x.no}${HELP.btn('sarraf.f.receipt')}</h2>
     <div class="preview" style="white-space:pre-line">${esc(receiptText(x))}</div>
     ${!phone && c && !c.is_walkin ? ('<p class="hint">' + _('برای ارسال مستقیم، شماره‌ی واتس‌اپ مشتری را در پرونده‌اش وارد کنید.') + '</p>') : ''}
     <div class="btns">${phone ? `<a class="btn wa" href="${waLink(phone, receiptText(x))}" target="_blank" rel="noopener">💬 ${_('ارسال متن رسید به {n}', {n: esc(c.name)})}</a>` : `<a class="btn wa" href="${waLink('', receiptText(x))}" target="_blank" rel="noopener">💬 ${_('ارسال متن در واتس‌اپ')}</a>`}

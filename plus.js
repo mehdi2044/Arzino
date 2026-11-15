@@ -72,11 +72,13 @@ const PLUS = (() => {
     let tab = 'fiat';
     const sheet = document.createElement('div'); sheet.className = 'sheet tall show'; sheet.id = 'addSheet';
     document.body.appendChild(sheet); $('sheetBg').classList.add('show');
-    const close = () => { sheet.remove(); $('sheetBg').classList.remove('show'); renderAll(); };
+    let done = false;
+    const close = fromNav => { if (done) return; done = true; sheet.remove(); $('sheetBg').classList.remove('show'); if (fromNav !== true) NAV.closed('sheet'); renderAll(); };
     $('sheetBg').addEventListener('click', close, {once: true});
+    NAV.opened('sheet', () => close(true));
     const draw = () => {
       const mine = S.custom.map(c => `<div class="item mini-it"><span class="ic"><img src="${AM[c.id]?.ic}" alt=""></span><div class="nm"><b>${esc(customName(c.id))}</b><span>${esc(c.code || c.sym)} · ${t('ad.k.' + c.kind)}</span></div><button class="btn ghost sm" data-rm="${c.id}">✕</button></div>`).join('');
-      sheet.innerHTML = `<div class="sheet-grip"></div><h2>➕ ${t('ad.add')}</h2>
+      sheet.innerHTML = `<div class="sheet-grip"></div><h2>➕ ${t('ad.add')}${HELP.btn('arzino.add')}</h2>
         <div class="seg" id="adTab">${['fiat', 'crypto', 'stock'].map(k => `<button class="${tab === k ? 'active' : ''}" data-k="${k}">${t('ad.k.' + k)}</button>`).join('')}</div>
         <input class="input" id="adQ" placeholder="${t('ad.ph.' + tab)}" autocomplete="off" ${tab === 'fiat' ? '' : 'style="text-transform:uppercase"'}>
         <div class="muted small" style="margin:6px 2px">${t('ad.hint.' + tab)}</div>
@@ -135,19 +137,26 @@ const PLUS = (() => {
 
   /* ================================================================ partner exchanges (Sarrafino directory) */
   let DIR = ls.get('arzino.dir', {t: 0, list: []});
+  let MKT = null;                                   // market data for exchanges whose board is automatic
   async function loadDir() {
     if (Date.now() - DIR.t < 10 * 60e3) return;
-    try { const list = await rest('rpc/public_directory', {method: 'POST', body: '{}'}); DIR = {t: Date.now(), list: Array.isArray(list) ? list : []}; ls.set('arzino.dir', DIR); if (curView() === 'market') renderMarket(); } catch {}
+    try { const list = await rest('rpc/public_directory', {method: 'POST', body: '{}'}); DIR = {t: Date.now(), list: Array.isArray(list) ? list : []}; ls.set('arzino.dir', DIR);
+      if (DIR.list.some(x => AUTORATE.isAuto(x.auto))) MKT = await AUTORATE.market();
+      if (curView() === 'market') renderMarket(); } catch {}
   }
   function dirHTML() {
-    const list = DIR.list || []; const wa = p => (p || '').replace(/[^\d]/g, '').replace(/^0(5\d{9})$/, '90$1');
+    const list = DIR.list || [];
+    if (!MKT && !dirHTML.busy && list.some(x => AUTORATE.isAuto(x.auto))) { dirHTML.busy = 1; AUTORATE.market().then(m => { MKT = m; if (m && curView() === 'market') renderMarket(); }); }
+    const wa = p => (p || '').replace(/[^\d]/g, '').replace(/^0(5\d{9})$/, '90$1');
     const cards = list.slice(0, 12).map(x => {
-      const rows = (x.rates || []).filter(r => r.buy || r.sell).slice(0, 3);
+      const saved = (c, q) => (x.rates || []).find(r => r.ccy === c && r.quote === q);
+      const pairs = x.rows && x.rows.length ? x.rows : (x.rates || []).map(r => [r.ccy, r.quote]);
+      const rows = pairs.map(([c, q]) => AUTORATE.rate(MKT, x.auto, c, q, saved(c, q))).filter(r => r && (r.buy || r.sell)).map(r => ({...r, ccy: r.ccy || '', quote: r.quote || ''})).slice(0, 3);
       return `<div class="xcard"><div class="xh">${x.logo ? `<img src="${esc(x.logo)}" alt="">` : `<span class="xl">${esc((x.name || '?').trim()[0])}</span>`}<div><b>${esc(x.name)}</b><span>${esc(x.city || '')}</span></div><em class="spons">${t('ad.partner')}</em></div>
         ${rows.map(r => `<div class="xr"><span>${esc(r.ccy)} → ${esc(r.quote)}</span><b class="up">${fmt(+r.buy)}</b><b class="down">${fmt(+r.sell)}</b></div>`).join('')}
         <div class="xa">${x.phone ? `<a class="btn sm wa" href="https://wa.me/${wa(x.phone)}" target="_blank" rel="noopener">💬 ${t('ad.wa')}</a>` : ''}<a class="btn sm ghost" href="sarraf/board.html?ex=${x.id}&lang=${L()}" target="_blank" rel="noopener">📺 ${t('ad.board')}</a></div></div>`;
     }).join('');
-    return `<div class="xsec"><h3 class="sec-title">🏪 ${t('ad.partners')}</h3><div class="xrow">${cards}
+    return `<div class="xsec"><h3 class="sec-title">🏪 ${t('ad.partners')}${HELP.btn('arzino.partners')}</h3><div class="xrow">${cards}
       <a class="xcard join" href="sarrafino/"><div style="font-size:30px">➕</div><b>${t('ad.joinT')}</b><span class="muted small">${t('ad.joinD')}</span></a></div></div>`;
   }
 

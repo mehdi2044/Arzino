@@ -37,6 +37,7 @@
     </div>
   </header>
 
+  <div id="subbar"></div>
   <main>
     <!-- MARKET -->
     <section class="view active" id="view-market">
@@ -137,7 +138,7 @@
 
 <div class="sheet" id="manualSheet">
   <div class="sheet-grip"></div>
-  <h2 id="manualTitle" data-i18n="mn.title">نرخ دستی</h2>
+  <h2><span id="manualTitle" data-i18n="mn.title">نرخ دستی</span><button type="button" class="hlp" data-help="arzino.manual">?</button></h2>
   <p class="muted" id="manualInfo"></p>
   <label class="lbl" data-i18n="mn.price">قیمت هر واحد</label>
   <div class="manual-row">
@@ -153,7 +154,7 @@
 
 <div class="sheet tall" id="settingsSheet">
   <div class="sheet-grip"></div>
-  <h2 data-i18n="st.title">⚙ تنظیمات</h2>
+  <h2><span data-i18n="st.title">⚙ تنظیمات</span><button type="button" class="hlp" data-help="arzino.settings">?</button></h2>
   <div class="set">
     <div><b data-i18n="st.lang">زبان برنامه</b><div class="muted small" data-i18n="st.langD"></div></div>
     <div class="seg small" id="setLang"></div>
@@ -193,7 +194,10 @@
 <script src="vendor/lightweight-charts.js"></script>
 <script src="i18n.js?v=3"></script>
 <script src="lang-arzino.js?v=3"></script>
-<script src="plus.js?v=1"></script>
-<script src="app.js?v=18"></script>
+<script src="nav.js?v=1"></script>
+<script src="autorate.js?v=1"></script>
+<script src="help-arzino.js?v=1"></script>
+<script src="plus.js?v=2"></script>
+<script src="app.js?v=19"></script>
 </body>
 </html>

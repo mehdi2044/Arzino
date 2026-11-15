@@ -166,7 +166,7 @@ html[dir=ltr] .tbl td.n{text-align:right}
 .lang-sel{appearance:none;-webkit-appearance:none;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-weight:800;font-size:13px;border-radius:12px;height:38px;padding:0 9px;cursor:pointer;text-align:center}
 .top .lang-sel{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.22);color:#fff}
 .lang-sel option{color:#0b1f3a;background:#fff}
-.auth-lang{display:flex;justify-content:flex-end;margin-bottom:6px}
+.auth-lang{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:6px}
 .lnk{display:block;width:100%;margin-top:10px;background:none;border:0;color:var(--em);font:inherit;font-weight:700;font-size:13.5px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 
 /* ---- plans & subscription ---- */
@@ -197,3 +197,23 @@ html[dir=rtl] .pcard .price{text-align:right}
 .bankbox pre.bank{white-space:pre-wrap;font:inherit;font-weight:700;direction:ltr;text-align:start;background:var(--soft);border:1px dashed var(--line);border-radius:12px;padding:10px;margin:0 0 8px}
 .locked{padding:28px 18px}
 .langs{display:flex;gap:14px;flex-wrap:wrap;margin:8px 0}
+/* board: automatic rates */
+.rmode{display:flex;margin:4px 0 2px}.rmode button{flex:1}
+#bTbl tr.au input[readonly]{background:transparent;border-style:dashed;color:var(--em);font-weight:800}
+#bTbl tr.fx td:first-child:after{content:" 📌";font-size:12px}
+#bTbl .racts{white-space:nowrap}#bTbl .racts .ibtn{margin-inline-start:4px}
+.ibtn.pin{opacity:.45}.ibtn.pin.on{opacity:1;border-color:#d9a521;background:rgba(247,215,122,.18)}
+@media(max-width:520px){#bTbl td,#bTbl th{padding:6px 4px}#bTbl .in{min-height:38px;padding:7px 6px;font-size:14px}#bTbl .racts .ibtn{min-width:30px;height:32px;padding:0 4px;margin-inline-start:2px}}
+
+#bTbl td.pr b{font-weight:800;white-space:nowrap}#bTbl .mk{display:none;color:var(--muted);font-size:11.5px;font-weight:600}
+@media(max-width:520px){
+  #bTbl .mkc{display:none}#bTbl .mk{display:block}#bTbl td.pr b{font-size:13px}
+  #bTbl .in.num{min-width:0;width:100%;font-size:13.5px}#bTbl td:nth-child(3),#bTbl td:nth-child(4){width:30%}
+  .top{gap:6px}.top .acts{gap:4px}.brand{gap:7px;min-width:0}.brand .coin{width:38px;height:38px;flex:none}
+  .brand h1{max-width:calc(100vw - 255px)}.brand small{max-width:calc(100vw - 255px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .top .ibtn{min-width:34px;height:34px;padding:0 6px}.top .lang-sel{height:34px;padding:0 6px;font-size:12px}
+}
+/* phones: nothing may push the page wider than the screen */
+.grid>*{min-width:0}.board-prev{max-width:100%;height:auto}
+#bSize{flex-wrap:wrap}#bSize button{flex:1 1 auto}
+.pair>*{min-width:0}.pair input[type=time]{flex:1 1 0;padding-inline:6px;font-size:13.5px}

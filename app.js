@@ -285,9 +285,15 @@ function changeIn(a, q) {            // 24h % change of a priced in q
 
 /* ---------------------------------------------------------------- views */
 function curView() { return S.view; }
-function show(v) {
+const VIEW_T = {market: ['📊', 'tab.market'], chart: ['📈', 'tab.chart'], convert: ['💱', 'tab.convert'], calc: ['🧮', 'tab.calc']};
+function drawBar() { const [i, k] = VIEW_T[S.view] || VIEW_T.market; $('subbar').innerHTML = NAV.bar(i + ' ' + t(k)); }
+HELP.ctx = () => 'arzino.' + (S.view || 'market');
+NAV.onBack(st => { closeSheets(true); show(st.view || 'market', 'nav'); });
+// how: undefined = new history step · 'nav' = coming back · 'init' = first screen
+function show(v, how) {
   if (S.view !== v) PLUS.action();
-  S.view = v; save();
+  if (!how && S.view !== v) NAV.push({view: v}); else if (how === 'init') NAV.replace({view: v});
+  S.view = v; save(); drawBar();
   document.querySelectorAll('.view').forEach(x => x.classList.toggle('active', x.id === 'view-' + v));
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.v === v));
   window.scrollTo({top:0, behavior:'smooth'});
@@ -387,8 +393,12 @@ function renderPicker(exclude) {
 function pickerBtn(el, a) { el.innerHTML = `<img src="${AM[a].ic}" alt=""><span>${esc(nm(a))}</span>`; }
 
 /* ---------------- sheets */
-function openSheet(id) { $('sheetBg').classList.add('show'); $(id).classList.add('show'); }
-function closeSheets() { $('sheetBg').classList.remove('show'); document.querySelectorAll('.sheet').forEach(s => s.classList.remove('show')); }
+function openSheet(id) { $('sheetBg').classList.add('show'); $(id).classList.add('show'); $(id).scrollTop = 0; NAV.opened('sheet', () => closeSheets(true)); }
+function closeSheets(fromNav) {
+  $('sheetBg').classList.remove('show'); document.querySelectorAll('.sheet').forEach(s => s.classList.remove('show'));
+  const a = $('addSheet'); if (a) a.remove();
+  if (!fromNav) NAV.closed('sheet');
+}
 $('sheetBg').onclick = closeSheets;
 
 /* ---------------- converter */
@@ -749,11 +759,11 @@ function applyLang() {
   $('keys').innerHTML = '';                       // rebuild keypad digits
   if (chart) { chart.remove(); chart = null; series = null; }
 }
-addEventListener('langchange', () => { applyLang(); renderAll(); if (curView() === 'calc') renderCalc(); if (curView() === 'chart') drawChart(true); setStatus(lastOk ? 'ok' : (D.t ? 'err' : 'busy')); });
+addEventListener('langchange', () => { applyLang(); drawBar(); renderAll(); if (curView() === 'calc') renderCalc(); if (curView() === 'chart') drawChart(true); setStatus(lastOk ? 'ok' : (D.t ? 'err' : 'busy')); });
 applyLang();
 applyTheme();
 const hv = location.hash.replace('#', '');
-show(['market','chart','convert','calc'].includes(hv) ? hv : (S.view || 'market'));
+show(['market','chart','convert','calc'].includes(hv) ? hv : (S.view || 'market'), 'init');
 refresh();
 fetchLive();
 PLUS.start();

@@ -120,7 +120,7 @@ async function planSheet() {
       ${price(p) ? `<button class="btn p w" data-buy="${p.id}">${S.plan?.paid_plan === p.id && S.plan?.status === 'active' ? _('تمدید') : _('انتخاب')}</button>` : ''}</div>`;
   const statusTxt = s => ({pending: '⏳ ' + _('در انتظار تأیید'), approved: '✅ ' + _('تأیید شد'), rejected: '❌ ' + _('رد شد')})[s] || s;
   const draw = () => {
-    $('sheetBody').innerHTML = `<h2>⭐ ${_('پلن‌ها و اشتراک')}</h2>
+    $('sheetBody').innerHTML = `<h2>⭐ ${_('پلن‌ها و اشتراک')}${HELP.btn('sarraf.plans')}</h2>
       <div class="seg" id="pPer" style="margin-bottom:12px"><button class="${months === 1 ? 'on' : ''}" data-m="1">${_('ماهانه')}</button><button class="${months === 12 ? 'on' : ''}" data-m="12">${_('سالانه')} <small>(${_('۲ ماه رایگان')})</small></button></div>
       <div class="pgrid">${plans.data.map(cardOf).join('')}</div>
       ${mine.data?.length ? `<h3>🧾 ${_('پرداخت‌های شما')}</h3><div class="list">${mine.data.map(x => `<div class="row"><div class="ic">💳</div><div class="m"><b>${esc(planTitle(plans.data.find(p => p.id === x.plan_id)) || x.plan_id)} · ${x.months === 12 ? _('سالانه') : _('ماهانه')}</b><span>${jd(x.created_at)}${x.admin_note ? ' · ' + esc(x.admin_note) : ''}</span></div><div class="e">${cur(x.currency)}${fmt(Number(x.amount), 0)}<br><small>${statusTxt(x.status)}</small></div></div>`).join('')}</div>` : ''}

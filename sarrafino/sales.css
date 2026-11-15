@@ -86,3 +86,7 @@ html[dir=ltr] .plan .pr{text-align:start}
 footer{background:#071427;color:#9fb0c8;padding:22px 0;font-size:14px}
 footer .in{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 [hidden]{display:none!important}
+
+.nav .sback{display:inline-flex;align-items:center;gap:4px;height:38px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font:inherit;font-weight:800;cursor:pointer}
+@media (max-width:720px){.nav .in{gap:8px}.nav .sback .lbl{display:none}.nav .sback{padding:0 10px}}
+@media (max-width:420px){.nav .logo b{display:none}}

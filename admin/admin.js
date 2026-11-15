@@ -16,8 +16,8 @@ const A = {tab: 'home', data: {}};
 
 function toast(t) { const e = $('toast'); e.textContent = t; e.classList.add('show'); clearTimeout(e._t); e._t = setTimeout(() => e.classList.remove('show'), 2600); }
 function err(e) { console.error(e); toast(_('خطا:') + ' ' + (e?.message || e)); }
-function openSheet(html, after) { $('sheetBody').innerHTML = html; $('sheetBg').classList.add('show'); $('sheet').classList.add('show'); after && after(); }
-function closeSheet() { $('sheetBg').classList.remove('show'); $('sheet').classList.remove('show'); }
+function openSheet(html, after) { $('sheetBody').innerHTML = html; $('sheetBg').classList.add('show'); $('sheet').classList.add('show'); $('sheet').scrollTop = 0; NAV.opened('sheet', closeSheet); after && after(); }
+function closeSheet() { $('sheetBg').classList.remove('show'); $('sheet').classList.remove('show'); NAV.closed('sheet'); }
 $('sheetBg').onclick = closeSheet;
 const tl = o => (o && (o[I18N.lang] || o.fa || o.en)) || '';
 const pill = (st) => `<span class="pill ${({active: 'ok', approved: 'ok', trial: 'tr', pending: 'tr', expired: 'bad', suspended: 'bad', rejected: 'bad'})[st] || ''}">${esc(_(({active: 'فعال', trial: 'آزمایشی', expired: 'منقضی', suspended: 'متوقف', free: 'رایگان', pending: 'در انتظار تأیید', approved: 'تأیید شد', rejected: 'رد شد'})[st] || st))}</span>`;
@@ -27,16 +27,37 @@ const money = (v, c) => `${({USD: '$', EUR: '€', TRY: '₺'})[c] || (c || '') 
 async function boot() {
   const {data: {session}} = await sb.auth.getSession();
   if (!session) return login();
+  if (!(await MFA.gate(sb, $('app'), () => boot().catch(err)))) return;
   const {data: ok} = await sb.rpc('is_platform_admin');
   if (!ok) {
     $('app').innerHTML = `<div class="auth"><div class="card center"><h2>⛔ ${_('دسترسی ندارید')}</h2><p class="muted">${_('این بخش فقط برای مدیر سامانه است.')}</p>
       <button class="btn g w" id="out">${_('خروج از حساب')}</button></div></div>`;
     $('out').onclick = async () => { await sb.auth.signOut(); location.reload(); }; return;
   }
-  A.user = session.user; render();
+  A.user = session.user; NAV.replace({tab: A.tab}); render();
+}
+NAV.fallback = '../sarraf/';
+HELP.ctx = () => A.user ? 'admin.' + A.tab : 'admin.login';
+NAV.onBack(st => { if (!A.user) return; A.tab = st.tab || 'home'; render(); scrollTo(0, 0); });
+// buttons to every part of the system
+const BASE = location.origin + location.pathname.replace(/admin\/[^/]*$/, '');
+const LINKS = [['📈', 'ارزینو', BASE], ['🏪', 'پنل صرافی (صرافینو)', BASE + 'sarraf/'], ['🛒', 'صفحه‌ی فروش', BASE + 'sarrafino/'], ['📺', 'تابلوهای زنده', '#boards'],
+  ['🗄', 'Supabase', 'https://supabase.com/dashboard/project/byecgsxfoiglaozubfyx'], ['🐙', 'GitHub', 'https://github.com/mehdi2044/Arzino'], ['📦', 'ساخت اپ اندروید', 'https://github.com/mehdi2044/Arzino/actions']];
+function linkBar() {
+  return `<div class="alinks">${LINKS.map(([i, l, u]) => u === '#boards' ? `<button class="alink" id="lnBoards">${i} ${_(l)}</button>`
+    : `<a class="alink" href="${u}" ${u.startsWith(BASE) ? '' : 'target="_blank" rel="noopener"'}>${i} ${_(l)}${u.startsWith(BASE) ? '' : ' ↗'}</a>`).join('')}</div>`;
+}
+async function boardsSheet() {
+  openSheet(`<h2>📺 ${_('تابلوهای زنده')}${HELP.btn('admin.links')}</h2><div class="boot" style="height:20vh">${_('در حال بارگذاری…')}</div>`);
+  const {data: list, error} = await sb.rpc('admin_exchanges'); if (error) return err(error);
+  $('sheetBody').innerHTML = `<h2>📺 ${_('تابلوهای زنده')}${HELP.btn('admin.links')}</h2><p class="hint" style="margin-top:0">${_('تابلوی زنده فقط برای صرافی‌هایی باز می‌شود که آن را روشن کرده‌اند و پلنشان اجازه می‌دهد.')}</p>
+    <div class="list">${list.map(x => `<div class="row"><div class="ic">🏪</div><div class="m"><b>${esc(x.name)}</b><span>${esc(tl(x.plan?.name) || '')}</span></div>
+      <a class="btn g" href="${BASE}sarraf/board.html?ex=${x.id}" target="_blank" rel="noopener" style="min-width:auto">📺</a><a class="btn g" href="${BASE}sarraf/board.html?ex=${x.id}&tv=1" target="_blank" rel="noopener" style="min-width:auto">TV</a></div>`).join('')}</div>
+    <div class="btns"><button class="btn g" id="bsX">${_('بستن')}</button></div>`;
+  $('bsX').onclick = closeSheet;
 }
 function login() {
-  $('app').innerHTML = `<div class="auth"><div class="auth-lang">${I18N.picker('lang-sel', true)}</div>
+  $('app').innerHTML = `<div class="auth"><div class="auth-lang">${NAV.btn()}<span style="flex:1"></span>${HELP.ctxBtn()}${I18N.picker('lang-sel', true)}</div>
     <div class="hero3d"><div class="coin">⚙</div><h1>${_('پنل مدیریت')}</h1><div class="muted">Sarrafino · Arzino</div></div>
     <div class="card" style="margin-top:18px"><div class="fld"><label>${_('ایمیل')}</label><input class="in" id="lE" type="email" dir="ltr" autocomplete="email"></div>
     <div class="fld"><label>${_('رمز عبور')}</label><input class="in" id="lP" type="password" dir="ltr" autocomplete="current-password"></div>
@@ -54,11 +75,14 @@ const TABS = [['home', '📊', 'خلاصه'], ['payments', '💳', 'پرداخت
 function render() {
   $('app').innerHTML = `<div class="wrap">
     <div class="top"><div class="brand"><div class="coin">⚙</div><div><h1>${_('پنل مدیریت')}</h1><small>${esc(A.user.email)}</small></div></div>
-      <div class="acts">${I18N.picker('lang-sel')}<a class="ibtn" href="../sarrafino/" target="_blank" title="${_('صفحه‌ی فروش')}">🛒</a><a class="ibtn" href="../sarraf/" title="${_('صرافینو')}">🏪</a><a class="ibtn" href="../" title="${_('ارزینو')}">📈</a><button class="ibtn" id="aRe">↻</button><button class="ibtn" id="aOut" title="${_('خروج از حساب')}">⎋</button></div></div>
+      <div class="acts">${I18N.picker('lang-sel')}<button class="ibtn" id="aRe" title="${_('بروزرسانی')}">↻</button><button class="ibtn" id="aOut" title="${_('خروج از حساب')}">⎋</button></div></div>
+    ${linkBar()}
+    ${NAV.bar((TABS.find(x => x[0] === A.tab) || TABS[0])[1] + ' ' + _((TABS.find(x => x[0] === A.tab) || TABS[0])[2]))}
     <div class="atabs">${TABS.map(([k, i, l]) => `<button data-t="${k}" class="${A.tab === k ? 'on' : ''}">${i} ${_(l)}${k === 'payments' && A.pending ? `<span class="badge">${A.pending}</span>` : ''}</button>`).join('')}</div>
     <div id="view"><div class="boot" style="height:40vh">${_('در حال بارگذاری…')}</div></div></div>`;
   I18N.bindPickers();
-  document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { A.tab = b.dataset.t; render(); });
+  document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { if (b.dataset.t === A.tab) return; A.tab = b.dataset.t; NAV.push({tab: A.tab}); render(); scrollTo(0, 0); });
+  $('lnBoards').onclick = boardsSheet;
   $('aRe').onclick = render;
   $('aOut').onclick = async () => { await sb.auth.signOut(); location.reload(); };
   ({home: vHome, payments: vPayments, exchanges: vExchanges, plans: vPlans, users: vUsers, ads: vAds, settings: vSettings})[A.tab]($('view')).catch(err);
@@ -212,7 +236,10 @@ async function vUsers(el) {
   const cn = c => { try { return c ? dn.of(c) : ''; } catch { return c; } };
   const draw = q => { $('uB').innerHTML = list.filter(u => !q || JSON.stringify(u).toLowerCase().includes(q)).map(u => `<tr><td>${esc([u.first_name, u.last_name].filter(Boolean).join(' '))}</td><td dir="ltr">${esc(u.email)} ${u.confirmed ? '' : '⏳'}</td><td dir="ltr">${esc(u.phone || '')}</td><td>${esc(cn(u.country))}</td>
     <td>${jd(u.created_at)}</td><td>${jd(u.last_sign_in_at)}</td><td>${(u.exchanges || []).map(e => esc(e.name) + ' <span class="mini">(' + esc(e.role) + ')</span>').join('<br>')}</td>
-    <td>${u.is_admin ? '<span class="pill ok">admin</span>' : ''}</td></tr>`).join(''); };
+    <td>${u.is_admin ? '<span class="pill ok">admin</span>' : ''} ${u.mfa ? `<span class="pill ok" title="${_('ورود دو مرحله‌ای')}">🔐 2FA</span> <button class="btn g" data-mfa="${u.id}" style="min-width:auto;padding:4px 8px;font-size:12px">${_('بازنشانی 2FA')}</button>` : ''}</td></tr>`).join('');
+    $('uB').querySelectorAll('[data-mfa]').forEach(b => b.onclick = async () => {
+      if (!confirm(_('ورود دو مرحله‌ای این کاربر خاموش شود؟ (برای وقتی که گوشی‌اش را گم کرده)'))) return;
+      const {error} = await sb.rpc('admin_reset_mfa', {p_user: b.dataset.mfa}); if (error) return err(error); toast(_('بازنشانی شد')); render(); }); };
   $('uQ').oninput = e => draw(e.target.value.trim().toLowerCase()); draw('');
   $('uX').onclick = () => {
     if (!window.XLSX) return toast('…');
@@ -314,7 +341,7 @@ function shrinkToDataUrl(file, max) {
 async function vSettings(el) {
   const [pay, trial, free, contact, plans] = await Promise.all([getSetting('payment'), getSetting('trial'), getSetting('free_plan'), getSetting('contact'), getPlans()]);
   const popt = sel => plans.map(p => `<option value="${p.id}" ${p.id === sel ? 'selected' : ''}>${esc(tl(p.name))}</option>`).join('');
-  el.innerHTML = `<div class="card"><h3>🏦 ${_('اطلاعات واریز (برای مشتری‌ها نمایش داده می‌شود)')}</h3>
+  el.innerHTML = MFA.card('admin.security') + `<div class="card"><h3>🏦 ${_('اطلاعات واریز (برای مشتری‌ها نمایش داده می‌شود)')}</h3>
     <p class="hint" style="margin-top:0">${_('شماره حساب، IBAN، نام صاحب حساب، آدرس کیف پول تتر یا هر روش دیگری که می‌خواهید. هر زبان جدا؛ اگر خالی باشد متن فارسی نمایش داده می‌شود.')}</p>
     <div class="g4">${L4.map(l => `<div class="fld"><label>${I18N.LANGS[l].name}</label><textarea class="in" data-bk="${l}" dir="ltr">${esc(pay.bank?.[l] || '')}</textarea></div>`).join('')}</div>
     <div class="sec">📝 ${_('راهنمای زیر اطلاعات واریز')}</div>
@@ -332,6 +359,7 @@ async function vSettings(el) {
       <div class="btns"><button class="btn p" id="sCt">${_('ذخیره')}</button></div></div>`;
   $('sPay').onclick = () => { const bank = {}, note = {}; document.querySelectorAll('[data-bk]').forEach(i => bank[i.dataset.bk] = i.value.trim()); document.querySelectorAll('[data-bn]').forEach(i => note[i.dataset.bn] = i.value.trim()); putSetting('payment', {...pay, bank, note}, 'users'); };
   $('sTr').onclick = async () => { if (await putSetting('trial', {plan: $('sTP').value, days: Number($('sTD').value) || 0}, 'public')) putSetting('free_plan', {plan: $('sFP').value}, 'public'); };
+  MFA.bindCard(sb);
   $('sCt').onclick = () => putSetting('contact', {whatsapp: $('sW').value.trim(), email: $('sE').value.trim(), brand: $('sBr').value.trim() || 'Sarrafino'}, 'public');
 }
 
