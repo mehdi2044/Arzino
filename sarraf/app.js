@@ -43,7 +43,7 @@ function fmt(v, d) {
 function money(v, c, d) { return `${fmt(v, d ?? (c === 'IRT' ? 0 : undefined))} ${sym(c)}`; }
 function num(s) {
   s = String(s ?? '').replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
-    .replace(/[٬,’'ʼ\s]/g, '').replace(/٫/g, '.');
+    .replace(/[٬,’'ʼ\s\u2066-\u2069\u200e\u200f]/g, '').replace(/٫/g, '.');
   const v = parseFloat(s); return isFinite(v) ? v : NaN;
 }
 function words(v) { return I18N.words(v, fmt); }

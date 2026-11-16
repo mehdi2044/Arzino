@@ -1,5 +1,5 @@
 'use strict';
-const APP_VERSION = '2026.11.16-6';   // shown in Settings, to check the app is up to date
+const APP_VERSION = '2026.11.16-7';   // shown in Settings, to check the app is up to date
 /* ارزینو — Arzino  ·  live rates, charts, converter, calculator */
 
 const DATA = 'https://raw.githubusercontent.com/mehdi2044/arzino/data/';
@@ -94,7 +94,7 @@ function fmt(v, d) {
 function pct(v) { if (v == null || !isFinite(v)) return ''; return (v > 0 ? '+' : '') + fmt(v, 2) + PCT(); }
 function parseNum(s) {
   s = String(s ?? '').replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
-    .replace(/[٬,’'ʼ\s]/g, '').replace(/٫/g, '.');
+    .replace(/[٬,’'ʼ\s\u2066-\u2069\u200e\u200f]/g, '').replace(/٫/g, '.');
   const v = parseFloat(s); return isFinite(v) ? v : NaN;
 }
 function words(v) { return I18N.words(v, fmt); }   // 25.7 million

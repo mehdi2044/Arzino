@@ -7,7 +7,9 @@
   const fix = p => p.type === 'group' ? '’' : p.value;
   function P(l, o) {
     const f = new NF(l, o), g = !(o && o.useGrouping === false);
-    return {format: x => g ? f.formatToParts(x).map(fix).join('') : f.format(x),
+    // the number is wrapped in a left-to-right isolate (U+2066 … U+2069): without it, right-to-left text swaps the groups (266’700 → 700’266)
+    const iso = t => (t.indexOf('’') >= 0 ? '\u2066' + t + '\u2069' : t);
+    return {format: x => g ? iso(f.formatToParts(x).map(fix).join('')) : f.format(x),
       formatToParts: x => f.formatToParts(x).map(p => (p.type === 'group' ? Object.assign({}, p, {value: '’'}) : p)),
       resolvedOptions: () => f.resolvedOptions()};
   }

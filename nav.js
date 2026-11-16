@@ -297,7 +297,7 @@
   const VD = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
   const FA = '۰۱۲۳۴۵۶۷۸۹', AR = '٠١٢٣٤٥٦٧٨٩';
   const ascii = x => String(x ?? '').replace(/[۰-۹]/g, d => FA.indexOf(d)).replace(/[٠-٩]/g, d => AR.indexOf(d)).replace(/٫/g, '.');
-  const bare = x => ascii(x).replace(/[’'ʼ٬,\s]/g, '');
+  const bare = x => ascii(x).replace(/[’'ʼ٬,\s\u2066-\u2069\u200e\u200f]/g, '');
   const faOf = el => !!(w.GROUP_FA && w.GROUP_FA(el));
   function grouped(raw, fa) {
     const m = raw.match(/^(-?)(\d*)(\.?)(\d*)$/); if (!m) return raw;            // not a plain number: leave it
@@ -323,6 +323,8 @@
     let i = 0, n = 0; while (i < out.length && n < keep) { if (/[\d.٫\-۰-۹]/.test(out[i])) n++; i++; }
     try { el.setSelectionRange(i, i); } catch (er) {}
   }, true);
+  // typed numbers are always laid out left to right (otherwise right-to-left pages swap the groups); alignment stays as the page sets it
+  document.head.insertAdjacentHTML('beforeend', '<style>input[data-grp]{direction:ltr}:where(html[dir=rtl]) :where(input[data-grp]){text-align:right}</style>');
   new MutationObserver(ms => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) markNums(n); }).observe(document.documentElement, {childList: true, subtree: true});
   document.addEventListener('DOMContentLoaded', () => markNums(document)); if (document.readyState !== 'loading') markNums(document);
 
