@@ -61,7 +61,7 @@ const MFA = (() => {
       if (error || !data || data.currentLevel === 'aal2' || data.nextLevel !== 'aal2') return true;
       f = (await verified(sb))[0]; if (!f) return true;
     } catch (e) { return true; }        // the database still refuses data without the code
-    root.innerHTML = `<div class="auth"><div class="auth-lang">${NAV.btn()}<span style="flex:1"></span>${THEME.btn()}${HELP.ctxBtn()}${I18N.picker('lang-sel', true)}</div>
+    root.innerHTML = `<div class="auth"><div class="auth-lang">${NAV.btn()}${window.arzBtn ? arzBtn() : ''}<span style="flex:1"></span>${THEME.btn()}${HELP.ctxBtn()}${I18N.picker('lang-sel', true)}</div>
       <div class="hero3d"><div class="coin">🔐</div><h1>${_t('ورود دو مرحله‌ای')}</h1><div class="muted">${_t('کد ۶ رقمی برنامه‌ی Authenticator را وارد کنید')}</div></div>
       <div class="card" style="margin-top:18px"><div class="fld"><label>${_t('کد ۶ رقمی')}</label>
         <input class="in num" id="mfaCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" dir="ltr" style="font-size:26px;letter-spacing:8px;text-align:center"></div>

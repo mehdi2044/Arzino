@@ -45,6 +45,7 @@
 .subbar .ibtn{height:36px;min-width:36px;padding:0 12px;font-size:14px;font-weight:800;border-radius:12px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;
   border:1px solid var(--line,#dce4ee);background:var(--bg2,var(--card,#fff));color:var(--text,#0b1324);box-shadow:none;flex:none;white-space:nowrap}
 .subbar .ibtn .lbl{display:inline!important}
+.subbar .arzbtn{padding:0 10px 0 5px;text-decoration:none;color:inherit}.subbar .arzbtn img{width:26px;height:26px;border-radius:8px;object-fit:cover}
 .subbar .themebtn{padding:0;width:38px;justify-content:center;font-size:17px}
 .subbar .hlp-ctx{color:#0fa47a}[data-theme=dark] .subbar .hlp-ctx{color:#4ee6b4}
 @media(max-width:360px){.subbar .ibtn{padding:0 9px}.subbar .t{font-size:14px}}`;
@@ -119,7 +120,7 @@
       return `<button type="button" class="ibtn navback ${extra}" data-navback title="${tt('nav.backT')}" aria-label="${tt('nav.backT')}" ${NAV.can() ? '' : 'hidden'}><span class="ar">${arrow}</span><span class="lbl">${tt('nav.back')}</span></button>`;
     },
     // slim bar under the header: [back] title [help]
-    bar(title) { return `<div class="subbar">${NAV.btn()}<div class="t">${title || ''}</div>${THEME.btn()}${w.HELP ? HELP.ctxBtn() : ''}</div>`; },
+    bar(title, extra = '') { return `<div class="subbar">${NAV.btn()}<div class="t">${title || ''}</div>${extra}${THEME.btn()}${w.HELP ? HELP.ctxBtn() : ''}</div>`; },
     update() { const c = NAV.can(); document.querySelectorAll('[data-navback]').forEach(b => { b.hidden = !c; }); },
   };
   addEventListener('popstate', e => {

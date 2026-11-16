@@ -177,3 +177,8 @@ I18N.add({fa: {'calc.clear': '🗑 پاک کردن', 'calc.clearSure': 'همه �
   tr: {'calc.clear': '🗑 Temizle', 'calc.clearSure': 'Hepsi silinsin mi? Tekrar dokunun', 'calc.del1': 'Bunu sil'},
   en: {'calc.clear': '🗑 Clear', 'calc.clearSure': 'Clear all? Tap again', 'calc.del1': 'Delete this one'},
   ar: {'calc.clear': '🗑 مسح', 'calc.clearSure': 'مسح الكل؟ اضغط مرة أخرى', 'calc.del1': 'حذف هذا'}});
+I18N.add({
+  fa: {'hero.titleQ': '{a} به {q}', 'hero.global': 'بازار جهانی', 'hero.toToman': 'نمایش همه نرخ‌ها به تومان', 'hero.nowIn': 'نرخ‌ها به {q}', 'hs.XAU': 'انس طلا', 'hs.BTC': 'بیت‌کوین', 'hs.GBP': 'پوند'},
+  tr: {'hero.titleQ': '{a} / {q}', 'hero.global': 'küresel piyasa', 'hero.toToman': 'Tüm kurları Tümen ile göster', 'hero.nowIn': 'Kurlar: {q}', 'hs.XAU': 'Altın ons', 'hs.BTC': 'Bitcoin', 'hs.GBP': 'Sterlin'},
+  en: {'hero.titleQ': '{a} in {q}', 'hero.global': 'global market', 'hero.toToman': 'Show all rates in Toman', 'hero.nowIn': 'Rates in {q}', 'hs.XAU': 'Gold oz', 'hs.BTC': 'Bitcoin', 'hs.GBP': 'Pound'},
+  ar: {'hero.titleQ': '{a} مقابل {q}', 'hero.global': 'السوق العالمية', 'hero.toToman': 'عرض كل الأسعار بالتومان', 'hero.nowIn': 'الأسعار بـ{q}', 'hs.XAU': 'الذهب', 'hs.BTC': 'بيتكوين', 'hs.GBP': 'جنيه'}});

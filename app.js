@@ -1,5 +1,5 @@
 'use strict';
-const APP_VERSION = '2026.11.16-9';   // shown in Settings, to check the app is up to date
+const APP_VERSION = '2026.11.16-10';   // shown in Settings, to check the app is up to date
 /* ارزینو — Arzino  ·  live rates, charts, converter, calculator */
 
 const DATA = 'https://raw.githubusercontent.com/mehdi2044/arzino/data/';
@@ -307,23 +307,42 @@ function show(v, how) {
 }
 
 /* ---------------- market */
+/* Top board. It follows the currency picked in “compare all with” (S.quote):
+   Toman → free-market dollar in Toman with the Iranian source switch (bonbast / tgju) and Euro · Lira · Tether in Toman;
+   any other currency → dollar in that currency (euro when the currency is the dollar), the reverse rate,
+   a Toman shortcut, and three key prices (euro or pound · gold ounce · bitcoin) in that currency. */
+const HERO_SHORT = {XAU: 'hs.XAU', BTC: 'hs.BTC', GBP: 'hs.GBP', USDT: 's.USDT'};
+function heroName(x) { return HERO_SHORT[x] ? t(HERO_SHORT[x]) : qName(x); }
+function heroIcon(x) { const ic = AM[x]?.ic; if (!ic) return x === 'USDT' ? '₮ ' : ''; return `<img class="${ic.indexOf('/flags/') >= 0 ? 'hflag' : 'hico'}" src="${ic}" alt="">`; }
 function renderHero() {
-  const T = I18N.t;
-  const t = toman('USD'), tt = toman('USDT'), e = toman('EUR'), tr = toman('TRY');
-  const c = D.chg?.IRT;
-  const sp = D.spark?.IRT;
-  $('hero').innerHTML = `
-    <div class="h-top"><span><img class="hflag" src="icons/flags/us.svg" alt="">${T('hero.title')} ${isManual('USD') ? `<span class="pill">${T('b.manual')}</span>` : ''}</span>
+  const T = I18N.t, q = S.quote || 'IRT';
+  if (q === 'IRT') {
+    const v = toman('USD'), c = D.chg?.IRT, sp = D.spark?.IRT;
+    $('hero').innerHTML = `
+    <div class="h-top"><span>${heroIcon('USD')}${T('hero.title')} ${isManual('USD') ? `<span class="pill">${T('b.manual')}</span>` : ''}</span>
       ${c != null ? `<span class="pill">${c >= 0 ? '▲' : '▼'} ${fmt(Math.abs(c), 2)}${PCT()} ${T('hero.24')}</span>` : ''}</div>
-    <div class="h-price">${t ? fmt(t, 0) : '—'} <small>${T('u.toman')}</small></div>
-    <div class="h-sub"><span>${t ? words(t) + ' ' + T('u.toman') : T('hero.noRate')}</span>${!isManual('USD') && srcOf('USD') ? `<span>${T('hero.src', {s: esc(SRC_NAME[srcOf('USD')] || srcOf('USD'))})}</span>` : ''}</div>
-    <div class="h-src">${SRCS.map(([k]) => { const v = D.iran_by?.[k]?.USD; return v ? `<button data-src="${k}" class="${S.src === k ? 'on' : ''}">${S.src === k ? '✓ ' : ''}${esc(SRC_NAME[k])}<b>${fmt(v, 0)}</b></button>` : ''; }).join('')}</div>
+    <div class="h-price">${v ? fmt(v, 0) : '—'} <small>${T('u.toman')}</small></div>
+    <div class="h-sub"><span>${v ? words(v) + ' ' + T('u.toman') : T('hero.noRate')}</span>${!isManual('USD') && srcOf('USD') ? `<span>${T('hero.src', {s: esc(SRC_NAME[srcOf('USD')] || srcOf('USD'))})}</span>` : ''}</div>
+    <div class="h-src">${SRCS.map(([k]) => { const x = D.iran_by?.[k]?.USD; return x ? `<button data-src="${k}" class="${S.src === k ? 'on' : ''}">${S.src === k ? '✓ ' : ''}${esc(SRC_NAME[k])}<b>${fmt(x, 0)}</b></button>` : ''; }).join('')}</div>
     ${sp && sp.length > 1 ? sparkSVG(sp, 300, 54, 'rgba(255,255,255,.95)').replace('class="spark"', '') : ''}
-    <div class="hero-grid">
-      <div><img class="hflag" src="icons/flags/eu.svg" alt="">${T('s.EUR')}<b>${e ? fmt(e, 0) : '—'}</b></div>
-      <div><img class="hflag" src="icons/flags/tr.svg" alt="">${T('s.TRY')}<b>${tr ? fmt(tr, 0) : '—'}</b></div>
-      <div>₮ ${T('s.USDT')}<b>${tt ? fmt(tt, 0) : '—'}</b></div>
-    </div>`;
+    <div class="hero-grid">${['EUR', 'TRY', 'USDT'].map(x => { const y = toman(x); return `<div data-chart="${x}">${heroIcon(x)}${heroName(x)}<b>${y ? fmt(y, 0) : '—'}</b></div>`; }).join('')}</div>`;
+    return;
+  }
+  const M = q === 'USD' ? 'EUR' : 'USD';                 // main price on the board
+  const p = rate(M, q), c = changeIn(M, q), sp = sparkIn(M, q), man = isManual(M) || isManual(q);
+  const cards = [['EUR', 'GBP'].find(x => x !== q && x !== M), 'XAU', 'BTC', 'USDT', 'TRY'].filter(x => x && x !== q && x !== M).slice(0, 3);
+  const tq = toman(q);
+  $('hero').innerHTML = `
+    <div class="h-top"><span>${heroIcon(M)}${T('hero.titleQ', {a: qName(M), q: qName(q)})} ${man ? `<span class="pill">${T('b.manual')}</span>` : ''}</span>
+      ${c != null ? `<span class="pill">${c >= 0 ? '▲' : '▼'} ${fmt(Math.abs(c), 2)}${PCT()} ${T('hero.24')}</span>` : ''}</div>
+    <div class="h-price">${p != null ? fmt(p) : '—'} <small>${esc(qName(q))}</small></div>
+    <div class="h-sub">${p != null && p >= 1000 ? `<span>${words(p)} ${esc(qName(q))}</span>` : ''}${man ? '' : `<span>${T('hero.src', {s: T('hero.global')})}</span>`}</div>
+    <div class="h-src">
+      <span class="h-inv"><span>${heroIcon(q)}${fmt(1, 0)} ${esc(heroName(q))}</span><b>${p ? fmt(1 / p) + ' ' + esc(AM[M]?.sym || heroName(M)) : '—'}</b></span>
+      ${tq ? `<button data-goq="IRT" title="${T('hero.toToman')}"><span><img class="hflag" src="icons/flags/ir.svg" alt="">${T('u.toman')}</span><b>${fmt(tq, tq >= 100 ? 0 : 2)}</b></button>` : ''}
+    </div>
+    ${sp && sp.length > 1 ? sparkSVG(sp, 300, 54, 'rgba(255,255,255,.95)').replace('class="spark"', '') : ''}
+    <div class="hero-grid">${cards.map(x => { const y = rate(x, q); return `<div data-chart="${x}">${heroIcon(x)}${esc(heroName(x))}<b>${y != null ? fmt(y) : '—'}</b></div>`; }).join('')}</div>`;
 }
 function renderMarket() {
   renderHero();
@@ -378,7 +397,11 @@ function renderMarket() {
 $('hero').onclick = e => {
   const b = e.target.closest('[data-src]');
   if (b) { S.src = b.dataset.src; save(); renderAll(); toast(t('toast.src', {s: SRC_NAME[S.src]})); return; }
-  S.chart = {...S.chart, a:'USD', q:'IRT'}; save(); show('chart');
+  const g = e.target.closest('[data-goq]');           // Toman shortcut: show the whole market in Toman
+  if (g) { S.quote = g.dataset.goq; save(); renderMarket(); toast(t('hero.nowIn', {q: qName(S.quote)})); return; }
+  const q = S.quote || 'IRT', card = e.target.closest('[data-chart]');
+  const a = card ? card.dataset.chart : q === 'USD' ? 'EUR' : 'USD';
+  S.chart = {...S.chart, a, q}; save(); show('chart');
 };
 
 /* ---------------- picker */
