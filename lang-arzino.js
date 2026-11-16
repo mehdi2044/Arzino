@@ -20,7 +20,7 @@ fa: {
   'src.wallex': 'والکس', 'src.nobitex': 'نوبیتکس', 'src.stale': 'آخرین نرخ ذخیره‌شده', 'src.label': 'منبع تومان:',
   'ago.now': 'همین حالا', 'ago.min': '{n} دقیقه پیش', 'ago.h': '{n} ساعت پیش', 'ago.d': '{n} روز پیش',
   'stat.offline': 'آفلاین — آخرین نرخ: {t}', 'stat.noconn': 'اتصال برقرار نشد', 'stat.upd': 'بروزرسانی: {t}', 'stat.live': ' · رمزارز زنده',
-  'hero.title': '🇺🇸 دلار آزاد به تومان', 'hero.24': '۲۴س', 'hero.noRate': 'نرخ تومان در دسترس نیست — از ✍️ نرخ دستی استفاده کنید', 'hero.src': 'منبع: {s}',
+  'hero.title': 'دلار آزاد به تومان', 'hero.24': '۲۴س', 'hero.noRate': 'نرخ تومان در دسترس نیست — از ✍️ نرخ دستی استفاده کنید', 'hero.src': 'منبع: {s}',
   'b.manual': '✍️ دستی', 'b.live': '● زنده', 'b.est': 'تخمینی',
   'mk.million': '۱ میلیون تومان', 'mk.iran': 'بازار ایران', 'mk.fav': 'منتخب', 'mk.empty': 'موردی نیست. ⭐ را کنار هر ارز بزنید تا اینجا بیاید.',
   'mk.foot': 'قیمت‌های تومانی از بازار آزاد ایران و قیمت‌های جهانی از بازارهای بین‌المللی گرفته می‌شود و هر چند دقیقه بروز می‌شود. «تخمینی» یعنی از روی اونس جهانی طلا محاسبه شده. برای نرخ صرافی خودتان از ⚙ ← نرخ دستی استفاده کنید.',
@@ -57,7 +57,7 @@ tr: {
   'src.wallex': 'Wallex', 'src.nobitex': 'Nobitex', 'src.stale': 'Son kayıtlı kur', 'src.label': 'Tümen kaynağı:',
   'ago.now': 'şimdi', 'ago.min': '{n} dk önce', 'ago.h': '{n} sa önce', 'ago.d': '{n} gün önce',
   'stat.offline': 'Çevrimdışı — son kur: {t}', 'stat.noconn': 'Bağlantı kurulamadı', 'stat.upd': 'Güncelleme: {t}', 'stat.live': ' · canlı kripto',
-  'hero.title': '🇺🇸 Serbest piyasa doları (Tümen)', 'hero.24': '24s', 'hero.noRate': 'Tümen kuru yok — ✍️ manuel kur kullanın', 'hero.src': 'Kaynak: {s}',
+  'hero.title': 'Serbest piyasa doları (Tümen)', 'hero.24': '24s', 'hero.noRate': 'Tümen kuru yok — ✍️ manuel kur kullanın', 'hero.src': 'Kaynak: {s}',
   'b.manual': '✍️ manuel', 'b.live': '● canlı', 'b.est': 'tahmini',
   'mk.million': '1 milyon Tümen', 'mk.iran': 'İran piyasası', 'mk.fav': 'Favori', 'mk.empty': 'Kayıt yok. Buraya eklemek için bir para biriminin yanındaki ⭐ simgesine dokunun.',
   'mk.foot': 'Tümen fiyatları İran serbest piyasasından, küresel fiyatlar uluslararası piyasalardan alınır ve birkaç dakikada bir güncellenir. «Tahmini», dünya ons altın fiyatından hesaplandığı anlamına gelir. Kendi büro kurunuz için ⚙ → Manuel kur bölümünü kullanın.',
@@ -94,7 +94,7 @@ en: {
   'src.wallex': 'Wallex', 'src.nobitex': 'Nobitex', 'src.stale': 'Last saved rate', 'src.label': 'Toman source:',
   'ago.now': 'just now', 'ago.min': '{n} min ago', 'ago.h': '{n} h ago', 'ago.d': '{n} d ago',
   'stat.offline': 'Offline — last rate: {t}', 'stat.noconn': 'Could not connect', 'stat.upd': 'Updated {t}', 'stat.live': ' · live crypto',
-  'hero.title': '🇺🇸 Free-market dollar in Toman', 'hero.24': '24h', 'hero.noRate': 'Toman rate unavailable — use ✍️ manual rate', 'hero.src': 'Source: {s}',
+  'hero.title': 'Free-market dollar in Toman', 'hero.24': '24h', 'hero.noRate': 'Toman rate unavailable — use ✍️ manual rate', 'hero.src': 'Source: {s}',
   'b.manual': '✍️ manual', 'b.live': '● live', 'b.est': 'estimate',
   'mk.million': '1 million Toman', 'mk.iran': 'Iran market', 'mk.fav': 'Favorite', 'mk.empty': 'Nothing here yet. Tap ⭐ next to any currency to add it.',
   'mk.foot': 'Toman prices come from Iran’s free market and global prices from international markets, refreshed every few minutes. “Estimate” means calculated from the world gold ounce. For your own exchange rate use ⚙ → Manual rate.',
@@ -134,7 +134,7 @@ I18N.add({ar: {
   'src.wallex': 'Wallex', 'src.nobitex': 'Nobitex', 'src.stale': 'آخر سعر محفوظ', 'src.label': 'مصدر التومان:',
   'ago.now': 'الآن', 'ago.min': 'قبل {n} دقيقة', 'ago.h': 'قبل {n} ساعة', 'ago.d': 'قبل {n} يوم',
   'stat.offline': 'غير متصل — آخر سعر: {t}', 'stat.noconn': 'تعذّر الاتصال', 'stat.upd': 'آخر تحديث: {t}', 'stat.live': ' · عملات رقمية مباشرة',
-  'hero.title': '🇺🇸 الدولار في السوق الحرة بالتومان', 'hero.24': '24س', 'hero.noRate': 'سعر التومان غير متوفر — استخدم ✍️ السعر اليدوي', 'hero.src': 'المصدر: {s}',
+  'hero.title': 'الدولار في السوق الحرة بالتومان', 'hero.24': '24س', 'hero.noRate': 'سعر التومان غير متوفر — استخدم ✍️ السعر اليدوي', 'hero.src': 'المصدر: {s}',
   'b.manual': '✍️ يدوي', 'b.live': '● مباشر', 'b.est': 'تقديري',
   'mk.million': 'مليون تومان', 'mk.iran': 'سوق إيران', 'mk.fav': 'مفضلة', 'mk.empty': 'لا توجد عناصر. اضغط ⭐ بجانب أي عملة لتظهر هنا.',
   'mk.foot': 'أسعار التومان مأخوذة من السوق الحرة في إيران والأسعار العالمية من الأسواق الدولية، وتُحدَّث كل بضع دقائق. «تقديري» يعني أنه محسوب من سعر أونصة الذهب العالمية. لسعر مكتبك الخاص استخدم ⚙ ← السعر اليدوي.',
@@ -172,3 +172,4 @@ I18N.add({
 "mk.arabNote": "أسعار العملات العربية هي الأسعار الرسمية والدولية، وقد تختلف عن السوق الموازية في بعض الدول."
 }
 });
+I18N.add({fa: {'st.ver': 'نسخه'}, tr: {'st.ver': 'Sürüm'}, en: {'st.ver': 'Version'}, ar: {'st.ver': 'الإصدار'}});

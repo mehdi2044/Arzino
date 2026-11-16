@@ -301,7 +301,7 @@
   const faOf = el => !!(w.GROUP_FA && w.GROUP_FA(el));
   function grouped(raw, fa) {
     const m = raw.match(/^(-?)(\d*)(\.?)(\d*)$/); if (!m) return raw;            // not a plain number: leave it
-    const out = m[1] + m[2].replace(/\B(?=(\d{3})+(?!\d))/g, fa ? '٬' : '’') + (m[3] ? (fa ? '٫' : '.') : '') + m[4];
+    const out = m[1] + m[2].replace(/\B(?=(\d{3})+(?!\d))/g, '’') + (m[3] ? (fa ? '٫' : '.') : '') + m[4];
     return fa ? out.replace(/\d/g, d => FA[d]) : out;
   }
   const isNumInput = el => el && el.tagName === 'INPUT' && !el.dataset.nogrp && !/^(time|tel|email|password|date|number|checkbox|radio|file|hidden)$/i.test(el.type) &&

@@ -1,6 +1,6 @@
 // Arzino service worker: app shell offline + last data cached
-const CACHE = 'arzino-v27';
-const SHELL = ['./', './index.html', './app.css?v=20', './plus.js?v=5', './app.js?v=25', './i18n.js?v=4', './lang-arzino.js?v=3', './nav.js?v=6', './brand.js?v=2', './autorate.js?v=1', './wl.js?v=1', './help-arzino.js?v=1', './vendor/lightweight-charts.js', './manifest.webmanifest',
+const CACHE = 'arzino-v28';
+const SHELL = ['./', './index.html', './app.css?v=21', './plus.js?v=5', './app.js?v=26', './i18n.js?v=5', './lang-arzino.js?v=4', './nav.js?v=7', './brand.js?v=2', './autorate.js?v=1', './wl.js?v=1', './help-arzino.js?v=1', './vendor/lightweight-charts.js', './manifest.webmanifest',
   './icons/app.svg', './icons/app-192.png', './icons/gold.svg', './icons/silver.svg', './icons/coin.svg', './icons/g18.svg'];
 self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).catch(() => {})); });
 self.addEventListener('activate', e => e.waitUntil(Promise.all([
@@ -17,7 +17,13 @@ self.addEventListener('fetch', e => {
       .catch(() => caches.match(key)));
     return;
   }
-  // shell & fonts: cache first, refresh in background
+  // pages and unversioned files: newest from the network when online, cached copy when offline
+  if (req.mode === 'navigate' || !url.search && url.origin === location.origin) {
+    e.respondWith(fetch(req, {cache: 'no-cache'}).then(r => { if (r.ok) { const c = r.clone(); caches.open(CACHE).then(x => x.put(req, c)); } return r; })
+      .catch(() => caches.match(req).then(h => h || caches.match('./index.html'))));
+    return;
+  }
+  // versioned files (?v=…) and fonts: cache first, refresh in background
   e.respondWith(caches.match(req).then(hit => {
     const net = fetch(req).then(r => { if (r.ok || r.type === 'opaque') { const c = r.clone(); caches.open(CACHE).then(x => x.put(req, c)); } return r; }).catch(() => hit);
     return hit || net;

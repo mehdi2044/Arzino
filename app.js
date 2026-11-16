@@ -1,4 +1,5 @@
 'use strict';
+const APP_VERSION = '2026.11.16-6';   // shown in Settings, to check the app is up to date
 /* ارزینو — Arzino  ·  live rates, charts, converter, calculator */
 
 const DATA = 'https://raw.githubusercontent.com/mehdi2044/arzino/data/';
@@ -312,15 +313,15 @@ function renderHero() {
   const c = D.chg?.IRT;
   const sp = D.spark?.IRT;
   $('hero').innerHTML = `
-    <div class="h-top"><span>${T('hero.title')} ${isManual('USD') ? `<span class="pill">${T('b.manual')}</span>` : ''}</span>
+    <div class="h-top"><span><img class="hflag" src="icons/flags/us.svg" alt="">${T('hero.title')} ${isManual('USD') ? `<span class="pill">${T('b.manual')}</span>` : ''}</span>
       ${c != null ? `<span class="pill">${c >= 0 ? '▲' : '▼'} ${fmt(Math.abs(c), 2)}${PCT()} ${T('hero.24')}</span>` : ''}</div>
     <div class="h-price">${t ? fmt(t, 0) : '—'} <small>${T('u.toman')}</small></div>
     <div class="h-sub"><span>${t ? words(t) + ' ' + T('u.toman') : T('hero.noRate')}</span>${!isManual('USD') && srcOf('USD') ? `<span>${T('hero.src', {s: esc(SRC_NAME[srcOf('USD')] || srcOf('USD'))})}</span>` : ''}</div>
     <div class="h-src">${SRCS.map(([k]) => { const v = D.iran_by?.[k]?.USD; return v ? `<button data-src="${k}" class="${S.src === k ? 'on' : ''}">${S.src === k ? '✓ ' : ''}${esc(SRC_NAME[k])}<b>${fmt(v, 0)}</b></button>` : ''; }).join('')}</div>
     ${sp && sp.length > 1 ? sparkSVG(sp, 300, 54, 'rgba(255,255,255,.95)').replace('class="spark"', '') : ''}
     <div class="hero-grid">
-      <div>💶 ${T('s.EUR')}<b>${e ? fmt(e, 0) : '—'}</b></div>
-      <div>🇹🇷 ${T('s.TRY')}<b>${tr ? fmt(tr, 0) : '—'}</b></div>
+      <div><img class="hflag" src="icons/flags/eu.svg" alt="">${T('s.EUR')}<b>${e ? fmt(e, 0) : '—'}</b></div>
+      <div><img class="hflag" src="icons/flags/tr.svg" alt="">${T('s.TRY')}<b>${tr ? fmt(tr, 0) : '—'}</b></div>
       <div>₮ ${T('s.USDT')}<b>${tt ? fmt(tt, 0) : '—'}</b></div>
     </div>`;
 }
@@ -502,7 +503,7 @@ function renderSettings() {
     return `<div class="item grp-${a.ir ? 'iran' : a.g}" data-id="${a.id}">${icon(a.id)}<div class="nm"><b>${esc(nm(a.id))}</b><span>${line}</span></div>${m ? `<span class="badge b-man">${t('st.manualBadge')}</span>` : ''}</div>`;
   }).join('');
   $('manualList').onclick = e => { const it = e.target.closest('.item'); if (it) openManual(it.dataset.id, B); };
-  $('about').innerHTML = `${t('about.upd')} <b>${D.t ? new Date(D.t * 1000).toLocaleString(I18N.dateLocale(S.digits)) : '—'}</b><br>
+  $('about').innerHTML = `<b>${t('st.ver')}: ${APP_VERSION}</b><br>${t('about.upd')} <b>${D.t ? new Date(D.t * 1000).toLocaleString(I18N.dateLocale(S.digits)) : '—'}</b><br>
     ${t('about.toman')} <b>${esc(SRC_NAME[S.src])}</b> ${t('about.tomanD')}<br>
     ${t('about.global')}${live._t ? t('about.liveCrypto') : ''}<br>
     ${t('about.note')}<br>

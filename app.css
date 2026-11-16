@@ -274,3 +274,4 @@ html[dir=ltr] .chart-msg{direction:ltr}
 .wlb .xr.hd{border-top:0;color:var(--muted);font-size:12px;padding-top:0}.wlb .xr b{text-align:center;direction:ltr}
 .wlb .wa,.wlb a.btn{text-decoration:none!important}.wlb .btn.sm.wa{display:inline-flex;align-items:center;gap:4px;padding:7px 12px;border-radius:12px;background:linear-gradient(135deg,#1faa59,#25d366);color:#fff;font-weight:800;font-size:13px;flex:none}
 #wlTop:empty{display:none}
+.hflag{width:18px;height:13px;border-radius:3px;object-fit:cover;vertical-align:-2px;margin-inline-end:6px;box-shadow:0 1px 3px rgba(0,0,0,.3)}
