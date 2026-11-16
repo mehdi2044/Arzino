@@ -173,3 +173,7 @@ I18N.add({
 }
 });
 I18N.add({fa: {'st.ver': 'نسخه'}, tr: {'st.ver': 'Sürüm'}, en: {'st.ver': 'Version'}, ar: {'st.ver': 'الإصدار'}});
+I18N.add({fa: {'calc.clear': '🗑 پاک کردن', 'calc.clearSure': 'همه پاک شود؟ دوباره بزنید', 'calc.del1': 'حذف این مورد'},
+  tr: {'calc.clear': '🗑 Temizle', 'calc.clearSure': 'Hepsi silinsin mi? Tekrar dokunun', 'calc.del1': 'Bunu sil'},
+  en: {'calc.clear': '🗑 Clear', 'calc.clearSure': 'Clear all? Tap again', 'calc.del1': 'Delete this one'},
+  ar: {'calc.clear': '🗑 مسح', 'calc.clearSure': 'مسح الكل؟ اضغط مرة أخرى', 'calc.del1': 'حذف هذا'}});

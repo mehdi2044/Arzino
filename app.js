@@ -1,5 +1,5 @@
 'use strict';
-const APP_VERSION = '2026.11.16-7';   // shown in Settings, to check the app is up to date
+const APP_VERSION = '2026.11.16-9';   // shown in Settings, to check the app is up to date
 /* ارزینو — Arzino  ·  live rates, charts, converter, calculator */
 
 const DATA = 'https://raw.githubusercontent.com/mehdi2044/arzino/data/';
@@ -725,10 +725,19 @@ function renderCalc() {
     $('keys').onclick = e => { const b = e.target.closest('button'); if (b) { calcPress(b.dataset.k); navigator.vibrate?.(8); } };
   }
   const v = evalExpr(cExpr);
-  $('calcExpr').textContent = prettyExpr(cExpr);
+  $('calcExpr').innerHTML = `<bdi dir="ltr">${esc(prettyExpr(cExpr))}</bdi>`;   // math reads left to right in every language
   $('calcOut').textContent = cExpr === '' ? fmt(0, 0) : isFinite(v) ? fmt(v, 8) : '…';
-  $('calcHist').innerHTML = S.calcHist.map((h, i) => `<div class="item" data-i="${i}"><div class="nm"><span>${esc(prettyExpr(h.e))}</span><b>= ${fmt(h.v, 8)}</b></div><span class="muted small">${t('calc.tapUse')}</span></div>`).join('') || `<p class="muted small">${t('calc.none')}</p>`;
-  $('calcHist').onclick = e => { const it = e.target.closest('.item'); if (it) { cExpr = String(S.calcHist[+it.dataset.i].v); renderCalc(); window.scrollTo({top:0, behavior:'smooth'}); } };
+  $('calcHist').innerHTML = S.calcHist.map((h, i) => `<div class="item" data-i="${i}"><div class="nm"><span><bdi dir="ltr">${esc(prettyExpr(h.e))}</bdi></span><b>= <bdi dir="ltr">${fmt(h.v, 8)}</bdi></b></div><span class="muted small">${t('calc.tapUse')}</span><button class="hist-del" data-del="${i}" title="${t('calc.del1')}" aria-label="${t('calc.del1')}">✕</button></div>`).join('') || `<p class="muted small">${t('calc.none')}</p>`;
+  $('calcHist').onclick = e => {
+    const d = e.target.closest('[data-del]'); if (d) { S.calcHist.splice(+d.dataset.del, 1); save(); renderCalc(); return; }   // remove one line
+    const it = e.target.closest('.item'); if (it) { cExpr = String(S.calcHist[+it.dataset.i].v); renderCalc(); window.scrollTo({top:0, behavior:'smooth'}); } };
+  // clear all: first tap asks “sure?”, second tap (within 4 s) clears
+  const clr = $('calcClr'); clr.hidden = !S.calcHist.length;
+  if (!clr.dataset.ask) clr.textContent = t('calc.clear');
+  clr.onclick = () => {
+    if (!clr.dataset.ask) { clr.dataset.ask = '1'; clr.textContent = t('calc.clearSure'); clr.classList.add('ask'); clearTimeout(clr._t);
+      clr._t = setTimeout(() => { delete clr.dataset.ask; clr.classList.remove('ask'); clr.textContent = t('calc.clear'); }, 4000); return; }
+    clearTimeout(clr._t); delete clr.dataset.ask; clr.classList.remove('ask'); S.calcHist = []; save(); renderCalc(); };
 }
 document.addEventListener('keydown', e => {
   if (curView() !== 'calc' || e.target.tagName === 'INPUT') return;
