@@ -293,5 +293,39 @@
       INSTALL.guide();
     },
   };
+  /* ------------------------------------------------------------------ thousands separators while typing numbers */
+  const VD = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  const FA = '۰۱۲۳۴۵۶۷۸۹', AR = '٠١٢٣٤٥٦٧٨٩';
+  const ascii = x => String(x ?? '').replace(/[۰-۹]/g, d => FA.indexOf(d)).replace(/[٠-٩]/g, d => AR.indexOf(d)).replace(/٫/g, '.');
+  const bare = x => ascii(x).replace(/[’'ʼ٬,\s]/g, '');
+  const faOf = el => !!(w.GROUP_FA && w.GROUP_FA(el));
+  function grouped(raw, fa) {
+    const m = raw.match(/^(-?)(\d*)(\.?)(\d*)$/); if (!m) return raw;            // not a plain number: leave it
+    const out = m[1] + m[2].replace(/\B(?=(\d{3})+(?!\d))/g, fa ? '٬' : '’') + (m[3] ? (fa ? '٫' : '.') : '') + m[4];
+    return fa ? out.replace(/\d/g, d => FA[d]) : out;
+  }
+  const isNumInput = el => el && el.tagName === 'INPUT' && !el.dataset.nogrp && !/^(time|tel|email|password|date|number|checkbox|radio|file|hidden)$/i.test(el.type) &&
+    el.getAttribute('maxlength') !== '6' && !/^mfa/.test(el.id || '') && (el.classList.contains('num') || /^(decimal|numeric)$/.test(el.getAttribute('inputmode') || ''));
+  Object.defineProperty(HTMLInputElement.prototype, 'value', {configurable: true, enumerable: VD.enumerable,
+    get() { const v = VD.get.call(this); return this.dataset && this.dataset.grp ? bare(v) : v; },
+    set(v) { if (this.dataset && this.dataset.grp) VD.set.call(this, grouped(bare(v), faOf(this))); else VD.set.call(this, v); }});
+  function markNums(root) {
+    const list = root.querySelectorAll ? [...root.querySelectorAll('input')] : []; if (root.tagName === 'INPUT') list.push(root);
+    for (const el of list) if (!el.dataset.grp && isNumInput(el)) { el.dataset.grp = '1'; VD.set.call(el, grouped(bare(VD.get.call(el)), faOf(el))); }
+  }
+  document.addEventListener('input', e => {                            // capture: runs before the page's own handlers
+    const el = e.target; if (!el || !el.dataset || !el.dataset.grp) return;
+    const raw = VD.get.call(el), pos = el.selectionStart ?? raw.length;
+    const keep = bare(raw.slice(0, pos)).replace(/[^\d.\-]/g, '').length;
+    let clean = bare(raw).replace(/[^\d.\-]/g, '').replace(/(?!^)-/g, ''); const k = clean.indexOf('.'); if (k >= 0) clean = clean.slice(0, k + 1) + clean.slice(k + 1).replace(/\./g, '');
+    const out = grouped(clean, faOf(el)); if (out === raw) return;
+    VD.set.call(el, out);
+    let i = 0, n = 0; while (i < out.length && n < keep) { if (/[\d.٫\-۰-۹]/.test(out[i])) n++; i++; }
+    try { el.setSelectionRange(i, i); } catch (er) {}
+  }, true);
+  new MutationObserver(ms => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) markNums(n); }).observe(document.documentElement, {childList: true, subtree: true});
+  document.addEventListener('DOMContentLoaded', () => markNums(document)); if (document.readyState !== 'loading') markNums(document);
+
+  NAV.shown = el => VD.get.call(el);                                   // what the field shows (with separators)
   w.NAV = NAV; w.HELP = HELP; w.INSTALL = INSTALL;
 })(window);

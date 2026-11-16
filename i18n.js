@@ -1,6 +1,19 @@
 'use strict';
 /* Shared language engine for Arzino and Sarraf — Persian · Türkçe · English · العربية
    One saved choice ('arzino.lang') drives both apps: text, direction (RTL/LTR), dates and numbers. */
+/* Thousands separator: always the raised ’ (Persian digits keep their own raised ٬), so it is never mixed up with a decimal point. */
+(function () {
+  const NF = Intl.NumberFormat; if (NF.__grouped) return;
+  const fix = p => p.type === 'group' && p.value !== '٬' ? '’' : p.value;
+  function P(l, o) {
+    const f = new NF(l, o), g = !(o && o.useGrouping === false);
+    return {format: x => g ? f.formatToParts(x).map(fix).join('') : f.format(x),
+      formatToParts: x => f.formatToParts(x).map(p => (p.type === 'group' && p.value !== '٬' ? Object.assign({}, p, {value: '’'}) : p)),
+      resolvedOptions: () => f.resolvedOptions()};
+  }
+  P.supportedLocalesOf = NF.supportedLocalesOf.bind(NF); P.__grouped = true;
+  Intl.NumberFormat = P;
+})();
 (function (w) {
   const LANGS = {
     fa: {name: 'فارسی', short: 'FA', dir: 'rtl', date: 'fa-IR-u-ca-persian', num: 'fa-IR'},

@@ -93,7 +93,7 @@ function fmt(v, d) {
 function pct(v) { if (v == null || !isFinite(v)) return ''; return (v > 0 ? '+' : '') + fmt(v, 2) + PCT(); }
 function parseNum(s) {
   s = String(s ?? '').replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
-    .replace(/[٬,\s]/g, '').replace(/٫/g, '.');
+    .replace(/[٬,’'ʼ\s]/g, '').replace(/٫/g, '.');
   const v = parseFloat(s); return isFinite(v) ? v : NaN;
 }
 function words(v) { return I18N.words(v, fmt); }   // 25.7 million
@@ -437,7 +437,8 @@ function renderConv() {
 }
 $('amount').addEventListener('input', () => { S.conv.amt = String(parseNum($('amount').value) || ''); save(); renderConv(); });
 $('amount').addEventListener('blur', () => { const v = parseNum($('amount').value); if (isFinite(v)) $('amount').value = fmt(v, 8); });
-$('amount').addEventListener('focus', () => { const v = parseNum($('amount').value); $('amount').value = isFinite(v) ? String(v) : ''; setTimeout(() => $('amount').select(), 10); });
+$('amount').addEventListener('focus', () => { setTimeout(() => $('amount').select(), 10); });
+window.GROUP_FA = () => I18N.lang === 'fa' && S.digits !== 'en';     // typed numbers use Persian digits when the app does
 $('fromBtn').onclick = () => openPicker(t('cv.from'), a => { if (a === S.conv.to) S.conv.to = S.conv.from; S.conv.from = a; save(); renderConv(); });
 $('toBtn').onclick = () => openPicker(t('cv.to'), a => { if (a === S.conv.from) S.conv.from = S.conv.to; S.conv.to = a; save(); renderConv(); });
 $('swapBtn').onclick = () => { [S.conv.from, S.conv.to] = [S.conv.to, S.conv.from]; save(); renderConv(); };

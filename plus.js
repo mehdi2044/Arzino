@@ -299,7 +299,7 @@ const PLUS = (() => {
     if (WLK) { wlApply(); loadWL(); setInterval(loadWL, 60e3); } else { loadAds(); loadDir(); }
     setInterval(() => { loadStocks().then(() => { if (curView() === 'market') renderMarket(); }); if (!WLK) { loadDir(); loadAds(); } loadFx(); }, 90e3);
   }
-  return {injectCustom, customName, customUsd, customBars, addSheet, dirHTML, slot, afterRender, action, rewardHTML, bindReward, start, feedEvery: () => CFG.feed?.every || 8, hasDir: () => !WLK && (DIR.list || []).length > 0,
+  return {injectCustom, customName, customUsd, customBars, addSheet, dirHTML, slot, afterRender, action, rewardHTML, bindReward, start, feedEvery: () => CFG.feed?.every || 8, hasDir: () => !WLK,
     wlBoard, wlApply, isWL: () => !!WLK};
 })();
 
