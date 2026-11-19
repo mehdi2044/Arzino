@@ -181,12 +181,15 @@ fa: ['تابلوی نرخ', `## نرخ‌های امروز صرافی
 - **✋ دستی:** نرخ‌ها فقط وقتی عوض می‌شوند که خودتان بنویسید و «ذخیره» بزنید. «⚡ پر کردن از بازار» همه را یک‌جا از نرخ بازار و درصدها پر می‌کند.
 - **⚡ خودکار از بازار:** نرخ‌ها هر چند دقیقه خودکار حساب می‌شوند: خرید = بازار منهای درصد خرید، فروش = بازار به‌اضافه‌ی درصد فروش. این نرخ در تابلو، تصویر، تابلوی زنده، فرم معامله و ارزینو یکی است.
 - **📌 ثابت:** در حالت خودکار، یک ردیف را با 📌 روی نرخ فعلی ثابت کنید تا دیگر با بازار عوض نشود.
+- **٪ درصد جداگانه هر ارز:** درصدهای بالا پیش‌فرض همه ارزهاست. با دکمه‌ی ٪ کنار هر ردیف، برای همان ارز درصد خرید و فروش جدا بنویسید (خالی = پیش‌فرض) و «ذخیره» بزنید.
 - **گرد کردن تومان:** مثلاً به ۱۰ یا ۱۰۰ تومان.
 - با «+ ردیف» جفت‌ارز تازه اضافه کنید و با ✕ حذف کنید.
 ## تابلوی دیجیتال برای واتس‌اپ
 - تصویر زیبای نرخ‌ها در سه اندازه: پست، استوری، مربع.
 - **📤 ارسال تصویر** واتس‌اپ را باز می‌کند؛ یک **لیست پخش** (Broadcast) از مشتری‌ها بسازید تا پیام برای هر نفر خصوصی برود.
-- **💬 ارسال متنی** و **⬇️ دانلود تصویر** هم هست.
+- **چه چیزی ارسال شود؟** فقط تصویر، فقط متن، یا هر دو با هم.
+- **متن پیام:** فقط نرخ‌ها، فقط متن دلخواه شما، یا هر دو. متن دلخواه یک بار نوشته می‌شود و می‌ماند؛ پیش‌نمایش را همان‌جا می‌بینید.
+- **📋 کپی متن** و **⬇️ دانلود تصویر** هم هست.
 - **ساعت‌های یادآوری:** تا سه ساعت در روز؛ در آن ساعت‌ها داشبورد یادآوری می‌کند.
 ## ظاهر و اطلاعات تابلو (مالک و شریک)
 - لوگو، تلفن، آدرس، متن پایین، رنگ و نوع ارقام.
@@ -198,12 +201,15 @@ en: ['Rate board', `## Today's office rates
 - **✋ Manual:** rates change only when you type them and tap Save. “⚡ Fill from market” fills them all from the market rate and your percentages.
 - **⚡ Automatic from market:** rates are recalculated every few minutes: buy = market minus the buy %, sell = market plus the sell %. The same rate is used on the board, the image, the live board, the trade form and in Arzino.
 - **📌 Fixed:** in automatic mode, pin a row with 📌 to keep its current rate and stop it following the market.
+- **٪ Own percentages per currency:** the percentages above are the default for all currencies. Tap ٪ on a row to give that currency its own buy and sell percentage (empty = default), then Save.
 - **Toman rounding:** e.g. to 10 or 100 toman.
 - Add a currency pair with “+ Row”, remove it with ✕.
 ## Digital board for WhatsApp
 - A clean image of your rates in three sizes: post, story, square.
 - **📤 Send image** opens WhatsApp; make a **broadcast list** of customers so each person gets it privately.
-- **💬 Send as text** and **⬇️ Download image** are also there.
+- **What to send:** image only, text only, or both together.
+- **Message text:** rates only, your own text only, or both. Your text is written once and kept; a preview is shown.
+- **📋 Copy text** and **⬇️ Download image** are also there.
 - **Reminder times:** up to three a day; the dashboard reminds you at those times.
 ## Board look and details (owner and partners)
 - Logo, phone, address, footer note, colour and digit style.
@@ -215,12 +221,15 @@ tr: ['Kur panosu', `## Büronun bugünkü kurları
 - **✋ Elle:** kurlar yalnızca siz yazıp Kaydet'e bastığınızda değişir. “⚡ Piyasadan doldur” hepsini piyasa kuru ve yüzdelerle doldurur.
 - **⚡ Piyasadan otomatik:** kurlar birkaç dakikada bir yeniden hesaplanır: alış = piyasa eksi alış yüzdesi, satış = piyasa artı satış yüzdesi. Aynı kur panoda, görselde, canlı panoda, işlem formunda ve Arzino'da kullanılır.
 - **📌 Sabit:** otomatik modda bir satırı 📌 ile mevcut kurda sabitleyin; artık piyasayı izlemez.
+- **٪ Dövize özel yüzde:** yukarıdaki yüzdeler tüm dövizler için varsayılandır. Bir satırdaki ٪ ile o dövize ayrı alış/satış yüzdesi girin (boş = varsayılan) ve Kaydet'e basın.
 - **Toman yuvarlama:** ör. 10 veya 100 tomana.
 - “+ Satır” ile döviz çifti ekleyin, ✕ ile silin.
 ## WhatsApp için dijital pano
 - Kurlarınızın şık bir görseli, üç boyutta: gönderi, hikâye, kare.
 - **📤 Görseli gönder** WhatsApp'ı açar; müşterilerden bir **toplu mesaj listesi** oluşturun, herkese ayrı ve özel gider.
-- **💬 Metin olarak gönder** ve **⬇️ Görseli indir** de var.
+- **Ne gönderilsin:** yalnız görsel, yalnız metin veya ikisi birlikte.
+- **Mesaj metni:** yalnız kurlar, yalnız kendi metniniz veya ikisi. Metniniz bir kez yazılır ve saklanır; önizlemesi görünür.
+- **📋 Metni kopyala** ve **⬇️ Görseli indir** de var.
 - **Hatırlatma saatleri:** günde üçe kadar; gösterge paneli o saatlerde hatırlatır.
 ## Pano görünümü ve bilgileri (sahip ve ortaklar)
 - Logo, telefon, adres, alt yazı, renk ve rakam türü.
@@ -232,12 +241,15 @@ ar: ['لوحة الأسعار', `## أسعار المكتب اليوم
 - **✋ يدوي:** تتغير الأسعار فقط عندما تكتبها وتضغط حفظ. «⚡ تعبئة من السوق» يملؤها كلها من سعر السوق والنسب.
 - **⚡ تلقائي من السوق:** تُعاد حساب الأسعار كل بضع دقائق: الشراء = السوق ناقص نسبة الشراء، البيع = السوق زائد نسبة البيع. السعر نفسه يُستخدم في اللوحة والصورة واللوحة المباشرة ونموذج المعاملة وفي أرزينو.
 - **📌 ثابت:** في الوضع التلقائي ثبّت صفاً بـ 📌 على سعره الحالي فلا يتبع السوق بعدها.
+- **٪ نسبة خاصة لكل عملة:** النسب أعلاه افتراضية لكل العملات. اضغط ٪ بجانب الصف لتحدد لتلك العملة نسبة شراء وبيع خاصة (فارغ = الافتراضي) ثم احفظ.
 - **تقريب التومان:** مثلاً إلى 10 أو 100 تومان.
 - أضف زوج عملات بـ «+ صف» واحذفه بـ ✕.
 ## لوحة رقمية لواتساب
 - صورة أنيقة لأسعارك بثلاثة مقاسات: منشور، قصة، مربع.
 - **📤 إرسال الصورة** يفتح واتساب؛ أنشئ **قائمة بث** للعملاء ليصل لكل شخص بشكل خاص.
-- يوجد أيضاً **💬 إرسال نصي** و**⬇️ تنزيل الصورة**.
+- **ماذا يُرسل:** الصورة فقط، أو النص فقط، أو الاثنان معاً.
+- **نص الرسالة:** الأسعار فقط، أو نصك فقط، أو الاثنان. يُكتب نصك مرة ويُحفظ مع معاينة.
+- يوجد أيضاً **📋 نسخ النص** و**⬇️ تنزيل الصورة**.
 - **أوقات التذكير:** حتى ثلاثة في اليوم؛ تذكّرك لوحة التحكم في تلك الأوقات.
 ## مظهر اللوحة ومعلوماتها (المالك والشركاء)
 - الشعار والهاتف والعنوان والنص السفلي واللون ونوع الأرقام.

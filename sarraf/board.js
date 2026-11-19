@@ -12,7 +12,14 @@ const CCY_COLORS = {USD:['#1f6f43','#3fb27a'], EUR:['#1e3a8a','#3b82f6'], TRY:['
 const settings = () => S.ex?.settings || {};
 const boardRows = () => (settings().board_rows?.length ? settings().board_rows : BOARD_DEFAULT);
 // effective board rate: manual (saved) or automatic (market ± margin), see ../autorate.js
-const rateCfg = () => { const st = settings(); return {mode: st.rate_mode || 'manual', sb: st.spread_buy ?? 0.3, ss: st.spread_sell ?? 0.3, round: st.round_irt || 10, fixed: st.board_fixed || []}; };
+const rateCfg = () => { const st = settings(); return {mode: st.rate_mode || 'manual', sb: st.spread_buy ?? 0.3, ss: st.spread_sell ?? 0.3, round: st.round_irt || 10, fixed: st.board_fixed || [], pair: st.board_spread || {}}; };
+// small badge under a currency that has its own percentages
+function spChip(c, q) {
+  const o = spOf(c, q); if (o.sb == null && o.ss == null) return '';
+  const st = settings(), b = o.sb ?? st.spread_buy ?? 0.3, x = o.ss ?? st.spread_sell ?? 0.3;
+  return `<small class="spc">٪ ${_('خرید')} −${fmt(b)} · ${_('فروش')} +${fmt(x)}</small>`;
+}
+const spOf = (c, q) => (settings().board_spread || {})[AUTORATE.key(c, q)] || {};   // a currency's own buy/sell %
 const isAutoMode = () => rateCfg().mode === 'auto';
 function effRate(c, q) { return AUTORATE.rate(S.market, rateCfg(), c, q, S.board.find(x => x.ccy === c && x.quote === q)); }
 const lastRateTime = () => { const t = boardRows().map(([c, q]) => effRate(c, q)).filter(Boolean).map(r => +new Date(r.updated_at)).filter(isFinite); return t.length ? Math.max(...t) : 0; };
@@ -50,28 +57,42 @@ function vBoard(el) {
   el.innerHTML = `
   <div class="card"><h3>📋 ${_('نرخ‌های امروز صرافی')}${HELP.btn('sarraf.board')} <span class="muted small" id="bLast">${lastRateTime() ? (auto ? _('بروزرسانی خودکار:') : _('آخرین ذخیره:')) + ' ' + jd(lastRateTime(), {hour:'2-digit', minute:'2-digit', day:'numeric', month:'short', hour12:false}) : ''}</span></h3>
     <div class="seg rmode" id="bMode"><button data-m="manual" class="${auto ? '' : 'on'}">✋ ${_('دستی')}</button><button data-m="auto" class="${auto ? 'on' : ''}">⚡ ${_('خودکار از بازار')}</button></div>
-    <p class="hint">${auto ? _('نرخ‌ها هر چند دقیقه خودکار از نرخ بازار و درصدهای زیر حساب می‌شوند؛ در تابلو، تصویر، تابلوی زنده و فرم معامله. برای ثابت نگه داشتن یک ردیف، 📌 را بزنید.') : _('«خرید» = نرخی که از مشتری می‌خرید · «فروش» = نرخی که به مشتری می‌فروشید. این نرخ‌ها پیش‌فرض فرم معامله و تابلو هستند.')}</p>
+    <p class="hint">${auto ? _('نرخ‌ها هر چند دقیقه خودکار از نرخ بازار و درصدهای زیر حساب می‌شوند؛ در تابلو، تصویر، تابلوی زنده و فرم معامله. برای ثابت نگه داشتن یک ردیف، 📌 را بزنید.') + ' ' + _('برای درصد جداگانه‌ی هر ارز، ٪ کنار همان ردیف را بزنید.') : _('«خرید» = نرخی که از مشتری می‌خرید · «فروش» = نرخی که به مشتری می‌فروشید. این نرخ‌ها پیش‌فرض فرم معامله و تابلو هستند.')}</p>
     <div class="grid g3 keep" style="margin:10px 0">
-      <div class="fld"><label>${_('درصد کمتر از بازار برای خرید')}</label><input class="in num" id="spB" inputmode="decimal" value="${sb_}"></div>
-      <div class="fld"><label>${_('درصد بیشتر از بازار برای فروش')}</label><input class="in num" id="spS" inputmode="decimal" value="${ss_}"></div>
+      <div class="fld"><label>${_('درصد کمتر از بازار برای خرید')} <span class="muted small">(${_('پیش‌فرض همه ارزها')})</span></label><input class="in num" id="spB" inputmode="decimal" value="${sb_}"></div>
+      <div class="fld"><label>${_('درصد بیشتر از بازار برای فروش')} <span class="muted small">(${_('پیش‌فرض همه ارزها')})</span></label><input class="in num" id="spS" inputmode="decimal" value="${ss_}"></div>
       <div class="fld"><label>${_('گرد کردن نرخ تومان')}</label><select class="in" id="rIrt">${[1, 10, 50, 100, 1000].map(v => `<option value="${v}" ${Number(st.round_irt || 10) === v ? 'selected' : ''}>${v === 1 ? _('بدون گرد کردن') : _('به {v} تومان', {v: fmt(v)})}</option>`).join('')}</select></div>
     </div>
     <div class="tbl-wrap"><table class="tbl" id="bTbl"><tr><th>${_('ارز')}</th><th class="mkc">${_('بازار')}</th><th>${_('خرید')}</th><th>${_('فروش')}</th><th></th></tr>
     ${rows.map(([c, q], i) => { const r = effRate(c, q), fx = fixed.has(AUTORATE.key(c, q)), ro = auto && !fx ? 'readonly' : ''; return `<tr class="${auto ? (fx ? 'fx' : 'au') : ''}">
-      <td class="pr"><b>${cn(c)} → ${cn(q)}</b><small class="mk">${_('بازار')}: <bdi>${fmt(mktRate(c, q))}</bdi></small></td><td class="n muted mkc">${fmt(mktRate(c, q))}</td>
+      <td class="pr"><b>${cn(c)} → ${cn(q)}</b><small class="mk">${_('بازار')}: <bdi>${fmt(mktRate(c, q))}</bdi></small>${spChip(c, q)}</td><td class="n muted mkc">${fmt(mktRate(c, q))}</td>
       <td><input class="in num" data-bb="${i}" value="${r?.buy ?? ''}" inputmode="decimal" ${ro}></td>
       <td><input class="in num" data-bs="${i}" value="${r?.sell ?? ''}" inputmode="decimal" ${ro}></td>
-      <td class="racts">${auto ? `<button class="ibtn small pin ${fx ? 'on' : ''}" data-pin="${i}" title="${fx ? _('برگرداندن به خودکار') : _('ثابت نگه داشتن این ردیف')}">📌</button>` : ''}<button class="ibtn small" data-del="${i}" title="${_('حذف ردیف')}">✕</button></td></tr>`; }).join('')}</table></div>
+      <td class="racts"><button class="ibtn small spbtn ${Object.keys(spOf(c, q)).length ? 'on' : ''}" data-sp="${i}" title="${_('درصد جداگانه برای این ارز')}">٪</button>${auto ? `<button class="ibtn small pin ${fx ? 'on' : ''}" data-pin="${i}" title="${fx ? _('برگرداندن به خودکار') : _('ثابت نگه داشتن این ردیف')}">📌</button>` : ''}<button class="ibtn small" data-del="${i}" title="${_('حذف ردیف')}">✕</button></td></tr>
+      <tr class="sprow" data-spr="${i}" hidden><td colspan="5"><div class="spedit"><b>٪ ${cn(c)} → ${cn(q)}</b>
+        <label>${_('خرید')} −<input class="in num" data-spb="${i}" inputmode="decimal" value="${spOf(c, q).sb ?? ''}" placeholder="${fmt(sb_)}">٪</label>
+        <label>${_('فروش')} +<input class="in num" data-sps="${i}" inputmode="decimal" value="${spOf(c, q).ss ?? ''}" placeholder="${fmt(ss_)}">٪</label>
+        <button class="btn g small" data-spclr="${i}">${_('همان پیش‌فرض')}</button></div>
+        <p class="hint">${_('خالی = همان درصد پیش‌فرض بالا. بعد از تغییر «ذخیره» را بزنید.')}</p></td></tr>`; }).join('')}</table></div>
     <div class="pair" style="margin-top:8px"><select class="in" id="addC">${ccyOpts('AED')}</select><select class="in" id="addQ">${ccyOpts('TRY', ['TRY','IRT','USD','EUR'])}</select><button class="btn g" id="addRow" style="flex:none">+ ${_('ردیف')}</button></div>
-    <div class="btns">${auto ? '' : `<button class="btn g" id="bFill">⚡ ${_('پر کردن از بازار با درصدهای بالا')}</button>`}<button class="btn p" id="bSave">💾 ${auto ? _('ذخیره درصدها و ردیف‌های ثابت') : _('ذخیره نرخ‌ها')}</button></div></div>
+    <div class="btns">${auto ? '' : `<button class="btn g" id="bFill">⚡ ${_('پر کردن از بازار با درصدهای بالا')}</button>`}<button class="btn p" id="bSave">💾 ${auto ? _('ذخیره درصدها و ردیف‌های ثابت') : _('ذخیره نرخ‌ها و درصدها')}</button></div></div>
 
   <div class="card"><h3>🖼 ${_('تابلوی دیجیتال برای واتس‌اپ')}</h3>
     <div class="grid g2">
       <div><canvas id="bCanvas" class="board-prev"></canvas>
         <div class="seg" id="bSize" style="margin:10px auto 0;display:flex;justify-content:center"><button class="on" data-s="post">${_('پست (۴:۵)')}</button><button data-s="story">${_('استوری (۹:۱۶)')}</button><button data-s="square">${_('مربع')}</button></div></div>
       <div>
-        <div class="btns" style="margin-top:0"><button class="btn wa w" id="bShare">📤 ${_('ارسال تصویر در واتس‌اپ')}</button></div>
-        <div class="btns"><button class="btn g" id="bText">💬 ${_('ارسال متنی نرخ‌ها')}</button><button class="btn g" id="bDl">⬇️ ${_('دانلود تصویر')}</button></div>
+        <div class="fld" style="margin-top:0"><label>${_('چه چیزی ارسال شود؟')}</label>
+          <div class="seg wa-seg" id="waWhat">${[['img', '🖼 ' + _('تصویر')], ['txt', '💬 ' + _('متن')], ['both', '🖼+💬 ' + _('هر دو')]].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div></div>
+        <div id="waTxtBox">
+          <div class="fld"><label>${_('متن پیام شامل چه باشد؟')}</label>
+            <div class="seg wa-seg" id="waText">${[['rates', '📋 ' + _('نرخ‌ها')], ['custom', '✍️ ' + _('متن من')], ['both', _('هر دو')]].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div></div>
+          <div class="fld" id="waMsgFld"><label>✍️ ${_('متن دلخواه شما')}</label>
+            <textarea class="in" id="waMsg" rows="3" placeholder="${_('مثلاً: سلام، نرخ‌های امروز صرافی ما 👇 برای معامله پیام بدهید.')}"></textarea></div>
+          <div class="fld"><label>👁 ${_('پیش‌نمایش متن')}</label><div class="preview wa-prev" id="waPrev"></div></div>
+        </div>
+        <div class="btns"><button class="btn wa w" id="bShare">📤 ${_('ارسال در واتس‌اپ')}</button></div>
+        <div class="btns"><button class="btn g" id="bCopy">📋 ${_('کپی متن')}</button><button class="btn g" id="bDl">⬇️ ${_('دانلود تصویر')}</button></div>
         <div class="preview" style="margin-top:12px">
           <b>${_('ارسال خصوصی به همه‌ی مشتری‌ها:')}</b> ${_('در واتس‌اپ یک «لیست پخش» (Broadcast list) بسازید و مشتری‌ها را در آن بگذارید. بعد از زدن «ارسال تصویر»، همان لیست را انتخاب کنید. پیام برای هر نفر جداگانه و خصوصی می‌رود. فقط کسانی که شماره‌ی صرافی را ذخیره کرده‌اند پیام را دریافت می‌کنند.')}
         </div>
@@ -98,23 +119,32 @@ function vBoard(el) {
     <div class="btns"><button class="btn p" id="stSave">💾 ${_('ذخیره تنظیمات تابلو')}</button></div></div>${isMgr() ? '' : '-->'}`;
 
   // --- rates table
+  const blank = v => String(v ?? '').trim() === '';
+  const readSpreads = () => { const o = {};             // only currencies whose % differs from the default are stored
+    rows.forEach(([c, q], i) => { const b = el.querySelector(`[data-spb="${i}"]`).value, x = el.querySelector(`[data-sps="${i}"]`).value;
+      if (blank(b) && blank(x)) return; o[AUTORATE.key(c, q)] = {sb: blank(b) ? null : num(b), ss: blank(x) ? null : num(x)}; });
+    return o; };
   const readRows = () => rows.map(([c, q], i) => ({c, q, buy: num(el.querySelector(`[data-bb="${i}"]`).value), sell: num(el.querySelector(`[data-bs="${i}"]`).value)}));
   $('bMode').onclick = async e => { const b = e.target.closest('button'); if (!b || b.dataset.m === rateCfg().mode) return;
-    if (await saveSettings({rate_mode: b.dataset.m, spread_buy: num($('spB').value) || 0, spread_sell: num($('spS').value) || 0, round_irt: Number($('rIrt').value)})) {
+    if (await saveSettings({rate_mode: b.dataset.m, spread_buy: num($('spB').value) || 0, spread_sell: num($('spS').value) || 0, round_irt: Number($('rIrt').value), board_spread: readSpreads()})) {
       toast(b.dataset.m === 'auto' ? _('نرخ‌ها از این به بعد خودکار بروز می‌شوند') + ' ⚡' : _('حالت دستی: نرخ‌ها فقط با ذخیره‌ی شما عوض می‌شوند')); vBoard(el); } };
   const recalc = () => { if (!isAutoMode()) return;      // live preview while typing the percentages
-    S.ex.settings = {...settings(), spread_buy: num($('spB').value) || 0, spread_sell: num($('spS').value) || 0, round_irt: Number($('rIrt').value)};
+    S.ex.settings = {...settings(), spread_buy: num($('spB').value) || 0, spread_sell: num($('spS').value) || 0, round_irt: Number($('rIrt').value), board_spread: readSpreads()};
     rows.forEach(([c, q], i) => { if (fixed.has(AUTORATE.key(c, q))) return; const r = effRate(c, q); if (!r) return;
       el.querySelector(`[data-bb="${i}"]`).value = r.buy ?? ''; el.querySelector(`[data-bs="${i}"]`).value = r.sell ?? ''; });
     redraw(); };
   $('spB').oninput = $('spS').oninput = recalc;
+  el.querySelectorAll('[data-spb],[data-sps]').forEach(i => i.addEventListener('input', recalc));
+  el.querySelectorAll('[data-sp]').forEach(b => b.onclick = () => { const r = el.querySelector(`[data-spr="${b.dataset.sp}"]`); r.hidden = !r.hidden; if (!r.hidden) r.querySelector('input').focus(); });
+  el.querySelectorAll('[data-spclr]').forEach(b => b.onclick = () => { const i = b.dataset.spclr; el.querySelector(`[data-spb="${i}"]`).value = ''; el.querySelector(`[data-sps="${i}"]`).value = ''; recalc(); });
   el.querySelectorAll('[data-pin]').forEach(b => b.onclick = async () => { const [c, q] = rows[+b.dataset.pin], k = AUTORATE.key(c, q), f = new Set(settings().board_fixed || []);
     if (f.has(k)) f.delete(k); else { f.add(k); const r = effRate(c, q);   // keep today's value as the fixed one
       if (r) await sb.from('rates').upsert({exchange_id: S.ex.id, ccy: c, quote: q, buy: r.buy, sell: r.sell, updated_at: new Date().toISOString(), updated_by: S.user.id}); }
     if (await saveSettings({board_fixed: [...f]})) { await loadExchangeData(); vBoard(el); } });
   if ($('bFill')) $('bFill').onclick = () => {
-    const pb = num($('spB').value) || 0, ps = num($('spS').value) || 0;
+    const sp = readSpreads();
     rows.forEach(([c, q], i) => { const m = mktRate(c, q); if (!m) return;
+      const own = sp[AUTORATE.key(c, q)] || {}, pb = own.sb ?? (num($('spB').value) || 0), ps = own.ss ?? (num($('spS').value) || 0);
       el.querySelector(`[data-bb="${i}"]`).value = roundRate(m * (1 - pb / 100), q);
       el.querySelector(`[data-bs="${i}"]`).value = roundRate(m * (1 + ps / 100), q); });
     toast(_('از بازار پر شد؛ در صورت نیاز ویرایش و ذخیره کنید'));
@@ -124,10 +154,11 @@ function vBoard(el) {
     const keep = r => !isAutoMode() || fixed.has(AUTORATE.key(r.c, r.q));
     const data = readRows().filter(keep).map(r => ({exchange_id: S.ex.id, ccy: r.c, quote: r.q, buy: isFinite(r.buy) ? r.buy : null, sell: isFinite(r.sell) ? r.sell : null, updated_at: new Date().toISOString(), updated_by: S.user.id}));
     if (data.length) { const {error} = await sb.from('rates').upsert(data); if (error) return err(error); }
-    await saveSettings({spread_buy: num($('spB').value) || 0, spread_sell: num($('spS').value) || 0, round_irt: Number($('rIrt').value)});
+    await saveSettings({spread_buy: num($('spB').value) || 0, spread_sell: num($('spS').value) || 0, round_irt: Number($('rIrt').value), board_spread: readSpreads()});
     toast((_('نرخ‌ها ذخیره شد') + ' ✅')); await loadExchangeData(); vBoard(el);
   };
-  el.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => { const r = [...rows]; r.splice(+b.dataset.del, 1); if (await saveSettings({board_rows: r})) vBoard(el); });
+  el.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => { const r = [...rows], [c, q] = r.splice(+b.dataset.del, 1)[0], bs = {...(settings().board_spread || {})};
+    delete bs[AUTORATE.key(c, q)]; if (await saveSettings({board_rows: r, board_spread: bs})) vBoard(el); });
   $('addRow').onclick = async () => { const c = $('addC').value, q = $('addQ').value; if (c === q) return toast(_('دو ارز باید متفاوت باشند'));
     if (rows.some(([a, b]) => a === c && b === q)) return toast(_('این ردیف وجود دارد')); if (await saveSettings({board_rows: [...rows, [c, q]]})) vBoard(el); };
 
@@ -143,9 +174,26 @@ function vBoard(el) {
     await loadMarket(); recalc();
     const t = lastRateTime(); if (t && $('bLast')) $('bLast').textContent = _('بروزرسانی خودکار:') + ' ' + jd(t, {hour:'2-digit', minute:'2-digit', day:'numeric', month:'short', hour12:false});
   }, 120000);
-  $('bShare').onclick = () => shareCanvas($('bCanvas'), `board-${size}.png`, boardText(true));
   $('bDl').onclick = () => downloadCanvas($('bCanvas'), `board-${new Date().toISOString().slice(0, 10)}.png`);
-  $('bText').onclick = () => window.open(waLink('', boardText()), '_blank');
+  // --- WhatsApp: what to send (image / text / both) and what the text holds (rates / own text / both); remembered per exchange
+  const wp = waPrefs();
+  $('waMsg').value = wp.msg || '';
+  const waPaint = () => {
+    const p = waPrefs();
+    $('waWhat').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === p.what));
+    $('waText').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === p.text));
+    $('waTxtBox').hidden = p.what === 'img';
+    $('waMsgFld').hidden = p.text === 'rates';
+    $('waPrev').textContent = waCompose(p) || _('(متن خالی است)');
+    $('bCopy').hidden = p.what === 'img';
+    $('bShare').textContent = '📤 ' + (p.what === 'img' ? _('ارسال تصویر در واتس‌اپ') : p.what === 'txt' ? _('ارسال متن در واتس‌اپ') : _('ارسال تصویر و متن در واتس‌اپ'));
+  };
+  $('waWhat').onclick = e => { const b = e.target.closest('button'); if (b) { waSave({what: b.dataset.v}); waPaint(); } };
+  $('waText').onclick = e => { const b = e.target.closest('button'); if (b) { waSave({text: b.dataset.v}); waPaint(); } };
+  let waT; $('waMsg').oninput = () => { S.waLocal = {...(S.waLocal || {}), msg: $('waMsg').value}; waPaint(); clearTimeout(waT); waT = setTimeout(() => waSave({msg: $('waMsg').value}), 900); };
+  waPaint();
+  $('bShare').onclick = () => sendBoard($('bCanvas'), size);
+  $('bCopy').onclick = () => { const t = waCompose(waPrefs()); if (!t) return toast(_('متن خالی است')); navigator.clipboard?.writeText(t).then(() => toast(_('متن کپی شد'))); };
   el.querySelectorAll('[data-time]').forEach(i => i.onchange = () => saveSettings({board_times: [...el.querySelectorAll('[data-time]')].map(x => x.value).filter(Boolean)}));
 
   // --- settings (owner / partner only)
@@ -173,6 +221,30 @@ function boardText(short) {
   for (const {c, q, r} of rows) lines.push(`${_('{a} به {b}', {a: cn(c), b: cn(q)})}:  ${_('خرید')} ${faNum(Number(r.buy))}  |  ${_('فروش')} ${faNum(Number(r.sell))}`);
   if (!short) { if (settings().board_note) lines.push('', settings().board_note); if (settings().phone) lines.push('📞 ' + ltr(settings().phone)); }
   return lines.join('\n');
+}
+
+/* WhatsApp sending preferences: {what: img|txt|both, text: rates|custom|both, msg}. Kept in the exchange settings (shared by its staff);
+   staff who can't change settings keep their choice on this device. */
+function waPrefs() {
+  let loc = {}; try { loc = JSON.parse(localStorage.getItem('sarraf.wa.' + S.ex.id) || '{}'); } catch {}
+  return {what: 'img', text: 'rates', msg: '', ...(settings().wa || {}), ...loc, ...(S.waLocal || {})};
+}
+async function waSave(patch) {
+  const next = {...waPrefs(), ...patch}; S.waLocal = next;
+  if (isMgr()) { const {error} = await sb.from('exchanges').update({settings: {...settings(), wa: next}}).eq('id', S.ex.id);
+    if (!error) { S.ex.settings = {...settings(), wa: next}; try { localStorage.removeItem('sarraf.wa.' + S.ex.id); } catch {} return; } }
+  try { localStorage.setItem('sarraf.wa.' + S.ex.id, JSON.stringify(next)); } catch {}
+}
+// the message text: own text, rates, or both (own text first). Sent with the image, the rates skip the note/phone already on the image.
+function waCompose(p) {
+  const mine = (p.msg || '').trim(), rates = p.text !== 'custom' ? boardText(p.what === 'both') : '';
+  return [p.text !== 'rates' ? mine : '', rates].filter(Boolean).join('\n\n');
+}
+async function sendBoard(canvas, size) {
+  const p = waPrefs(), text = p.what === 'img' ? '' : waCompose(p);
+  if (p.what !== 'img' && !text) return toast(_('متن خالی است؛ متن دلخواه را بنویسید یا «نرخ‌ها» را انتخاب کنید'));
+  if (p.what === 'txt') return window.open(waLink('', text), '_blank');
+  return shareCanvas(canvas, `board-${size}.png`, text);
 }
 
 /* ---------------------------------------------------------------- canvas helpers */
@@ -283,12 +355,13 @@ async function shareCanvas(canvas, name, text, phone) {
   let copied = false;
   try { await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]); copied = true; } catch {}
   if (!copied) downloadCanvas(canvas, name);
-  const url = phone ? `https://wa.me/${normPhone(phone)}` : 'https://web.whatsapp.com/';
+  const url = phone ? `https://wa.me/${normPhone(phone)}` : text ? waLink('', text) : 'https://web.whatsapp.com/';
   openSheet(`<h2>📤 ${_('ارسال تصویر در واتس‌اپ')}</h2>
     <div class="preview">${copied ? ('✅ ' + _('تصویر کپی شد.')) : ('⬇️ ' + _('تصویر دانلود شد.'))}<br>
       ${phone ? _('۱) دکمه‌ی زیر را بزنید تا واتس‌اپ روی چت همین مشتری باز شود.') : _('۱) دکمه‌ی زیر را بزنید تا واتس‌اپ باز شود.')}<br>
       ${phone ? '' : _('۲) چت یا «لیست پخش» را انتخاب کنید.') + '<br>'}
-      ${copied ? _('در کادر پیام Ctrl+V بزنید و ارسال کنید.') : _('در کادر پیام روی 📎 بزنید، فایل دانلودشده را انتخاب کنید و ارسال کنید.')}</div>
+      ${copied ? _('در کادر پیام Ctrl+V بزنید و ارسال کنید.') : _('در کادر پیام روی 📎 بزنید، فایل دانلودشده را انتخاب کنید و ارسال کنید.')}
+      ${text && !phone ? '<br>' + _('متن پیام هم از قبل در واتس‌اپ نوشته شده است.') : ''}</div>
     <div class="btns"><a class="btn wa" href="${url}" target="_blank" rel="noopener">💬 ${_('باز کردن واتس‌اپ')}</a><button class="btn g" id="shDl">⬇️ ${_('دانلود تصویر')}</button><button class="btn g" id="shX">${_('بستن')}</button></div>`, () => {
     $('shX').onclick = closeSheet; $('shDl').onclick = () => downloadCanvas(canvas, name);
   });

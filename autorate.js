@@ -26,12 +26,14 @@ const AUTORATE = (() => {
   }
   const key = (c, q) => c + '/' + q;
   const isAuto = cfg => !!cfg && cfg.mode === 'auto';
-  // one row: saved = {buy, sell, updated_at} or undefined; cfg = {mode, sb, ss, round, fixed:[…]}
+  // one row: saved = {buy, sell, updated_at} or undefined; cfg = {mode, sb, ss, round, fixed:[…], pair:{'USD/TRY':{sb,ss}}}
   function rate(m, cfg, c, q, saved) {
     if (!isAuto(cfg) || (cfg.fixed || []).includes(key(c, q))) return saved ? Object.assign({auto: false}, saved) : saved;
     const x = mid(m, c, q);
     if (!x) return saved ? Object.assign({auto: false}, saved) : saved;
-    const sb = Number(cfg.sb ?? 0.3) || 0, ss = Number(cfg.ss ?? 0.3) || 0;
+    const sp = (cfg.pair || {})[key(c, q)] || {};          // this currency's own percentages, if the exchange set them
+    const pick = (own, def) => (own !== null && own !== undefined && own !== '' && isFinite(own) ? Number(own) : Number(def ?? 0.3) || 0);
+    const sb = pick(sp.sb, cfg.sb), ss = pick(sp.ss, cfg.ss);
     return {ccy: c, quote: q, buy: round(x * (1 - sb / 100), q, cfg.round), sell: round(x * (1 + ss / 100), q, cfg.round),
       updated_at: m && m.t ? new Date(m.t * 1000).toISOString() : new Date().toISOString(), auto: true};
   }

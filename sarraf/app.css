@@ -225,3 +225,21 @@ html[dir=rtl] .pcard .price{text-align:right}
 /* narrow phones: keep every button readable — help shows only “❔”, Arzino on login screens shows only its logo */
 @media(max-width:420px){.subbar:has(.arzbtn) .hlp-ctx .lbl{display:none!important}.subbar:has(.arzbtn) .hlp-ctx{padding:0;width:38px;justify-content:center}
   .auth-lang .arzbtn{padding:0 6px}.auth-lang .arzbtn .lbl{display:none}}
+
+/* per-currency percentages */
+.spbtn{font-weight:900}.spbtn.on{background:var(--em);color:#fff;border-color:var(--em)}
+.spc{display:inline-block;margin-top:3px;padding:1px 7px;border-radius:999px;background:rgba(16,185,129,.12);color:var(--em);font-size:11px;font-weight:700;white-space:nowrap}
+.sprow td{background:var(--soft);padding:8px 10px!important}
+.spedit{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.spedit b{font-size:13px}
+.spedit label{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:700;white-space:nowrap}
+.spedit input{width:68px;padding:6px 8px;text-align:center}
+.sprow .hint{margin:6px 0 0}
+/* WhatsApp send options */
+.wa-seg{display:flex;width:100%}.wa-seg button{flex:1;min-width:0;padding:8px 6px;white-space:nowrap}
+.wa-prev{white-space:pre-wrap;max-height:180px;overflow:auto;font-size:13px;line-height:1.7;margin:0}
+#waMsg{resize:vertical;min-height:70px}
+@media(max-width:420px){.wa-seg button{font-size:12px;padding:8px 3px}}
+.spedit input.in{width:72px;flex:none;padding:6px 8px;text-align:center}
+.spedit .btn.small{padding:6px 12px;min-height:34px}
+.sprow .spedit input.in{width:72px!important;min-width:0!important;max-width:72px!important}
