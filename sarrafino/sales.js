@@ -1,6 +1,8 @@
 'use strict';
 /* Sarrafino sales page: features, live prices from the plans table, FAQ, contact */
 const C = window.SARRAF_CONFIG;
+// referral link (?ref=CODE): remembered so the sign-up page links the new exchange to the one that invited it
+(() => { const r = (new URLSearchParams(location.search).get('ref') || '').trim().toUpperCase(); if (/^[A-Z0-9]{4,10}$/.test(r)) try { localStorage.setItem('sarraf.ref', r); } catch (e) {} })();
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 const fmt = v => new Intl.NumberFormat('en-US', {maximumFractionDigits: 0}).format(v);
@@ -29,7 +31,7 @@ function drawPlans() {
       <ul><li>👤 ${t('s.p.staff', {n: lim(p.limits?.staff)})}</li><li>📇 ${t('s.p.cust', {n: lim(p.limits?.customers)})}</li><li>🌐 ${t('s.p.langs', {n: lim(p.limits?.langs)})}</li>
         ${Number(p.limits?.exchanges) > 1 ? `<li>🏪 ${t('s.p.branches', {n: lim(p.limits?.exchanges)})}</li>` : ''}
         ${PF.map(([k, l]) => `<li class="${p.features?.[k] ? '' : 'no'}">${p.features?.[k] ? '✅' : '—'} ${t(l)}</li>`).join('')}</ul>
-      <a class="btn" href="../sarraf/">${t(pr ? 's.p.choose' : 's.cta')}</a></div>`;
+      <a class="btn" href="../sarraf/?signup=1">${t(pr ? 's.p.choose' : 's.cta')}</a></div>`;
   }).join('');
 }
 async function load() {

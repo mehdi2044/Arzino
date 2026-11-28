@@ -151,3 +151,5 @@ ar: {
 });
 I18N.add({fa: {'p.f.wl': 'ارزینوی اختصاصی با نام و لوگوی شما و منبع قیمت دلخواه'}, tr: {'p.f.wl': 'Kendi adınız ve logonuzla özel Arzino, kendi fiyat kaynağınız'},
   en: {'p.f.wl': 'Your own Arzino with your name and logo and your own price feeds'}, ar: {'p.f.wl': 'أرزينو خاص باسمك وشعارك ومصادر أسعارك'}});
+I18N.add({fa: {'s.demo': '🎮 امتحان بدون ثبت‌نام', 's.terms': 'شرایط استفاده و حریم خصوصی'}, tr: {'s.demo': '🎮 Kayıt olmadan deneyin', 's.terms': 'Kullanım koşulları ve gizlilik'},
+  en: {'s.demo': '🎮 Try without signing up', 's.terms': 'Terms of use & privacy'}, ar: {'s.demo': '🎮 جرّب دون تسجيل', 's.terms': 'شروط الاستخدام والخصوصية'}});

@@ -811,7 +811,7 @@ const hv = location.hash.replace('#', '');
 show(['market','chart','convert','calc'].includes(hv) ? hv : (S.view || 'market'), 'init');
 refresh();
 fetchLive();
-PLUS.start(); BRAND.load();
+PLUS.start(); PLUS.bindHub(); BRAND.load();
 setInterval(() => { if (!document.hidden) refresh(); }, 60000);
 setInterval(() => { if (!document.hidden) fetchLive(); }, 12000);
 setInterval(() => setStatus(lastOk ? 'ok' : (D.t ? 'err' : 'busy')), 30000);

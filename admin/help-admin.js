@@ -239,6 +239,56 @@ ar: ['إعدادات المنصة', `- **🔐 أمان الحساب:** الدخ�
 - **الفترة التجريبية:** الخطة وعدد الأيام للمكاتب الجديدة. **الخطة المجانية:** الخطة المستخدمة بعد انتهاء الاشتراك.
 - **التواصل:** رقم واتساب الدعم (لزر صفحة البيع) والبريد واسم العلامة.`],
 },
+'admin.followup': {
+fa: ['پیگیری مشتری‌ها', `فهرست کسانی که همین الان یک پیام شخصی از شما بیشترین اثر را دارد:
+- **⏳ آزمایشی رو به پایان:** ۵ روز یا کمتر تا پایان دوره‌ی آزمایشی مانده. بهترین وقت برای فروش اشتراک.
+- **🆕 بدون صرافی:** ثبت‌نام کرده ولی صرافی نساخته؛ احتمالاً جایی گیر کرده.
+- **⌛ آزمایشی تمام شده:** در ۳ هفته‌ی اخیر به پلن رایگان رفته.
+- **👋 ثبت‌نام تازه:** در ۷ روز اخیر آمده؛ یک خوش‌آمد شخصی اعتماد می‌سازد.
+- **💤 کم‌کار:** بیش از ۷ روز معامله‌ای ثبت نکرده.
+## چطور
+- زبان پیام را از بالای کارت انتخاب کنید.
+- 💬 واتس‌اپ را با پیام آماده باز می‌کند و ✉️ ایمیل را. پیش از فرستادن می‌توانید متن را عوض کنید.`],
+en: ['Customer follow-up', `People for whom a personal message from you matters most right now:
+- **⏳ Trial ending:** 5 days or less left — the best moment to sell a subscription.
+- **🆕 No exchange yet:** signed up but never created an office — probably stuck.
+- **⌛ Trial ended:** moved to the free plan in the last 3 weeks.
+- **👋 New sign-up:** joined in the last 7 days; a personal welcome builds trust.
+- **💤 Quiet:** no trades for more than 7 days.
+Pick the message language at the top of the card. 💬 opens WhatsApp and ✉️ opens email with a ready message you can edit before sending.`],
+tr: ['Müşteri takibi', `Şu anda sizden kişisel bir mesajın en çok etki edeceği kişiler:
+- **⏳ Deneme bitiyor:** 5 gün veya daha az kaldı — abonelik satmak için en iyi an.
+- **🆕 Bürosu yok:** kaydolmuş ama büro oluşturmamış — muhtemelen bir yerde takıldı.
+- **⌛ Deneme bitti:** son 3 haftada ücretsiz plana geçti.
+- **👋 Yeni kayıt:** son 7 günde katıldı; kişisel bir karşılama güven oluşturur.
+- **💤 Sessiz:** 7 günden fazla işlem yok.
+Mesaj dilini kartın üstünden seçin. 💬 WhatsApp’ı, ✉️ e-postayı hazır mesajla açar; göndermeden önce düzenleyebilirsiniz.`],
+ar: ['متابعة العملاء', `الأشخاص الذين تؤثر فيهم رسالة شخصية منك الآن أكثر من غيرهم:
+- **⏳ التجربة تنتهي:** بقي ٥ أيام أو أقل — أفضل وقت لبيع الاشتراك.
+- **🆕 بلا مكتب:** سجّل ولم يُنشئ مكتبه — ربما واجه مشكلة.
+- **⌛ انتهت التجربة:** انتقل إلى الخطة المجانية خلال آخر ٣ أسابيع.
+- **👋 تسجيل جديد:** انضم خلال آخر ٧ أيام؛ الترحيب الشخصي يبني الثقة.
+- **💤 خامل:** لا معاملات منذ أكثر من ٧ أيام.
+اختر لغة الرسالة من أعلى البطاقة. 💬 يفتح واتساب و✉️ البريد برسالة جاهزة يمكنك تعديلها قبل الإرسال.`],
+},
+'admin.referral': {
+fa: ['جایزه‌ی معرفی', `- هر صرافی در «بیشتر» یک لینک معرفی می‌بیند و می‌تواند آن را در واتس‌اپ برای صرافی‌های دیگر بفرستد.
+- صرافی تازه‌ای که با آن لینک ثبت‌نام کند، به صرافی معرف وصل می‌شود (در جدول «صرافی‌ها» زیر نام می‌بینید).
+- وقتی **اولین فیش** صرافی تازه را تأیید کنید، به هر دو صرافی همین تعداد روز رایگان داده می‌شود: اگر اشتراک پولی یا آزمایشی فعال دارند به آخرش اضافه می‌شود، وگرنه همین مدت پلن حرفه‌ای می‌گیرند.
+- جایزه برای هر صرافی معرفی‌شده فقط یک بار داده می‌شود و کسی نمی‌تواند خودش را معرفی کند.`],
+en: ['Referral reward', `- Every office sees a referral link under “More” and can send it to other offices on WhatsApp.
+- A new office that signs up with that link is linked to the one that invited it (shown under the name in “Exchanges”).
+- When you approve the new office’s **first payment**, both offices get this many free days — added to an active paid or trial plan, otherwise as the Pro plan.
+- The reward is given once per invited office, and nobody can refer themselves.`],
+tr: ['Öneri ödülü', `- Her büro «Daha fazla» bölümünde bir öneri bağlantısı görür ve WhatsApp’tan diğer bürolara gönderebilir.
+- Bu bağlantıyla kaydolan yeni büro, onu davet edene bağlanır («Bürolar» tablosunda adın altında görünür).
+- Yeni büronun **ilk ödemesini** onayladığınızda iki büroya da bu kadar gün ücretsiz verilir — aktif ücretli veya deneme planının sonuna eklenir, yoksa Profesyonel plan olarak.
+- Ödül her davet edilen büro için bir kez verilir; kimse kendini öneremez.`],
+ar: ['مكافأة الدعوة', `- كل مكتب يرى رابط دعوة في «المزيد» ويمكنه إرساله لمكاتب أخرى عبر واتساب.
+- المكتب الجديد الذي يسجّل عبر الرابط يُربط بالمكتب الذي دعاه (يظهر تحت الاسم في جدول «المكاتب»).
+- عند الموافقة على **أول دفعة** للمكتب الجديد يحصل المكتبان على هذا العدد من الأيام مجاناً — تُضاف إلى الاشتراك المدفوع أو التجريبي النشط، وإلا فبالخطة الاحترافية.
+- تُمنح المكافأة مرة واحدة لكل مكتب مدعو، ولا يمكن لأحد دعوة نفسه.`],
+},
 'admin.brand': {
 fa: ['نام و لوگوی هر بخش', `سامانه چهار بخش دارد و نام و لوگوی هر کدام اینجا عوض می‌شود:
 - **ارزینو:** برنامه‌ی عمومی نرخ ارز برای همه‌ی مردم؛ درآمدش از تبلیغات است.

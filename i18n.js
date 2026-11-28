@@ -1,4 +1,32 @@
 'use strict';
+/* Home address: arzino.kiagroup.tr. sarrafino.kiagroup.tr opens the Sarrafino page there, and the old GitHub address
+   moves visitors over, carrying their saved settings (manual rates, calculator history, language …) along in the link.
+   The Android app keeps using the old address until it is updated, so it is not moved. */
+(function () {
+  try {
+    const HOME = 'https://arzino.kiagroup.tr', MOVE_OLD = false, h = location.hostname;
+    if (/^sarrafino\./.test(h)) {
+      const p = location.pathname === '/' || location.pathname === '' ? '/sarrafino/' : location.pathname;
+      location.replace(HOME + p + location.search + location.hash); return;
+    }
+    if (MOVE_OLD && h === 'mehdi2044.github.io' && !/; wv\)/.test(navigator.userAgent)) {
+      const skip = /^(sb-|arzino\.(d|dir|ads|adcfg|ad_t|fx_t|wl_d)$)/, data = {};
+      for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i), v = localStorage.getItem(k); if (!skip.test(k) && v && v.length < 60000) data[k] = v; }
+      const path = location.pathname.replace(/^\/arzino/i, '') || '/', keys = Object.keys(data).length;
+      const mig = keys ? 'mig=' + btoa(unescape(encodeURIComponent(JSON.stringify(data)))) : '';
+      const hash = location.hash.slice(1);
+      document.documentElement.style.visibility = 'hidden';
+      location.replace(HOME + path + location.search + (mig ? '#' + mig + (hash ? '&h=' + encodeURIComponent(hash) : '') : (hash ? '#' + hash : '')));
+      return;
+    }
+    const m = location.hash.match(/^#mig=([^&]*)(?:&h=(.*))?$/);
+    if (m) {
+      const o = JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+      for (const k in o) if (localStorage.getItem(k) === null) localStorage.setItem(k, o[k]);
+      history.replaceState(null, '', location.pathname + location.search + (m[2] ? '#' + decodeURIComponent(m[2]) : ''));
+    }
+  } catch (e) {}
+})();
 /* Shared language engine for Arzino and Sarraf — Persian · Türkçe · English · العربية
    One saved choice ('arzino.lang') drives both apps: text, direction (RTL/LTR), dates and numbers. */
 /* Thousands separator: always the raised ’ in every language and font, so it is never mixed up with a decimal point. */

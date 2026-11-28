@@ -102,13 +102,73 @@ async function vHome(el) {
   A.pending = o.pending; document.querySelector('[data-t=payments]').innerHTML = `💳 ${_('پرداخت‌ها')}${o.pending ? `<span class="badge">${o.pending}</span>` : ''}`;
   const inc = Object.entries(o.income_30d || {}).map(([c, v]) => money(v, c)).join(' + ') || '0';
   el.innerHTML = `<div class="kpis">${[[_('صرافی‌ها'), fmt(o.exchanges)], [_('کاربران'), fmt(o.users) + ` <small class="muted"><bdi>+${fmt(o.users_7d)}</bdi> ${_('در ۷ روز')}</small>`],
-    [_('اشتراک پولی فعال'), fmt(o.paid)], [_('در دوره‌ی آزمایشی'), fmt(o.trial)], [_('فیش در انتظار'), fmt(o.pending)], [_('درآمد ۳۰ روز'), inc], [_('تراکنش‌های ۷ روز'), fmt(o.txns_7d)]]
+    [_('اشتراک پولی فعال'), fmt(o.paid)], [_('در دوره‌ی آزمایشی'), fmt(o.trial)], [_('فیش در انتظار'), fmt(o.pending)], [_('درآمد ۳۰ روز'), inc], [_('تراکنش‌های ۷ روز'), fmt(o.txns_7d)],
+    [_('دموی ۲۴ ساعت'), fmt(o.demos_24h || 0)]]
     .map(([l, v]) => `<div class="stat"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('')}</div>
+    <div class="card" id="fuCard"><h3>📞 ${_('پیگیری مشتری‌ها')}${HELP.btn('admin.followup')}</h3><div class="muted">${_('در حال بارگذاری…')}</div></div>
     <div class="card"><h3>🧭 ${_('راهنمای سریع')}</h3><ol class="muted" style="line-height:2;margin:0;padding-inline-start:20px">
       <li>${_('در «تنظیمات» اطلاعات حساب بانکی خود را برای واریز مشتری‌ها بنویسید.')}</li>
       <li>${_('در «پلن‌ها و قیمت» قیمت، سقف کاربر و مشتری و امکانات هر پلن را تعیین کنید.')}</li>
       <li>${_('وقتی فیشی رسید، در «پرداخت‌ها» آن را ببینید و تأیید کنید؛ اشتراک خودکار فعال می‌شود.')}</li>
       <li>${_('در «تبلیغات» جای نمایش، تعداد و زمان تبلیغ‌ها را تنظیم کنید و تبلیغ اسپانسرها را اضافه کنید.')}</li></ol></div>`;
+  followUp().catch(err);
+}
+/* follow-up list: new sign-ups, trials about to end, quiet exchanges — each with a ready WhatsApp message */
+const FU_MSG = {
+  fa: {new: 'سلام {n} عزیز، مهدی هستم از صرافینو. ممنون که ثبت‌نام کردید 🌹 اگر در راه‌اندازی صرافی‌تان یا وارد کردن موجودی‌ها کمک لازم دارید، همین‌جا بنویسید؛ با کمال میل راهنمایی می‌کنم.',
+    noex: 'سلام {n} عزیز، مهدی هستم از صرافینو. دیدم ثبت‌نام کرده‌اید ولی هنوز صرافی‌تان را نساخته‌اید. اگر جایی گیر کرده‌اید بگویید تا با هم در ۵ دقیقه راهش بیندازیم.',
+    trial: 'سلام {n} عزیز، مهدی هستم از صرافینو. {d} روز از دوره‌ی آزمایشی «{x}» مانده. اگر سؤالی درباره‌ی پلن‌ها یا امکانات دارید در خدمتم؛ برای ادامه کافی است از «بیشتر ← اشتراک» پلن را انتخاب کنید.',
+    expired: 'سلام {n} عزیز، مهدی هستم از صرافینو. دوره‌ی آزمایشی «{x}» تمام شده و صرافی روی پلن رایگان است؛ اطلاعاتتان محفوظ است. اگر بخواهید همه‌ی امکانات برگردد، راهنمایی‌تان می‌کنم.',
+    quiet: 'سلام {n} عزیز، مهدی هستم از صرافینو. چند روزی است در «{x}» معامله‌ای ثبت نشده. همه‌چیز خوب است؟ اگر مشکلی یا پیشنهادی دارید خوشحال می‌شوم بشنوم.'},
+  tr: {new: 'Merhaba {n}, ben Sarrafino’dan Mehdi. Kaydolduğunuz için teşekkürler 🌹 Büronuzu kurarken veya bakiyeleri girerken yardıma ihtiyacınız olursa buraya yazın, memnuniyetle yardımcı olurum.',
+    noex: 'Merhaba {n}, ben Sarrafino’dan Mehdi. Kaydolduğunuzu ama büronuzu henüz oluşturmadığınızı gördüm. Takıldığınız bir yer varsa söyleyin, 5 dakikada birlikte kuralım.',
+    trial: 'Merhaba {n}, ben Sarrafino’dan Mehdi. «{x}» deneme süresinin bitmesine {d} gün kaldı. Planlar veya özellikler hakkında sorunuz varsa buradayım; devam etmek için «Daha fazla → Abonelik»ten plan seçmeniz yeterli.',
+    expired: 'Merhaba {n}, ben Sarrafino’dan Mehdi. «{x}» deneme süresi bitti ve büro ücretsiz planda; verileriniz korunuyor. Tüm özellikleri geri açmak isterseniz yardımcı olurum.',
+    quiet: 'Merhaba {n}, ben Sarrafino’dan Mehdi. Birkaç gündür «{x}» bürosunda işlem kaydedilmedi. Her şey yolunda mı? Bir sorun ya da öneriniz varsa duymaktan memnun olurum.'},
+  en: {new: 'Hello {n}, this is Mehdi from Sarrafino. Thank you for signing up 🌹 If you need help setting up your exchange office or entering your balances, just write here — I’m happy to help.',
+    noex: 'Hello {n}, this is Mehdi from Sarrafino. I saw you signed up but haven’t created your exchange office yet. If you got stuck somewhere, tell me and we’ll set it up together in 5 minutes.',
+    trial: 'Hello {n}, this is Mehdi from Sarrafino. {d} days are left in the trial of “{x}”. If you have questions about plans or features I’m here; to continue, just pick a plan in “More → Subscription”.',
+    expired: 'Hello {n}, this is Mehdi from Sarrafino. The trial of “{x}” has ended and the office is on the free plan — your data is safe. If you’d like all features back, I can guide you.',
+    quiet: 'Hello {n}, this is Mehdi from Sarrafino. No trades have been recorded in “{x}” for a few days. Is everything all right? I’d be glad to hear any problem or suggestion.'},
+  ar: {new: 'مرحباً {n}، أنا مهدي من صرافينو. شكراً لتسجيلك 🌹 إذا احتجت مساعدة في إعداد مكتبك أو إدخال الأرصدة فاكتب هنا، يسعدني مساعدتك.',
+    noex: 'مرحباً {n}، أنا مهدي من صرافينو. لاحظت أنك سجّلت لكنك لم تُنشئ مكتبك بعد. إن واجهتك مشكلة أخبرني ونجهّزه معاً في ٥ دقائق.',
+    trial: 'مرحباً {n}، أنا مهدي من صرافينو. بقي {d} يوماً من الفترة التجريبية لـ«{x}». إن كان لديك سؤال عن الخطط أو الميزات فأنا في الخدمة؛ وللاستمرار اختر خطة من «المزيد ← الاشتراك».',
+    expired: 'مرحباً {n}، أنا مهدي من صرافينو. انتهت الفترة التجريبية لـ«{x}» والمكتب على الخطة المجانية وبياناتك محفوظة. إن أردت استعادة كل الميزات فسأرشدك.',
+    quiet: 'مرحباً {n}، أنا مهدي من صرافينو. لم تُسجَّل معاملات في «{x}» منذ أيام. هل كل شيء على ما يرام؟ يسعدني سماع أي مشكلة أو اقتراح.'},
+};
+async function followUp() {
+  const el = $('fuCard'); if (!el) return;
+  const [{data: users, error: e1}, {data: exs, error: e2}] = await Promise.all([sb.rpc('admin_users'), sb.rpc('admin_exchanges')]);
+  if (e1 || e2) throw e1 || e2;
+  const now = Date.now(), day = 864e5, waNum = p => (p || '').replace(/[^\d]/g, '').replace(/^0(5\d{9})$/, '90$1');
+  let lang = localStorage.getItem('admin.fuLang') || 'fa';
+  const items = [];
+  for (const u of users) {
+    if (u.is_admin) continue;
+    const age = (now - new Date(u.created_at)) / day, name = [u.first_name, u.last_name].filter(Boolean).join(' ') || u.email;
+    if (age <= 14 && !(u.exchanges || []).length && age >= 0.04) items.push({k: 'noex', ic: '🆕', name, phone: u.phone, email: u.email, sub: _('ثبت‌نام کرده ولی صرافی نساخته') + ' · ' + jd(u.created_at), x: '', ord: 1});
+    else if (age <= 7 && (u.exchanges || []).length) items.push({k: 'new', ic: '👋', name, phone: u.phone, email: u.email, sub: _('ثبت‌نام تازه') + ' · ' + esc((u.exchanges || []).map(e => e.name).join(', ')), x: '', ord: 3});
+  }
+  for (const x of exs) {
+    const st = x.plan?.status, end = x.sub?.period_end ? new Date(x.sub.period_end) : null, name = x.owner?.name || x.owner?.email || x.name;
+    const left = end ? Math.ceil((end - now) / day) : null;
+    if (st === 'trial' && left != null && left <= 5) items.push({k: 'trial', ic: '⏳', name, phone: x.owner?.phone, email: x.owner?.email, x: x.name, d: left, sub: esc(x.name) + ' · ' + _('{d} روز تا پایان آزمایشی', {d: fmt(Math.max(left, 0))}), ord: 0});
+    else if (st === 'expired' && end && (now - end) / day <= 21) items.push({k: 'expired', ic: '⌛', name, phone: x.owner?.phone, email: x.owner?.email, x: x.name, sub: esc(x.name) + ' · ' + _('آزمایشی تمام شده') + ' ' + jd(x.sub.period_end), ord: 2});
+    else if ((now - new Date(x.created_at)) / day > 3 && (!x.last_txn || (now - new Date(x.last_txn)) / day > 7)) items.push({k: 'quiet', ic: '💤', name, phone: x.owner?.phone, email: x.owner?.email, x: x.name, sub: esc(x.name) + ' · ' + _('آخرین معامله:') + ' ' + (x.last_txn ? jd(x.last_txn) : '—'), ord: 4});
+  }
+  items.sort((a, b) => a.ord - b.ord);
+  const draw = () => {
+    const msg = it => FU_MSG[lang][it.k].replace('{n}', it.name.split(' ')[0]).replace('{x}', it.x).replace('{d}', String(Math.max(it.d ?? 0, 0)));
+    el.innerHTML = `<h3>📞 ${_('پیگیری مشتری‌ها')}${HELP.btn('admin.followup')} <span class="muted small">(${fmt(items.length)})</span>
+        <select class="in" id="fuLang" style="max-width:130px;margin-inline-start:auto">${L4.map(l => `<option value="${l}" ${l === lang ? 'selected' : ''}>💬 ${I18N.LANGS[l].name}</option>`).join('')}</select></h3>
+      <p class="hint" style="margin-top:0">${_('کسانی که الان یک پیام شخصی از شما بیشترین اثر را دارد. دکمه‌ی واتس‌اپ پیام آماده را باز می‌کند؛ قبل از فرستادن می‌توانید ویرایشش کنید.')}</p>
+      ${items.length ? `<div class="list">${items.map(it => `<div class="row"><div class="ic">${it.ic}</div><div class="m"><b>${esc(it.name)}</b><span>${it.sub}</span><span dir="ltr">${esc(it.phone || it.email || '')}</span></div>
+        ${waNum(it.phone).length >= 8 ? `<a class="btn wa" style="min-width:auto" href="https://wa.me/${waNum(it.phone)}?text=${encodeURIComponent(msg(it))}" target="_blank" rel="noopener">💬</a>` : ''}
+        ${it.email ? `<a class="btn g" style="min-width:auto" href="mailto:${esc(it.email)}?subject=${encodeURIComponent('Sarrafino')}&body=${encodeURIComponent(msg(it))}">✉️</a>` : ''}</div>`).join('')}</div>`
+        : `<p class="muted">${_('فعلاً کسی برای پیگیری نیست 👌')}</p>`}`;
+    $('fuLang').onchange = e => { lang = e.target.value; localStorage.setItem('admin.fuLang', lang); draw(); };
+  };
+  draw();
 }
 
 /* ---------------------------------------------------------------- payments */
@@ -148,7 +208,7 @@ async function vExchanges(el) {
     <div class="tbl-wrap"><table class="at"><thead><tr><th>${_('صرافی')}</th><th>${_('مالک')}</th><th>${_('پلن')}</th><th>${_('وضعیت')}</th><th>${_('اعتبار تا')}</th><th>${_('کاربر')}</th><th>${_('مشتری')}</th><th>${_('تراکنش')}</th><th>${_('آخرین فعالیت')}</th></tr></thead>
     <tbody id="exB"></tbody></table></div></div>`;
   const draw = q => { $('exB').innerHTML = list.filter(x => !q || JSON.stringify([x.name, x.owner]).toLowerCase().includes(q)).map(x => `<tr class="click" data-ex="${x.id}">
-    <td><b>${esc(x.name)}</b><div class="mini">${jd(x.created_at)}</div></td><td>${esc(x.owner?.name || '')}<div class="mini" dir="ltr">${esc(x.owner?.email || '')}<br>${esc(x.owner?.phone || '')}</div></td>
+    <td><b>${esc(x.name)}</b><div class="mini">${jd(x.created_at)} · 🎁 <span dir="ltr">${esc(x.ref_code || '')}</span>${x.referred_by ? ' · ' + _('معرف:') + ' ' + esc(x.referred_by) : ''}${x.referrals ? ' · ' + _('{n} معرفی', {n: fmt(x.referrals)}) : ''}</div></td><td>${esc(x.owner?.name || '')}<div class="mini" dir="ltr">${esc(x.owner?.email || '')}<br>${esc(x.owner?.phone || '')}</div></td>
     <td>${esc(tl(x.plan?.name) || x.plan?.plan)}</td><td>${pill(x.plan?.status)}</td><td>${jd(x.sub?.period_end)}</td>
     <td class="n"><span dir="ltr">${fmt(x.staff)} / ${fmt(x.plan?.limits?.staff)}</span></td><td class="n"><span dir="ltr">${fmt(x.customers)} / ${fmt(x.plan?.limits?.customers)}</span></td><td class="n">${fmt(x.txns)}</td><td>${jd(x.last_txn)}</td></tr>`).join('');
     $('exB').querySelectorAll('[data-ex]').forEach(r => r.onclick = () => exDetail(list.find(x => x.id === r.dataset.ex), plans)); };
@@ -344,7 +404,7 @@ function shrinkToDataUrl(file, max) {
 
 /* ---------------------------------------------------------------- settings */
 async function vSettings(el) {
-  const [pay, trial, free, contact, plans] = await Promise.all([getSetting('payment'), getSetting('trial'), getSetting('free_plan'), getSetting('contact'), getPlans()]);
+  const [pay, trial, free, contact, plans, refs] = await Promise.all([getSetting('payment'), getSetting('trial'), getSetting('free_plan'), getSetting('contact'), getPlans(), getSetting('referral')]);
   const popt = sel => plans.map(p => `<option value="${p.id}" ${p.id === sel ? 'selected' : ''}>${esc(tl(p.name))}</option>`).join('');
   const BP = [['arzino', '📈', 'ارزینو — برنامه‌ی عمومی نرخ ارز'], ['sarrafino', '🏪', 'صرافینو — پنل صرافی'], ['sales', '🛒', 'صفحه‌ی فروش'], ['admin', '⚙️', 'پنل مدیریت']];
   const brand = JSON.parse(JSON.stringify(await getSetting('brand') || {}));
@@ -365,6 +425,11 @@ async function vSettings(el) {
         <div class="fld"><label>${_('چند روز آزمایشی (۰ = بدون آزمایش)')}</label><input class="in num" id="sTD" value="${trial.days ?? 14}"></div>
         <div class="fld"><label>${_('پلن بعد از پایان اشتراک')}</label><select class="in" id="sFP">${popt(free.plan || 'free')}</select></div></div>
       <div class="btns"><button class="btn p" id="sTr">${_('ذخیره')}</button></div></div>
+    <div class="card"><h3>🎁 ${_('جایزه‌ی معرفی')}${HELP.btn('admin.referral')}</h3>
+      <p class="hint" style="margin-top:0">${_('هر صرافی یک لینک معرفی دارد. وقتی صرافی تازه‌ای که با آن لینک آمده اولین فیشش تأیید شود، به هر دو صرافی این تعداد روز اشتراک رایگان داده می‌شود (اگر اشتراک فعالی نداشته باشند، پلن حرفه‌ای).')}</p>
+      <div class="g4"><div class="fld"><label>${_('فعال')}</label><select class="in" id="sRO"><option value="1" ${refs.on !== false ? 'selected' : ''}>${_('بله')}</option><option value="0" ${refs.on === false ? 'selected' : ''}>${_('خیر')}</option></select></div>
+        <div class="fld"><label>${_('چند روز رایگان')}</label><input class="in num" id="sRD" value="${refs.days ?? 30}"></div></div>
+      <div class="btns"><button class="btn p" id="sRf">${_('ذخیره')}</button></div></div>
     <div class="card"><h3>📞 ${_('تماس و پشتیبانی (در صفحه‌ی فروش)')}</h3>
       <div class="g4"><div class="fld"><label>${_('واتس‌اپ پشتیبانی')}</label><input class="in" id="sW" dir="ltr" value="${esc(contact.whatsapp || '')}" placeholder="+90…"></div>
         <div class="fld"><label>${_('ایمیل پشتیبانی')}</label><input class="in" id="sE" dir="ltr" value="${esc(contact.email || '')}"></div>
@@ -372,6 +437,7 @@ async function vSettings(el) {
       <div class="btns"><button class="btn p" id="sCt">${_('ذخیره')}</button></div></div>`;
   $('sPay').onclick = () => { const bank = {}, note = {}; document.querySelectorAll('[data-bk]').forEach(i => bank[i.dataset.bk] = i.value.trim()); document.querySelectorAll('[data-bn]').forEach(i => note[i.dataset.bn] = i.value.trim()); putSetting('payment', {...pay, bank, note}, 'users'); };
   $('sTr').onclick = async () => { if (await putSetting('trial', {plan: $('sTP').value, days: Number($('sTD').value) || 0}, 'public')) putSetting('free_plan', {plan: $('sFP').value}, 'public'); };
+  $('sRf').onclick = () => putSetting('referral', {on: $('sRO').value === '1', days: Math.max(0, Number($('sRD').value) || 0)}, 'public');
   MFA.bindCard(sb);
   const showLogo = k => { $('bl-' + k).innerHTML = brand[k]?.logo ? `<img src="${brand[k].logo}" alt="">` : BP.find(x => x[0] === k)[1]; };
   el.querySelectorAll('[data-blogo]').forEach(i => i.onchange = async () => { const f = i.files[0]; if (!f) return; const k = i.dataset.blogo;

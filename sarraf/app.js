@@ -126,17 +126,20 @@ async function boot() {
   const {data: {session}} = await sb.auth.getSession();
   S.user = session?.user || null;
   if (!S.user) {
-    renderAuth();
+    if (PARAMS.get('demo') === '1') return startDemo();
+    renderAuth(PARAMS.get('signup') === '1' || refCode() ? 'signup' : 'login');
     if (/otp_expired|access_denied/.test(HASH0) && !boot.warned) { boot.warned = true; toast(_('این لینک منقضی شده یا قبلاً استفاده شده است. دوباره درخواست بدهید.')); }
     return;
   }
   if (RECOVER) return renderNewPass();
+  if (PARAMS.get('demo') === '1' && !S.user.is_anonymous && !boot.demoAsked) { boot.demoAsked = true; history.replaceState(null, '', location.pathname); }
   if (!(await MFA.gate(sb, $('app'), () => boot().catch(err), () => boot()))) { S.screen = () => boot(); return; }
   await sb.rpc('accept_invites', {p_display_name: S.user.user_metadata?.name || null});
-  const {data, error} = await sb.from('members').select('role, display_name, exchange_id, exchanges(id,name,base_ccy,settings)').eq('user_id', S.user.id);
+  let {data, error} = await sb.from('members').select('role, display_name, exchange_id, exchanges(id,name,base_ccy,settings,is_demo,ref_code)').eq('user_id', S.user.id);
+  if (error && /is_demo|ref_code/.test(error.message || '')) ({data, error} = await sb.from('members').select('role, display_name, exchange_id, exchanges(id,name,base_ccy,settings)').eq('user_id', S.user.id));
   if (error) return err(error);
   S.mems = data;
-  if (!data.length) return renderCreateExchange();
+  if (!data.length) return S.user.is_anonymous ? startDemo() : renderCreateExchange();
   const last = localStorage.getItem('sarraf.ex');
   const m = data.find(x => x.exchange_id === last) || data[0];
   await openExchange(m);
@@ -144,7 +147,7 @@ async function boot() {
 async function openExchange(m) {
   S.ex = m.exchanges; S.role = m.role; localStorage.setItem('sarraf.ex', S.ex.id);
   $('app').innerHTML = ('<div class="boot">' + _('در حال بارگذاری حساب‌ها…') + '</div>');
-  try { await Promise.all([loadExchangeData(), loadMarket(), loadPlan()]); await wlMergeMarket(); } catch (e) { return err(e); }
+  try { await Promise.all([loadExchangeData(), loadMarket(), loadPlan()]); await wlMergeMarket(); if (S.ex.is_demo) await seedDemo(); } catch (e) { return err(e); }
   NAV.replace({view: S.view || 'home', custId: S.custId}); render();
 }
 function renderAuth(mode = 'login') {
@@ -159,13 +162,16 @@ function renderAuth(mode = 'login') {
         <div class="fld"><label>${_('کشور محل سکونت')}</label><select class="in" id="aCountry" autocomplete="country">${countryOptions('TR')}</select></div>` : ''}
       <div class="fld"><label>${_('ایمیل')}</label><input class="in" id="aEmail" type="email" autocomplete="email" dir="ltr"></div>
       <div class="fld"><label>${_('رمز عبور')} ${mode === 'signup' ? _('(حداقل ۶ کاراکتر)') : ''}</label><input class="in" id="aPass" type="password" autocomplete="${mode === 'signup' ? 'new-password' : 'current-password'}" dir="ltr"></div>
+      ${mode === 'signup' ? termsBox() + (refCode() ? `<p class="hint">🎁 ${_('با کد معرفی {c} ثبت‌نام می‌کنید', {c: `<b dir="ltr">${esc(refCode())}</b>`})}</p>` : '') : ''}
       <button class="btn p w" id="aGo">${mode === 'login' ? _('ورود') : _('ساخت حساب')}</button>
       ${mode === 'login' ? `<button class="lnk" id="aForgot" type="button">${_('رمز را فراموش کرده‌اید؟')}</button>` : ''}
       <p class="hint">${mode === 'signup' ? _('اگر صاحب صرافی شما را دعوت کرده، با همان ایمیلی که داده ثبت‌نام کنید تا خودکار به صرافی وصل شوید.') : ''}</p>
-    </div>${INSTALL.can ? `<button class="lnk" id="aInst" type="button" style="display:block;margin:14px auto 0">${INSTALL.label()}</button>` : ''}</div>`;
+    </div>
+    <div class="card demo-try"><button class="btn g w" id="aDemo">🎮 ${_('امتحان بدون ثبت‌نام')}</button><p class="hint" style="margin-bottom:0">${_('یک صرافی نمونه با داده‌های ساختگی باز می‌شود؛ بدون ایمیل و رمز.')}</p></div>${INSTALL.can ? `<button class="lnk" id="aInst" type="button" style="display:block;margin:14px auto 0">${INSTALL.label()}</button>` : ''}</div>`;
   S.screen = () => renderAuth(mode); I18N.bindPickers();
   document.querySelectorAll('[data-m]').forEach(b => b.onclick = () => renderAuth(b.dataset.m));
   if ($('aInst')) $('aInst').onclick = () => INSTALL.run();
+  $('aDemo').onclick = startDemo;
   if ($('aForgot')) $('aForgot').onclick = () => { NAV.push({auth: 'forgot'}); renderForgot(); };
   $('aGo').onclick = async () => {
     const email = $('aEmail').value.trim(), password = $('aPass').value;
@@ -173,6 +179,8 @@ function renderAuth(mode = 'login') {
     const prof = mode === 'signup' ? {first_name: $('aFirst').value.trim(), last_name: $('aLast').value.trim(), phone: $('aPhone').value.trim(), country: $('aCountry').value} : null;
     if (prof && (!prof.first_name || !prof.last_name)) return toast(_('نام و نام خانوادگی را وارد کنید'));
     if (prof && prof.phone.replace(/\D/g, '').length < 8) return toast(_('شماره موبایل را کامل وارد کنید (با کد کشور)'));
+    if (prof && !$('aTerms').checked) return toast(_('برای ثبت‌نام، شرایط استفاده را بپذیرید'));
+    if (prof) { prof.terms_at = new Date().toISOString(); if (refCode()) prof.ref = refCode(); }
     $('aGo').disabled = true;
     const r = mode === 'login' ? await sb.auth.signInWithPassword({email, password})
       : await sb.auth.signUp({email, password, options:{data:{...prof, name: prof.first_name + ' ' + prof.last_name}, emailRedirectTo: location.origin + location.pathname}});
@@ -243,8 +251,13 @@ function renderCreateExchange() {
   </div></div>`;
   $('exGo').onclick = async () => {
     const n = $('exName').value.trim(); if (!n) return toast(_('نام صرافی را وارد کنید'));
+    if (S.user.is_anonymous) return toast(_('در حالت نمایشی نمی‌شود صرافی واقعی ساخت. اول «ثبت‌نام واقعی» را بزنید.'));
     if ($('exGo').disabled) return; $('exGo').disabled = true; $('exGo').textContent = _('در حال ساخت…');
-    const {error} = await sb.rpc('create_exchange', {p_name:n, p_display_name:$('exMe').value.trim() || S.user.email, p_base:$('exBase').value});
+    const ref = refCode() || S.user.user_metadata?.ref || null;
+    const args = {p_name:n, p_display_name:$('exMe').value.trim() || S.user.email, p_base:$('exBase').value};
+    let {error} = await sb.rpc('create_exchange', {...args, p_ref:ref});
+    if (error && (error.code === 'PGRST202' || /p_ref/.test(error.message || ''))) ({error} = await sb.rpc('create_exchange', args));
+    if (!error) try { localStorage.removeItem('sarraf.ref'); } catch (e) {}
     if (error) { $('exGo').disabled = false; $('exGo').textContent = _('ساخت صرافی'); return err(error); }
     toast((_('صرافی ساخته شد') + ' 🎉')); boot();
   };
@@ -333,7 +346,7 @@ function vHome(el) {
   const todayProfit = S.recentTrades.filter(t => new Date(t.occurred_at) >= today).reduce((s, t) => s + (t.meta?.profit_base || 0), 0);
   const todayCount = S.recentTrades.filter(t => new Date(t.occurred_at) >= today).length;
   const due = dueBoardSlot();
-  el.innerHTML = planBanner() + (due ? `<div class="card remind"><h3>📣 ${_('وقت ارسال تابلوی نرخ ساعت {t} است', {t: due.time})} <span><button class="btn wa" id="remGo">${_('ارسال تابلو')}</button> <button class="btn g" id="remDone">${_('ارسال شد')} ✓</button></span></h3></div>` : '') + quickActions() + `
+  el.innerHTML = demoBanner() + (isDemo() ? '' : planBanner()) + checklistCard() + (due ? `<div class="card remind"><h3>📣 ${_('وقت ارسال تابلوی نرخ ساعت {t} است', {t: due.time})} <span><button class="btn wa" id="remGo">${_('ارسال تابلو')}</button> <button class="btn g" id="remDone">${_('ارسال شد')} ✓</button></span></h3></div>` : '') + quickActions() + `
     <div class="card"><h3>💰 ${_('موجودی صندوق‌ها')} <button class="ibtn small" data-act="transfer">🔁 ${_('انتقال')}</button></h3>
       <div class="grid g3">${bt.map(({b, v}) => `<div class="stat"><div class="l">${esc(b.name)}</div><div class="v ${v < 0 ? 'down' : ''}">${money(v, b.currency)}</div></div>`).join('') || ('<p class="muted">' + _('صندوقی تعریف نشده') + '</p>')}</div></div>
     <div class="grid g2">
@@ -346,7 +359,7 @@ function vHome(el) {
         ${Object.entries(custBal).filter(([, v]) => v.rec > 1e-9 || v.pay > 1e-9).map(([c, v]) => `<tr><td>${cn(c) || c}</td><td class="n down">${money(v.rec, c)}</td><td class="n up">${money(v.pay, c)}</td></tr>`).join('') || ('<tr>' + '<td colspan="3" class="muted">' + _('همه تسویه') + '</td>' + '</tr>')}</table></div>
     </div>
     ${boardCard()}`;
-  bindQA(el);
+  bindQA(el); bindDemoBanner(el); bindChecklist(el);
   el.querySelectorAll('[data-board]').forEach(b => b.onclick = () => go('board'));
   if (due) {
     $('remGo').onclick = () => { try { localStorage.setItem(due.key, '1'); } catch {} go('board'); };
@@ -580,7 +593,7 @@ function xlsx(name, rows) {
 /* ---------------------------------------------------------------- more / settings */
 function vMore(el) {
   const mgr = isMgr();
-  el.innerHTML = planCard() + langCard() + wlCard() + MFA.card('sarraf.security') + (INSTALL.can ? `<div class="card"><h3>${INSTALL.label()}</h3><p class="hint" style="margin-top:0">${_('صرافینو را مثل یک برنامه روی صفحه‌ی اصلی گوشی بگذارید؛ تمام‌صفحه و سریع باز می‌شود. روی آیفون و اندروید کار می‌کند.')}</p><div class="btns"><button class="btn p" id="instGo">${INSTALL.label()}</button></div></div>` : '') + `<div class="card"><h3>📖 ${_('راهنما')}</h3><p class="hint" style="margin-top:0">${_('روی دکمه‌ی ❔ بالای هر صفحه یا کنار هر فرم بزنید تا توضیح کامل همان بخش را ببینید.')}</p><div class="btns">${HELP.allBtn('sarraf.', 'btn p')}</div></div>` + `${mgr ? `<div class="qa"><button class="c5" data-act="capital"><span>🏦</span>${_('آورده / برداشت شریک')}</button><button class="c6" data-act="opening"><span>📌</span>${_('موجودی اول دوره')}</button><button class="c2" data-act="transfer"><span>🔁</span>${_('انتقال بین صندوق‌ها')}</button><button class="c1" id="mBoxAdd"><span>➕</span>${_('صندوق جدید')}</button></div>` : ''}
+  el.innerHTML = demoBanner() + (isDemo() ? '' : planCard()) + langCard() + wlCard() + referralCard() + (isDemo() ? '' : MFA.card('sarraf.security')) + (INSTALL.can ? `<div class="card"><h3>${INSTALL.label()}</h3><p class="hint" style="margin-top:0">${_('صرافینو را مثل یک برنامه روی صفحه‌ی اصلی گوشی بگذارید؛ تمام‌صفحه و سریع باز می‌شود. روی آیفون و اندروید کار می‌کند.')}</p><div class="btns"><button class="btn p" id="instGo">${INSTALL.label()}</button></div></div>` : '') + `<div class="card"><h3>📖 ${_('راهنما')}</h3><p class="hint" style="margin-top:0">${_('روی دکمه‌ی ❔ بالای هر صفحه یا کنار هر فرم بزنید تا توضیح کامل همان بخش را ببینید.')}</p><div class="btns">${HELP.allBtn('sarraf.', 'btn p')}</div></div>` + `${mgr ? `<div class="qa"><button class="c5" data-act="capital"><span>🏦</span>${_('آورده / برداشت شریک')}</button><button class="c6" data-act="opening"><span>📌</span>${_('موجودی اول دوره')}</button><button class="c2" data-act="transfer"><span>🔁</span>${_('انتقال بین صندوق‌ها')}</button><button class="c1" id="mBoxAdd"><span>➕</span>${_('صندوق جدید')}</button></div>` : ''}
     <div class="card"><h3>💰 ${_('صندوق‌ها')}</h3><div class="list">${S.boxes.map(b => `<div class="row" data-box="${b.id}"><div class="ic">${b.kind === 'bank' ? '🏦' : b.kind === 'wallet' ? '👛' : '💵'}</div><div class="m"><b>${esc(b.name)}${b.archived ? (' ' + _('(بایگانی)')) : ''}</b><span>${cn(b.currency) || b.currency}</span></div><div class="e">${money(balOf('box', 'box_id', b.id)[b.currency] || 0, b.currency)}</div></div>`).join('')}</div></div>
     <div class="card"><h3>👔 ${_('اعضای صرافی')}</h3><div class="list">${S.members.map(m => `<div class="row" data-mem="${m.user_id}"><div class="ic">${m.role === 'owner' ? '👑' : m.role === 'partner' ? '🤝' : '🧑‍💼'}</div><div class="m"><b>${esc(m.display_name || m.email)}</b><span>${ROLE[m.role]}${m.role !== 'staff' ? (' · ' + _('سهم سود') + ' ') + fmt(m.share_pct, 2) + PC() : ''} · ${esc(m.email || '')}</span></div></div>`).join('')}</div>
       ${mgr ? ('<div class="btns">' + '<button class="btn p" id="mInv">' + '+ ' + _('دعوت شریک یا کارمند') + '</button>' + '</div>' + '<div id="invList">' + '</div>') : ''}</div>
@@ -591,9 +604,9 @@ function vMore(el) {
     <div class="card"><h3>🏪 ${_('صرافی')}</h3>
       ${S.role === 'owner' ? `<div class="fld"><label>${_('نام صرافی')}</label><input class="in" id="exN" value="${esc(S.ex.name)}"></div>
       <div class="fld"><label>${_('ارز گزارش سود')}</label><select class="in" id="exB">${ccyOpts(base(), ['USD','TRY','IRT','EUR'])}</select></div><button class="btn p w" id="exSave">${_('ذخیره')}</button>` : `<p>${esc(S.ex.name)}</p>`}
-      <div class="btns"><button class="btn g" id="newEx">+ ${_('ساخت صرافی دیگر')}</button><button class="btn r" id="logout">${_('خروج از حساب')}</button></div>
+      <div class="btns">${isDemo() ? '' : `<button class="btn g" id="newEx">+ ${_('ساخت صرافی دیگر')}</button>`}<button class="btn r" id="logout">${_('خروج از حساب')}</button></div>
       <p class="hint">${_('نسخه‌ی آزمایشی. داده‌ها در پایگاه داده‌ی ابری ذخیره می‌شود و هر صرافی فقط به اطلاعات خودش دسترسی دارد.')}</p></div>`;
-  bindQA(el); bindLangCard(); MFA.bindCard(sb); bindWlCard(el);
+  bindQA(el); bindLangCard(); MFA.bindCard(sb); bindWlCard(el); bindDemoBanner(el); loadReferral(); S.mfaOn = undefined;
   if ($('instGo')) $('instGo').onclick = () => INSTALL.run();
   if ($('mBoxAdd')) $('mBoxAdd').onclick = () => formBox(null);
   el.querySelectorAll('[data-box]').forEach(r => r.onclick = () => mgr && formBox(box(r.dataset.box)));
@@ -601,7 +614,7 @@ function vMore(el) {
   if ($('mInv')) { $('mInv').onclick = formInvite; loadInvites(); }
   if ($('exSave')) $('exSave').onclick = async () => { const {error} = await sb.from('exchanges').update({name:$('exN').value.trim(), base_ccy:$('exB').value}).eq('id', S.ex.id); if (error) return err(error); S.ex.name = $('exN').value.trim(); S.ex.base_ccy = $('exB').value; toast(_('ذخیره شد')); render(); };
   if ($('bkX')) { $('bkX').onclick = () => backup('xlsx').catch(err); $('bkJ').onclick = () => backup('json').catch(err); }
-  $('newEx').onclick = renderCreateExchange;
+  if ($('newEx')) $('newEx').onclick = renderCreateExchange;
   $('logout').onclick = async () => { await sb.auth.signOut(); location.reload(); };
 }
 async function loadInvites() {

@@ -243,3 +243,12 @@ html[dir=rtl] .pcard .price{text-align:right}
 .spedit input.in{width:72px;flex:none;padding:6px 8px;text-align:center}
 .spedit .btn.small{padding:6px 12px;min-height:34px}
 .sprow .spedit input.in{width:72px!important;min-width:0!important;max-width:72px!important}
+/* demo, getting-started checklist, terms */
+.demo-banner{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1.5px dashed #d9a521;background:linear-gradient(135deg,rgba(242,193,78,.16),transparent)}
+.demo-banner b{display:block;font-size:15px;margin-bottom:2px}.demo-banner span{font-size:13px;color:var(--muted);line-height:1.6}
+.checklist h3{display:flex;align-items:center;gap:8px}.checklist h3 small{font-weight:600;font-size:12.5px}.checklist h3 .ibtn{margin-inline-start:auto}
+.ckbar{height:7px;border-radius:9px;background:var(--line);overflow:hidden;margin:2px 0 10px}.ckbar i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,#0a7f60,#19c79b);transition:width .4s}
+.row.ck{cursor:pointer}.row.ck.ok{opacity:.6;cursor:default}.row.ck.ok b{text-decoration:line-through}
+label.terms{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.7;margin:4px 0 8px;cursor:pointer}
+label.terms input{width:18px;height:18px;margin-top:3px;flex:none}
+.demo-try{text-align:center}

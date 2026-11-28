@@ -296,3 +296,18 @@ html[dir=ltr] .chart-msg{direction:ltr}
 .hero .h-src button[data-goq] .hflag,.hero .h-src .h-inv .hflag{margin-inline-end:4px}
 .hero-grid div{white-space:nowrap;text-overflow:ellipsis}
 @media(max-width:400px){.hero .h-src button{padding:7px 8px;font-size:11.5px}.hero .h-src button b{font-size:14px}}
+/* exchange hub (🏪 button): find the best rate, or open Sarrafino */
+.hubbtn{display:flex;align-items:center;gap:12px;width:100%;text-align:start;padding:14px;margin:0 0 10px;border-radius:18px;border:1px solid var(--line);background:var(--card);color:var(--text);text-decoration:none;font:inherit;cursor:pointer;box-shadow:var(--shadow)}
+.hubbtn .hi{font-size:26px;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:var(--soft);flex:none}
+.hubbtn b{display:block;font-size:15.5px}.hubbtn small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;line-height:1.5}
+.hubbtn.own{border-color:var(--p1)}.hubbtn.own .hi{background:linear-gradient(145deg,var(--p1),var(--p2));color:#fff}
+.hubbtn.ghost{box-shadow:none;background:transparent}
+.hublist{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.hubrow{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+.hubrow.top{border-color:var(--p1);background:var(--soft)}
+.hubrow .xl{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:900;background:linear-gradient(145deg,#b7811a,#f2c14e);color:#3b2700;overflow:hidden;flex:none}
+.hubrow .xl img{width:100%;height:100%;object-fit:cover}
+.hubrow .hn{flex:1;min-width:0}.hubrow .hn b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hubrow .hn span{font-size:11.5px;color:var(--muted)}
+.hubrow .hv{direction:ltr;font-size:16px;font-weight:800}
+.hubrow .ha{display:flex;gap:4px}.hubrow .ha .btn{text-decoration:none;padding:6px 9px}
+.hubempty{text-align:center;font-size:40px;padding:14px}.hubempty p{font-size:14px;color:var(--muted)}

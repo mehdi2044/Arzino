@@ -299,7 +299,77 @@ const PLUS = (() => {
     if (WLK) { wlApply(); loadWL(); setInterval(loadWL, 60e3); } else { loadAds(); loadDir(); }
     setInterval(() => { loadStocks().then(() => { if (curView() === 'market') renderMarket(); }); if (!WLK) { loadDir(); loadAds(); } loadFx(); }, 90e3);
   }
-  return {injectCustom, customName, customUsd, customBars, addSheet, dirHTML, slot, afterRender, action, rewardHTML, bindReward, start, feedEvery: () => CFG.feed?.every || 8, hasDir: () => !WLK,
+  /* ================================================================ exchange hub: people find the best rate, owners find Sarrafino */
+  function popSheet(html, bind) {
+    document.getElementById('hubSheet')?.remove();
+    const sheet = document.createElement('div'); sheet.className = 'sheet tall show'; sheet.id = 'hubSheet';
+    document.body.appendChild(sheet); $('sheetBg').classList.add('show');
+    let done = false;
+    const close = fromNav => { if (done) return; done = true; sheet.remove(); $('sheetBg').classList.remove('show'); if (fromNav !== true) NAV.closed('sheet'); };
+    $('sheetBg').addEventListener('click', close, {once: true});
+    NAV.opened('sheet', () => close(true));
+    sheet.innerHTML = '<div class="sheet-grip"></div>' + html;
+    sheet.querySelectorAll('[data-close]').forEach(b => b.onclick = close);
+    bind && bind(sheet, close);
+    return close;
+  }
+  function hub() {
+    popSheet(`<h2>🏪 ${t('hub.title')}</h2>
+      <button class="hubbtn" id="hubFind"><span class="hi">🔎</span><span><b>${t('hub.find')}</b><small>${t('hub.findD')}</small></span></button>
+      <a class="hubbtn own" href="sarrafino/"><span class="hi">🏪</span><span><b>${t('hub.own')}</b><small>${t('hub.ownD')}</small></span></a>
+      <a class="hubbtn ghost" href="sarraf/"><span class="hi">🔑</span><span><b>${t('hub.login')}</b><small>${t('hub.loginD')}</small></span></a>
+      <div class="btn-row"><button class="btn ghost" data-close>${t('st.close')}</button></div>`,
+      (sh, close) => { sh.querySelector('#hubFind').onclick = () => { close(); best(); }; });
+  }
+  const PAIR_ORDER = ['USD/TRY', 'EUR/TRY', 'USDT/TRY', 'USD/IRT', 'EUR/IRT', 'TRY/IRT', 'USDT/IRT', 'GBP/TRY'];
+  async function best(pair) {
+    const close = popSheet(`<h2>🔎 ${t('hub.find')}</h2><div class="muted small">${t('ad.loading')}</div>`);
+    DIR.t = 0; await loadDir();
+    const list = DIR.list || [];
+    if (!MKT) MKT = await AUTORATE.market();
+    const rowsOf = x => {
+      const saved = (c, q) => (x.rates || []).find(r => r.ccy === c && r.quote === q);
+      const pairs = x.rows && x.rows.length ? x.rows : (x.rates || []).map(r => [r.ccy, r.quote]);
+      return pairs.map(([c, q]) => AUTORATE.rate(MKT, x.auto, c, q, saved(c, q))).filter(r => r && (+r.buy || +r.sell)).map(r => ({...r, k: r.ccy + '/' + r.quote}));
+    };
+    const all = list.map(x => ({x, rows: rowsOf(x)}));
+    const keys = [...new Set(all.flatMap(o => o.rows.map(r => r.k)))].sort((a, b) => ((PAIR_ORDER.indexOf(a) + 1) || 99) - ((PAIR_ORDER.indexOf(b) + 1) || 99));
+    pair = keys.includes(pair) ? pair : keys[0];
+    close(true); NAV.closed('sheet');
+    const wa = p => (p || '').replace(/[^\d]/g, '').replace(/^0(5\d{9})$/, '90$1');
+    const cname = c => I18N.has('s.' + c) ? t('s.' + c) : c;
+    if (!pair) {
+      popSheet(`<h2>🔎 ${t('hub.find')}</h2><div class="hubempty">🏪<p>${t('hub.none')}</p></div>
+        <a class="hubbtn own" href="sarrafino/"><span class="hi">➕</span><span><b>${t('ad.joinT')}</b><small>${t('ad.joinD')}</small></span></a>
+        <div class="btn-row"><button class="btn ghost" data-close>${t('st.close')}</button></div>`);
+      return;
+    }
+    const [c, q] = pair.split('/');
+    const offers = all.map(o => ({x: o.x, r: o.rows.find(r => r.k === pair)})).filter(o => o.r);
+    const buyers = offers.filter(o => +o.r.buy).sort((a, b) => b.r.buy - a.r.buy);
+    const sellers = offers.filter(o => +o.r.sell).sort((a, b) => a.r.sell - b.r.sell);
+    const m = AUTORATE.mid(MKT, c, q);
+    const row = (o, v, top) => `<div class="hubrow ${top ? 'top' : ''}"><span class="xl">${o.x.logo ? `<img src="${esc(o.x.logo)}" alt="">` : esc((o.x.name || '?').trim()[0])}</span>
+      <div class="hn"><b>${top ? '🏆 ' : ''}${esc(o.x.name)}</b><span>${esc(o.x.city || '')}</span></div><b class="hv">${fmt(+v)}</b>
+      <span class="ha">${o.x.phone ? `<a class="btn sm wa" href="https://wa.me/${wa(o.x.phone)}?text=${encodeURIComponent(t('hub.waMsg', {p: cname(c) + ' → ' + cname(q)}))}" target="_blank" rel="noopener">💬</a>` : ''}<a class="btn sm ghost" href="sarraf/board.html?ex=${o.x.id}&lang=${L()}" target="_blank" rel="noopener">📺</a></span></div>`;
+    popSheet(`<h2>🔎 ${t('hub.find')}${HELP.btn('arzino.partners')}</h2>
+      <div class="field"><label>${t('hub.pair')}</label><select class="input" id="hubPair">${keys.map(k => { const [a, b] = k.split('/'); return `<option value="${k}" ${k === pair ? 'selected' : ''}>${esc(cname(a))} → ${esc(cname(b))}</option>`; }).join('')}</select></div>
+      ${m ? `<div class="muted small" style="margin:0 2px 10px">${t('hub.market')}: <b style="direction:ltr;display:inline-block">${fmt(m)}</b></div>` : ''}
+      <h3 class="sec-title">💵 ${t('hub.sell', {c: cname(c)})}</h3><div class="muted small" style="margin:-4px 2px 6px">${t('hub.sellD', {c: cname(c), q: cname(q)})}</div>
+      <div class="hublist">${buyers.map((o, i) => row(o, o.r.buy, i === 0)).join('') || `<div class="muted small">—</div>`}</div>
+      <h3 class="sec-title">🛒 ${t('hub.buy', {c: cname(c)})}</h3><div class="muted small" style="margin:-4px 2px 6px">${t('hub.buyD', {c: cname(c), q: cname(q)})}</div>
+      <div class="hublist">${sellers.map((o, i) => row(o, o.r.sell, i === 0)).join('') || `<div class="muted small">—</div>`}</div>
+      <p class="muted small" style="margin:10px 2px">${t('hub.note')}</p>
+      <a class="hubbtn own" href="sarrafino/"><span class="hi">➕</span><span><b>${t('ad.joinT')}</b><small>${t('ad.joinD')}</small></span></a>
+      <div class="btn-row"><button class="btn ghost" data-close>${t('st.close')}</button></div>`,
+      (sh, cl) => { sh.querySelector('#hubPair').onchange = e => { cl(true); NAV.closed('sheet'); best(e.target.value); }; });
+  }
+  function bindHub() {
+    const b = document.querySelector('.ibtn.sarraf'); if (!b || WLK) return;
+    b.addEventListener('click', e => { e.preventDefault(); hub(); });
+  }
+
+  return {hub, best, bindHub, injectCustom, customName, customUsd, customBars, addSheet, dirHTML, slot, afterRender, action, rewardHTML, bindReward, start, feedEvery: () => CFG.feed?.every || 8, hasDir: () => !WLK,
     wlBoard, wlApply, isWL: () => !!WLK};
 })();
 
@@ -330,4 +400,35 @@ ar: {'g.stock': '📈 الأسهم', 'ad.add': 'إضافة عملة أو عمل�
   'ad.mine': 'ما أضفته', 'ad.none': 'لا توجد نتائج', 'ad.loading': 'جارٍ جلب قائمة العملات…', 'ad.checking': 'جارٍ التحقق…', 'ad.notFound': 'لم يُعثر على هذا الرمز.', 'ad.stockSoon': 'ستعمل الأسهم بعد نقل التطبيق إلى العنوان الجديد.',
   'ad.exists': 'مضاف مسبقاً', 'ad.added': 'أُضيف «{n}» إلى المفضلة ⭐', 'ad.partners': 'مكاتب صرافة شريكة', 'ad.partner': 'شريك', 'ad.wa': 'واتساب', 'ad.board': 'اللوحة', 'ad.joinT': 'لديك مكتب صرافة؟', 'ad.joinD': 'اظهر هنا بأسعارك',
   'ad.tag': 'إعلان', 'ad.reward': 'إعلان · مكافأة', 'ad.close': 'إغلاق', 'ad.set': 'الإعلانات', 'ad.setD': 'شاهد إعلاناً واحداً لتتصفح {h} ساعة دون إعلانات', 'ad.freeUntil': 'دون إعلانات حتى {d}', 'ad.watch': 'شاهد إعلاناً', 'ad.thanks': 'شكراً! {h} ساعة دون إعلانات 🎉', 'ad.addBtn': '＋ إضافة'},
+});
+
+I18N.add({
+fa: {'hub.title': 'صرافی', 'hub.find': 'صرافی‌ها و بهترین نرخ', 'hub.findD': 'نرخ خرید و فروش صرافی‌ها را کنار هم ببینید و بهترین را پیدا کنید',
+  'hub.own': 'من صاحب صرافی هستم', 'hub.ownD': 'حسابداری، تابلوی نرخ و رسید واتس‌اپ با صرافینو — ۱۴ روز رایگان',
+  'hub.login': 'ورود به پنل صرافی', 'hub.loginD': 'اگر قبلاً در صرافینو ثبت‌نام کرده‌اید',
+  'hub.pair': 'کدام ارز؟', 'hub.market': 'نرخ میانگین بازار', 'hub.sell': 'می‌خواهم {c} بفروشم', 'hub.sellD': 'صرافی‌ای که بیشترین {q} را به ازای هر {c} می‌دهد، اول است.',
+  'hub.buy': 'می‌خواهم {c} بخرم', 'hub.buyD': 'صرافی‌ای که {c} را ارزان‌تر (با {q} کمتر) می‌فروشد، اول است.',
+  'hub.note': 'نرخ‌ها را خود صرافی‌ها می‌گذارند و ممکن است لحظه‌ای عوض شوند؛ پیش از رفتن تماس بگیرید.',
+  'hub.none': 'هنوز صرافی‌ای در این فهرست نیست. اگر صرافی دارید، اولین نفر باشید!', 'hub.waMsg': 'سلام، از ارزینو آمده‌ام. نرخ {p} امروز چند است؟'},
+tr: {'hub.title': 'Döviz bürosu', 'hub.find': 'Bürolar ve en iyi kur', 'hub.findD': 'Büroların alış-satış kurlarını yan yana görün, en iyisini bulun',
+  'hub.own': 'Döviz büronuz mu var?', 'hub.ownD': 'Sarrafino ile muhasebe, kur panosu ve WhatsApp makbuzu — 14 gün ücretsiz',
+  'hub.login': 'Büro paneline giriş', 'hub.loginD': 'Sarrafino’ya zaten kayıtlıysanız',
+  'hub.pair': 'Hangi döviz?', 'hub.market': 'Piyasa ortalaması', 'hub.sell': '{c} satmak istiyorum', 'hub.sellD': 'Her {c} için en çok {q} veren büro en üsttedir.',
+  'hub.buy': '{c} almak istiyorum', 'hub.buyD': '{c} birimini en ucuza (en az {q} ile) satan büro en üsttedir.',
+  'hub.note': 'Kurları bürolar kendisi girer ve anlık değişebilir; gitmeden önce arayın.',
+  'hub.none': 'Bu listede henüz büro yok. Döviz büronuz varsa ilk siz olun!', 'hub.waMsg': 'Merhaba, Arzino’dan geliyorum. Bugün {p} kuru kaç?'},
+en: {'hub.title': 'Exchange offices', 'hub.find': 'Exchanges & best rate', 'hub.findD': 'Compare exchange offices’ buy and sell rates side by side',
+  'hub.own': 'I own an exchange office', 'hub.ownD': 'Accounting, rate board and WhatsApp receipts with Sarrafino — 14 days free',
+  'hub.login': 'Sign in to the exchange panel', 'hub.loginD': 'If you already use Sarrafino',
+  'hub.pair': 'Which currency?', 'hub.market': 'Market average', 'hub.sell': 'I want to sell {c}', 'hub.sellD': 'The office that pays the most {q} for each {c} is first.',
+  'hub.buy': 'I want to buy {c}', 'hub.buyD': 'The office that sells {c} cheapest (for the least {q}) is first.',
+  'hub.note': 'Rates are set by the offices themselves and can change at any moment; call before you go.',
+  'hub.none': 'No exchange office is listed yet. If you own one, be the first!', 'hub.waMsg': 'Hello, I found you on Arzino. What is your {p} rate today?'},
+ar: {'hub.title': 'الصرافة', 'hub.find': 'مكاتب الصرافة وأفضل سعر', 'hub.findD': 'قارن أسعار الشراء والبيع لدى مكاتب الصرافة جنباً إلى جنب',
+  'hub.own': 'أملك مكتب صرافة', 'hub.ownD': 'المحاسبة ولوحة الأسعار وإيصالات واتساب مع صرافينو — ١٤ يوماً مجاناً',
+  'hub.login': 'الدخول إلى لوحة الصرافة', 'hub.loginD': 'إذا كنت مسجلاً في صرافينو',
+  'hub.pair': 'أي عملة؟', 'hub.market': 'متوسط السوق', 'hub.sell': 'أريد بيع {c}', 'hub.sellD': 'المكتب الذي يدفع أكثر {q} مقابل كل {c} يأتي أولاً.',
+  'hub.buy': 'أريد شراء {c}', 'hub.buyD': 'المكتب الذي يبيع {c} بأرخص سعر (بأقل {q}) يأتي أولاً.',
+  'hub.note': 'المكاتب تضع أسعارها بنفسها وقد تتغير في أي لحظة؛ اتصل قبل الذهاب.',
+  'hub.none': 'لا يوجد مكتب صرافة في القائمة بعد. إن كنت تملك مكتباً فكن الأول!', 'hub.waMsg': 'مرحباً، وجدتكم عبر أرزينو. كم سعر {p} اليوم؟'},
 });
