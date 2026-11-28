@@ -4,7 +4,7 @@
    The Android app keeps using the old address until it is updated, so it is not moved. */
 (function () {
   try {
-    const HOME = 'https://arzino.kiagroup.tr', MOVE_OLD = false, h = location.hostname;
+    const HOME = 'https://arzino.kiagroup.tr', MOVE_OLD = true, h = location.hostname;
     if (/^sarrafino\./.test(h)) {
       const p = location.pathname === '/' || location.pathname === '' ? '/sarrafino/' : location.pathname;
       location.replace(HOME + p + location.search + location.hash); return;

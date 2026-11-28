@@ -17,7 +17,7 @@ import androidx.webkit.WebViewAssetLoader;
 /** Arzino: the web app bundled inside the APK, served from a secure https origin. */
 public class MainActivity extends Activity {
     private static final String HOST = "appassets.androidplatform.net";
-    private static final String LIVE = "https://mehdi2044.github.io/Arzino/";
+    private static final String LIVE = "https://arzino.kiagroup.tr/";
     private static final String OFFLINE = "https://" + HOST + "/assets/www/index.html";
     private boolean fellBack = false;
     private WebView web;
@@ -43,7 +43,8 @@ public class MainActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
                 Uri u = r.getUrl();
-                if (HOST.equals(u.getHost()) || "mehdi2044.github.io".equals(u.getHost())) return false;
+                String h = u.getHost();
+                if (HOST.equals(h) || "arzino.kiagroup.tr".equals(h) || "mehdi2044.github.io".equals(h)) return false;
                 try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (Exception ignored) { }
                 return true;
             }
