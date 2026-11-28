@@ -1,0 +1,25 @@
+name: keep-database-awake
+
+# Free Supabase projects are paused after a week with no database activity.
+# This reads one row once a day so Sarrafino never goes to sleep, even when no exchange is working.
+on:
+  schedule:
+    - cron: "23 4 * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Read one row from the database
+        run: |
+          URL="https://byecgsxfoiglaozubfyx.supabase.co"
+          KEY="sb_publishable_TAVJpLKC1x0iVFL4F0R_Gw_uKyzJS6T"   # public key, the same one the website uses
+          for i in 1 2 3; do
+            code=$(curl -s -o /tmp/r.json -w '%{http_code}' "$URL/rest/v1/plans?select=id&limit=1" -H "apikey: $KEY" -H "Authorization: Bearer $KEY")
+            echo "attempt $i: HTTP $code $(head -c 200 /tmp/r.json)"
+            [ "$code" = "200" ] && exit 0
+            sleep 20
+          done
+          exit 1
